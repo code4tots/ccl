@@ -2,7 +2,7 @@
 """
 
 from ccl.lexer import lex
-from ccl.ast   import Int, Float, String, Name, Command, Block
+from ccl.ast   import Int, Float, String, Name, Command, Block, Attribute
 
 class Parser(object):
     atom_start_token_types = frozenset(
@@ -29,36 +29,58 @@ class Parser(object):
     
     def atom(self):
         if self.lookahead.type == 'INT':
-            return Int(self.next_token().value)
+            return_value = Int(self.next_token().value)
         elif self.lookahead.type == 'FLOAT':
-            return Float(self.next_token().value)
+            return_value = Float(self.next_token().value)
         elif self.lookahead.type == 'STRING':
-            return String(self.next_token().value)
+            return_value = String(self.next_token().value)
         elif self.lookahead.type == 'NAME':
-            return Name(self.next_token().value)
+            return_value = Name(self.next_token().value)
         elif self.lookahead.type == '{':
             self.next_token()
             block = Block(self.commands())
             self.expect('}')
-            return block
+            return_value = block
         elif self.lookahead.type == '(':
             self.next_token()
             command = self.command()
             self.expect(')')
-            return command
-        raise SyntaxError('expected atom but found %r' %
-            (self.lookahead.type,))
+            return_value = command
+        else:
+            raise SyntaxError('expected atom but found %r' %
+                (self.lookahead.type,))
+        
+        while self.lookahead.type == '.':
+            self.next_token()
+            return_value = Attribute(
+                return_value,
+                self.next_token().value)
+        
+        return return_value
+            
+    
+    def atoms(self, skip_newlines):
+        atoms = []
+        
+        if skip_newlines:
+            self.skip_newlines()
+        
+        while self.lookahead.type in self.atom_start_token_types:
+            atoms.append(self.atom())
+            
+            if skip_newlines:
+                self.skip_newlines()
+        
+        return atoms
     
     def command(self):
         f = self.atom()
-        args = []
-        while self.lookahead.type in self.atom_start_token_types:
-            args.append(self.atom())
+        args = self.atoms(skip_newlines = False)
         return Command(f,args)
     
     def commands(self):
-        self.skip_newlines()
         commands = []
+        self.skip_newlines()
         while self.lookahead.type in self.atom_start_token_types:
             commands.append(self.command())
             self.skip_newlines()

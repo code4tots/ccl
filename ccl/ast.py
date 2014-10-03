@@ -30,6 +30,14 @@ class Name(Ast):
     def __call__(self, ctx):
         return self.find(ctx)[self.string]
 
+class Attribute(Ast):
+    def __init__(self, atom, name):
+        self.atom = atom
+        self.name = name
+    
+    def __call__(self, ctx):
+        return getattr(self.atom(ctx), self.name)
+
 class Command(Ast):
     def __init__(self, f, args):
         self.f = f

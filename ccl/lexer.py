@@ -1,6 +1,6 @@
 import re
 space_re = re.compile(r'[ \t]*')
-symbols = ('(',')','{','}', ';', '\n')
+symbols = ('(',')','{','}', '.', ';', '\n')
 
 res = [(t,re.compile(r)) for t, r in
     [(s,re.escape(s)) for s in symbols] +
