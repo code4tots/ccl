@@ -20,8 +20,8 @@ def repl(context = None):
     def count(type_):
         return sum(t.type == type_ for t in lex(command_string))
     
-    try:
-        while True:
+    while True:
+        try:
             command_string = input(getcwd()+'>> ').strip()
             if command_string == '':
                 continue
@@ -30,5 +30,9 @@ def repl(context = None):
             result = run(command_string, context)
             if result is not None:
                 print(result)
-    except EOFError:
-        print('')
+        except EOFError:
+            print('')
+            break
+        except Exception:
+            import traceback
+            print(traceback.format_exc())

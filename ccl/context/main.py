@@ -23,6 +23,7 @@ global_context = {
     
     # basic system interface
     'print'   : print,
+    'open'    : open,
     'cwd'     : os.getcwd,
     'ls'      :
         # In python 2.x os.listdir does not have default path
