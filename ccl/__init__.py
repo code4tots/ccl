@@ -10,7 +10,7 @@ from ccl.context import new_context
 def run(string, context = None):
     if context is None:
         context = new_context()
-    Parser(string).all()(context)
+    return Parser(string).all()(context)
 
 def repl(context = None):
     if context is None:
@@ -26,6 +26,8 @@ def repl(context = None):
                 continue
             while count('(') != count(')') or count('{') != count('}'):
                 command_string += input('... ')
-            run(command_string, context)
+            result = run(command_string, context)
+            if result is not None:
+                print(result)
     except EOFError:
         print('')

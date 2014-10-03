@@ -15,7 +15,11 @@ def register(name):
     return wrapper
 
 global_context = {
-    'print' : print
+    'print' : print,
+    
+    'cwd'   : os.getcwd,
+    'ls'    : os.listdir,
+    'cd'    : os.chdir,
 }
 
 def new_context(parent=global_context):
