@@ -44,5 +44,9 @@ global_context = {
     'ismount' : os.path.ismount,
 }
 
+global_context['__context__'] = global_context
+
 def new_context(parent = global_context):
-    return {'__parent__' : global_context}
+    context = {'__parent__' : parent}
+    context['__context__'] = context
+    return context

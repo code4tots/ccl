@@ -2,6 +2,22 @@
 """
 from ccl.context.main import register, SpecialForm
 
+@register('assign')
+@SpecialForm
+def assign(ctx, args):
+    name, value = args
+    value = value(ctx)
+    ctx[name.string] = value
+    return value
+
+@register('reassign')
+@SpecialForm
+def reassign(ctx, args):
+    name, value = args
+    value = value(ctx)
+    name.find(ctx)[name.string] = value
+    return value
+
 @register('if')
 @SpecialForm
 def if_(ctx, args):
