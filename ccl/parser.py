@@ -23,6 +23,10 @@ class Parser(object):
                 (type_, self.type))
         return self.next_token()
     
+    def consume(self, type_):
+        if self.lookahead.type == type_:
+            return self.next_token()
+    
     def skip_newlines(self):
         while self.lookahead.type in ';\n':
             self.next_token()
@@ -36,13 +40,11 @@ class Parser(object):
             return_value = String(self.next_token().value)
         elif self.lookahead.type == 'NAME':
             return_value = Name(self.next_token().value)
-        elif self.lookahead.type == '{':
-            self.next_token()
+        elif self.consume('{'):
             block = Block(self.commands())
             self.expect('}')
             return_value = block
-        elif self.lookahead.type == '(':
-            self.next_token()
+        elif self.consume('('):
             command = self.command()
             self.expect(')')
             return_value = command
@@ -50,8 +52,7 @@ class Parser(object):
             raise SyntaxError('expected atom but found %r' %
                 (self.lookahead.type,))
         
-        while self.lookahead.type == '.':
-            self.next_token()
+        while self.consume('.'):
             return_value = Attribute(
                 return_value,
                 self.next_token().value)
