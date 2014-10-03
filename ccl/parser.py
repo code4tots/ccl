@@ -2,11 +2,12 @@
 """
 
 from ccl.lexer import lex
-from ccl.ast   import Int, Float, String, Name, Command, Block, Attribute
+from ccl.ast   import (
+    Int, Float, String, Name, Command, Block, Attribute, List)
 
 class Parser(object):
     atom_start_token_types = frozenset(
-        ('(','{','INT','FLOAT','STRING','NAME'))
+        ('(','{','[','INT','FLOAT','STRING','NAME'))
     
     def __init__(self, string):
         self.generator = lex(string)
@@ -48,6 +49,10 @@ class Parser(object):
             command = self.command()
             self.expect(')')
             return_value = command
+        elif self.consume('['):
+            atoms = self.atoms(skip_newlines = True)
+            self.expect(']')
+            return_value = List(atoms)
         else:
             raise SyntaxError('expected atom but found %r' %
                 (self.lookahead.type,))
@@ -58,7 +63,6 @@ class Parser(object):
                 self.next_token().value)
         
         return return_value
-            
     
     def atoms(self, skip_newlines):
         atoms = []
@@ -88,4 +92,8 @@ class Parser(object):
         return commands
     
     def all(self):
-        return Block(self.commands())
+        block = Block(self.commands())
+        if self.lookahead.type != 'END':
+            raise SyntaxError('expected END but found ' +
+                repr(self.lookahead))
+        return block

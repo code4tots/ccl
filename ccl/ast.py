@@ -38,6 +38,13 @@ class Attribute(Ast):
     def __call__(self, ctx):
         return getattr(self.atom(ctx), self.name)
 
+class List(Ast):
+    def __init__(self, atoms):
+        self.atoms = atoms
+    
+    def __call__(self, ctx):
+        return [atom(ctx) for atom in self.atoms]
+
 class Command(Ast):
     def __init__(self, f, args):
         self.f = f

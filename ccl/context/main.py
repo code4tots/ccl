@@ -17,9 +17,16 @@ def register(name):
 global_context = {
     # language
     'just'    : (lambda x : x),
+    
     'None'    : None,
     'True'    : True,
     'False'   : False,
+    
+    'len'     : len,
+    'range'   : range,
+    
+    'list'    : list,
+    'tuple'   : tuple,
     
     # basic system interface
     'print'   : print,
