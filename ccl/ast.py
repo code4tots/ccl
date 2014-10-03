@@ -23,7 +23,7 @@ class Name(Ast):
     
     def find(self, ctx):
         name = self.string
-        while name not in ctx:
+        while name not in ctx and '__parent__' in ctx:
             ctx = ctx['__parent__']
         return ctx
     
@@ -53,6 +53,5 @@ class Block(Ast):
     
     def __call__(self, ctx):
         for command in self.commands:
-            last = commands(ctx)
+            last = command(ctx)
         return last
-

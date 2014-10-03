@@ -5,8 +5,8 @@ symbols = ('(',')','{','}', ';', '\n')
 res = [(t,re.compile(r)) for t, r in
     [(s,re.escape(s)) for s in symbols] +
     [ ('STRING',
-        r'\"(?:\\\"|[^"])\"' '|'
-        r"\'(?:\\\'|[^'])\'"),
+        r'\"(?:\\\"|[^"])*\"' '|'
+        r"\'(?:\\\'|[^'])*\'"),
     ('FLOAT', r'\-?\d*\.\d*'), ('INT', r'\-?\d+'), ('NAME', r'\w+')]]
 
 class Token(object):
@@ -29,5 +29,10 @@ def lex(s):
             if m is not None:
                 yield Token(t, m.group(), s, i)
                 i = m.end()
+                break
+        else:
+            m = re.compile(r'\S*').match(s, i)
+            raise SyntaxError('invalid token %r' %
+                (m.group(),))
         i = c.match(s,i).end()
     yield Token('END', None, s, len(s))

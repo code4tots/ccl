@@ -18,24 +18,24 @@ class Parser(object):
         return token
     
     def expect(self, type_):
-        if self.type != type_:
+        if self.lookahead.type != type_:
             raise SyntaxError('expected %r but got %r' %
                 (type_, self.type))
         return self.next_token()
     
     def skip_newlines(self):
-        while self.type in ';\n':
+        while self.lookahead.type in ';\n':
             self.next_token()
     
     def atom(self):
         if self.lookahead.type == 'INT':
-            return Int(self.lookahead.value)
+            return Int(self.next_token().value)
         elif self.lookahead.type == 'FLOAT':
-            return Float(self.lookahead.value)
+            return Float(self.next_token().value)
         elif self.lookahead.type == 'STRING':
-            return String(self.lookahead.value)
+            return String(self.next_token().value)
         elif self.lookahead.type == 'NAME':
-            return Name(self.lookahead.value)
+            return Name(self.next_token().value)
         elif self.lookahead.type == '{':
             self.next_token()
             block = Block(self.commands())
@@ -64,3 +64,5 @@ class Parser(object):
             self.skip_newlines()
         return commands
     
+    def all(self):
+        return Block(self.commands())
