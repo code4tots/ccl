@@ -11,4 +11,4 @@ from ccl.context.main import (
     new_context,
     SpecialForm)
 
-import language
+import ccl.context.language

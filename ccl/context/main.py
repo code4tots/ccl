@@ -24,7 +24,9 @@ global_context = {
     # basic system interface
     'print'   : print,
     'cwd'     : os.getcwd,
-    'ls'      : os.listdir,
+    'ls'      :
+        # In python 2.x os.listdir does not have default path
+        (lambda p=None: os.listdir(os.getcwd() if p is None else p)),
     'cd'      : os.chdir,
     'mkdir'   : os.makedirs,
     'exists'  : os.path.exists,
