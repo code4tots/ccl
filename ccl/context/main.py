@@ -27,6 +27,7 @@ global_context = {
     
     'list'    : list,
     'tuple'   : tuple,
+    'dict'    : dict,
     
     # basic system interface
     'print'   : print,
