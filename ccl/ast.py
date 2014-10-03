@@ -52,6 +52,7 @@ class Block(Ast):
         self.commands = commands
     
     def __call__(self, ctx):
+        last = None
         for command in self.commands:
             last = command(ctx)
         return last

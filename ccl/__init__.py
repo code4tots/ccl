@@ -6,6 +6,7 @@ except NameError:
 from ccl.lexer   import lex
 from ccl.parser  import Parser
 from ccl.context import new_context
+from os import getcwd
 
 def run(string, context = None):
     if context is None:
@@ -21,11 +22,11 @@ def repl(context = None):
     
     try:
         while True:
-            command_string = input('>>> ').strip()
+            command_string = input(getcwd()+'>> ').strip()
             if command_string == '':
                 continue
             while count('(') != count(')') or count('{') != count('}'):
-                command_string += input('... ')
+                command_string += '\n' + input('... ')
             result = run(command_string, context)
             if result is not None:
                 print(result)
