@@ -39,3 +39,25 @@ def while_(ctx, args):
         last = block(ctx)
     return last
 
+@register('class')
+@SpecialForm
+def class_(ctx, args):
+    from ccl.context import new_context
+    
+    if len(args) == 2:
+        name, body = args
+        bases = ()
+    else:
+        name, bases, body = args
+    
+    name = name.string
+    bases = tuple(base(ctx) for base in bases)
+    
+    dict_ = new_context(ctx)
+    body(dict_)
+    
+    cls = type(name, bases, dict_)
+    
+    ctx[name] = cls
+    
+    return cls

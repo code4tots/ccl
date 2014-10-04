@@ -1,9 +1,14 @@
 assign x 5
 print (x.__add__ 5)
 
+class MyClass {
+}
+
+print (MyClass)
 assign app (QtGui.QApplication sys.argv)
 assign wid (QtGui.QWidget)
 wid.resize 250 150
 wid.setWindowTitle 'Simple'
 wid.show
 sys.exit (app.exec_)
+
