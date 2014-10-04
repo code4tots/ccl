@@ -1,6 +1,6 @@
 from ccl import run, repl
+from sys import argv
+# repl()
 
-# run("""
-# print 12
-# """)
-repl()
+with open(argv[1]) as f:
+    run(f.read())

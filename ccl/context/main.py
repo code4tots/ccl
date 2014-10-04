@@ -1,5 +1,5 @@
 from __future__ import print_function
-import os
+import os, sys
 
 class SpecialForm(object):
     def __init__(self, f):
@@ -30,6 +30,9 @@ global_context = {
     'dict'    : dict,
     
     # basic system interface
+    'os'      : os,
+    'sys'     : sys,
+    
     'print'   : print,
     'open'    : open,
     'cwd'     : os.getcwd,
