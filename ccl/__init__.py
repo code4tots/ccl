@@ -1,5 +1,3 @@
-# initialize the main engine
-from ccl.main import global_context, execute, run, repl, run_file
-
-# initialize the libraries
-import ccl.language
+from ccl.scope import global_scope, new_scope
+from ccl.parser import parse
+from ccl.controller import run, repl, run_file

@@ -11,5 +11,4 @@ setup(
     keywords = [],
     classifiers = [],
     install_requires= [
-        'PySide'
     ])
