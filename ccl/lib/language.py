@@ -1,29 +1,11 @@
 """
-The most fundamental tools for the language
+The most fundamental language constructs
 """
 from __future__ import print_function
-from functools import wraps
 
-from ccl.scope import global_scope, find, new_scope
+from ccl.scope import global_scope, find, new_scope, function, register
 from ccl.ast import NameDisplay, ListDisplay, AttributeDisplay
 import ccl.exception as ex
-
-def function(wrapped):
-    @wraps(wrapped)
-    def wrapper(scope, args, ast):
-        args = [arg(scope) for arg in args]
-        try:
-            return wrapped(*args)
-        except ex.CclException as e:
-            e.callstack.append(ast)
-            raise
-    return wrapper
-
-def register(name):
-    def wrapper(f):
-        global_scope[name] = f
-        return f
-    return wrapper
 
 global_scope.update({
     'None'  : None,
@@ -36,6 +18,10 @@ global_scope.update({
     for name, f in {
         'print' : print,
     }.items()})
+
+@register('#')
+def comment(scope, args, ast):
+    pass
 
 def assign(scope, lhs, rhs, reassign):
     if isinstance(lhs, NameDisplay):
@@ -119,8 +105,3 @@ def lambda_(scope, args, ast):
         return body(fscope)
     
     return lambda_function
-
-@register('#')
-def comment(scope, args, ast):
-    pass
-
