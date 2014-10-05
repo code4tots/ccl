@@ -1,7 +1,8 @@
 = [x y] [1 2]
 = [y x] [x y] 
 print x
+print y
 
-= f (def [a b c] {
+= f $ \ a b c {
     
-})
+}

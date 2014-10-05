@@ -36,9 +36,11 @@ class ExpectedAtom(ParseError):
             "can't start with tokens of type %r" % (token.type,))
 
 class RuntimeException(CclException):
-    def __init__(self, message):
+    def __init__(self, ast, message):
         self.message = message
         self.callstack = []
+        if ast is not None:
+            self.callstack.append(ast)
     
     def __str__(self):
         s = self.message + '\n'
@@ -47,10 +49,17 @@ class RuntimeException(CclException):
         return s
 
 class AttributeError(RuntimeException):
-    def __init__(self, value, attribute):
+    def __init__(self, ast, value, attribute):
         super(AttributeError, self).__init__(
+            ast,
             '%r does not have attribute %r' % (value, attribute))
 
 class KeyError(RuntimeException):
-    def __init__(self, key):
-        super(KeyError, self).__init__('No such key %r' % (key,))
+    def __init__(self, ast, key):
+        super(KeyError, self).__init__(ast, 'No such key %r' % (key,))
+
+class WrongNumberOfArguments(RuntimeException):
+    def __init__(self, ast, expected, got):
+        super(WrongNumberOfArguments, self).__init__(
+            ast,
+            "Expected %s arguments but got %s" % (expected, got))

@@ -29,9 +29,7 @@ class NameDisplay(TokenDisplay):
             return lookup(scope, self.token.value)
         except KeyError:
             import ccl.exception as ex
-            e = ex.KeyError(self.token.value)
-            e.callstack.append(self)
-            raise e
+            raise ex.KeyError(self, self.token.value)
 
 class ListDisplay(AbstractSyntaxTree):
     def __init__(self, token, atoms):
@@ -68,9 +66,7 @@ class AttributeDisplay(AbstractSyntaxTree):
         try:
             return getattr(self.atom(scope), self.name)
         except AttributeError:
-            e = ex.AttributeError(value, self.name)
-            e.callstack.append(self)
-            raise e
+            raise ex.AttributeError(self, value, self.name)
 
 class Command(AbstractSyntaxTree):
     def __init__(self, f, args):
@@ -81,14 +77,4 @@ class Command(AbstractSyntaxTree):
     def __call__(self, scope):
         import ccl.exception as ex
         
-        f = self.f(scope)
-        
-        try:
-            return f(scope, self.args)
-        except ex.RuntimeException as e:
-            e.callstack.append(self)
-            raise
-        except ValueError:
-            e = ex.RuntimeException('wrong number of arguments')
-            e.callstack.append(self)
-            raise e
+        return self.f(scope)(scope, self.args, self)
