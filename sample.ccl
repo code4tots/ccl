@@ -6,7 +6,8 @@
 }
 
 = f $ \ a b c {
-    print a
+    print a b c
 }
 
 f 1.1
+

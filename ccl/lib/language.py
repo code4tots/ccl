@@ -9,12 +9,10 @@ from ccl.ast import NameDisplay, ListDisplay, AttributeDisplay
 import ccl.exception as ex
 
 def function(wrapped):
-    print('%r is being wrapped' % (wrapped,))
     @wraps(wrapped)
     def wrapper(scope, args, ast):
         args = [arg(scope) for arg in args]
         try:
-            print('%r is being called' % (wrapped,))
             return wrapped(*args)
         except ex.CclException as e:
             e.callstack.append(ast)
@@ -103,7 +101,11 @@ def macro(scope, args, ast):
 @register('\\')
 def lambda_(scope, args, ast):
     body  = args[-1]
-    names = [str(arg) for arg in args[:-1]]
+    if not all(isinstance(arg, NameDisplay) for arg in args[:-1]):
+        raise ex.RuntimException(
+            ast,
+            'all arguments except the last must be names')
+    names = [arg.token.value for arg in args[:-1]]
     
     @function
     def lambda_function(*args):
