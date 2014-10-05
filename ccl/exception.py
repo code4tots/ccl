@@ -32,7 +32,7 @@ class ExpectedAtom(ParseError):
     def __init__(self, token):
         super(ExpectedAtom, self).__init__(
             token,
-            "Expected an <atom> but <atom>s"
+            "Expected an <atom> but <atom>s "
             "can't start with tokens of type %r" % (token.type,))
 
 class RuntimeException(CclException):
