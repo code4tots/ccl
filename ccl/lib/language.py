@@ -25,7 +25,7 @@ global_scope.update({
 
 def assign(ctx, lhs, rhs, reassign):
     from ccl.scope import find
-    from ccl.ast import NameDisplay, ListDisplay
+    from ccl.ast import NameDisplay, ListDisplay, AttributeDisplay
     
     if isinstance(lhs, NameDisplay):
         lhs = lhs.token.value
@@ -38,6 +38,11 @@ def assign(ctx, lhs, rhs, reassign):
     elif isinstance(lhs, ListDisplay):
         for element, value in zip(lhs, rhs):
             assign(ctx, element, value, reassign)
+    
+    elif isinstance(lhs, AttributeDisplay):
+        atom = lhs.atom(ctx)
+        attribute = lhs.name
+        setattr(atom, attribute, rhs)
     
     else:
         import ccl.exception as ex

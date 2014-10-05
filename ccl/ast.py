@@ -88,3 +88,7 @@ class Command(AbstractSyntaxTree):
         except ex.RuntimeException as e:
             e.callstack.append(self)
             raise
+        except ValueError:
+            e = ex.RuntimeException('wrong number of arguments')
+            e.callstack.append(self)
+            raise e
