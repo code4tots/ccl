@@ -81,5 +81,26 @@ class Command(AbstractSyntaxTree):
         
         if not callable(f):
             raise ex.NotCallable(self, f)
-        
-        return f(scope, self.args, self)
+        elif isinstance(f, SpecialForm):
+            return f(scope, self.args, self)
+        else:
+            args = [arg(scope) for arg in self.args]
+            
+            try:
+                return f(*args)
+            except ex.CclException as e:
+                e.callstack.append(self)
+                raise
+
+class SpecialForm(object):
+    def __init__(self, f, name = None):
+        self.name = name
+        self.f = f
+    
+    def __call__(self, scope, args, ast):
+        return self.f(scope, args, ast)
+    
+    def __repr__(self):
+        return '<special-form %r>' % (
+            '<unnamed>' if self.name is None else
+            self.name,)

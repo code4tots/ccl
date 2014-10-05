@@ -19,23 +19,9 @@ def new_scope(parent):
     return scope
 
 def register(name):
+    from ccl.ast import SpecialForm
     def register_(f):
+        if isinstance(f, SpecialForm):
+            f.name = name
         global_scope[name] = f
     return register_
-
-def function(wrapped):
-    @wraps(wrapped)
-    def wrapper(scope, args, ast):
-        args = [arg(scope) for arg in args]
-        try:
-            return wrapped(*args)
-        except ex.CclException as e:
-            e.callstack.append(ast)
-            raise
-    return wrapper
-
-def register(name):
-    def wrapper(f):
-        global_scope[name] = f
-        return f
-    return wrapper

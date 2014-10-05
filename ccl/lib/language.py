@@ -3,23 +3,35 @@ The most fundamental language constructs
 """
 from __future__ import print_function
 
-from ccl.scope import global_scope, find, new_scope, function, register
-from ccl.ast import NameDisplay, ListDisplay, AttributeDisplay
+from ccl.scope import global_scope, find, new_scope, register
+from ccl.ast import NameDisplay, ListDisplay, AttributeDisplay, SpecialForm
 import ccl.exception as ex
 
 global_scope.update({
     'None'  : None,
     'True'  : True,
     'False' : False,
+    
+    'list'  : list,
+    'tuple' : tuple,
+    'dict'  : dict,
+    'set'   : set,
+    
+    'print'       : print,
+    'len'         : len,
+    
+    'abs'         : abs,
+    'all'         : all,
+    'any'         : any,
+    'bool'        : bool,
+    'callable'    : callable,
+    'chr'         : chr,
+    'classmethod' : classmethod,
+    
     })
 
-global_scope.update({
-    name : function(f)
-    for name, f in {
-        'print' : print,
-    }.items()})
-
 @register('#')
+@SpecialForm
 def comment(scope, args, ast):
     pass
 
@@ -29,6 +41,9 @@ def assign(scope, lhs, rhs, reassign):
         
         if reassign:
             ctx = find(scope, lhs)
+        
+        if isinstance(rhs,SpecialForm) and rhs.name is None:
+            rhs.name = lhs
         
         scope[lhs] = rhs
     
@@ -45,6 +60,7 @@ def assign(scope, lhs, rhs, reassign):
         raise ex.RuntimException('invalid assignment')
 
 @register('=')
+@SpecialForm
 def assign_macro(scope, args, ast):
     try:
         lhs, rhs = args
@@ -57,6 +73,7 @@ def assign_macro(scope, args, ast):
     return rhs
 
 @register('=>')
+@SpecialForm
 def reassign_macro(scope, args, ast):
     try:
         lhs, rhs = args
@@ -69,13 +86,20 @@ def reassign_macro(scope, args, ast):
     return rhs
 
 @register('\\\\')
+@SpecialForm
 def macro(scope, args, ast):
     if len(args) != 3:
         raise ex.WrongNumberOfArguments(ast, expected=3, got=len(args))
     
-    names = args[:-1]
-    body = args[-1]
+    if not all(isinstance(arg, NameDisplay) for arg in args[:-1]):
+        raise ex.RuntimException(
+            ast,
+            'all arguments except the last must be names')
     
+    body = args[-1]
+    names = [arg.token.value for arg in args[:-1]]
+    
+    @SpecialForm
     def macro_function(*args):
         mscope = new_scope(scope)
         for name, arg in zip(names, args):
@@ -83,17 +107,17 @@ def macro(scope, args, ast):
         return body(mscope)
     
     return macro_function
-    
+
 @register('\\')
+@SpecialForm
 def lambda_(scope, args, ast):
-    body  = args[-1]
     if not all(isinstance(arg, NameDisplay) for arg in args[:-1]):
         raise ex.RuntimException(
             ast,
             'all arguments except the last must be names')
     names = [arg.token.value for arg in args[:-1]]
+    body  = args[-1]
     
-    @function
     def lambda_function(*args):
         fscope = new_scope(scope)
         fscope['__args__'] = args
@@ -103,5 +127,6 @@ def lambda_(scope, args, ast):
             if name not in fscope:
                 fscope[name] = None
         return body(fscope)
+    lambda_function.name = 'lambda_function'
     
     return lambda_function

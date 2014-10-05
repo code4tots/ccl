@@ -11,6 +11,16 @@
 
 f 1.1
 
+= g $ \\ scope args {
+    print "inside g!"
+    print $ len scope
+    print $ scope.keys
+    print $ len args
+    print "exiting g"
+}
+
+g
+
 # $ = main $ window {
     
     frame {
@@ -18,3 +28,4 @@ f 1.1
 }
 
 print #
+print g
