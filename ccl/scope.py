@@ -3,7 +3,6 @@ global_scope['__scope__'] = global_scope
 global_scope['__global__'] = global_scope
 
 def find(scope, name):
-    original_scope = scope
     while name not in scope:
         scope = scope['__parent__']
     return scope
