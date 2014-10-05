@@ -5,7 +5,7 @@ tokens = tuple((t, re.compile(r)) for t, r in (
     ('String', r'\"(?:\\\"|[^"])*\"' '|' r"\'(?:\\\'|[^'])*\'"),
     ('Float' , r'\-?\d+\.\d*|\-?\.\d+'),
     ('Int'   , r'\-?\d+'),
-    ('Name'  , r'[0-9a-zA-Z_\\\-\+\*\/\<\>\=]+')) +
+    ('Name'  , r'[0-9a-zA-Z_\\\-\+\*\/\<\>\=\#]+')) +
     tuple((s, re.escape(s)) for s in literals))
 
 class Location(object):

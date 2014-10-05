@@ -63,3 +63,9 @@ class WrongNumberOfArguments(RuntimeException):
         super(WrongNumberOfArguments, self).__init__(
             ast,
             "Expected %s arguments but got %s" % (expected, got))
+
+class NotCallable(RuntimeException):
+    def __init__(self, ast, f):
+        super(NotCallable, self).__init__(
+            ast,
+            "%r is not callable" % (f,))

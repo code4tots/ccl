@@ -77,4 +77,9 @@ class Command(AbstractSyntaxTree):
     def __call__(self, scope):
         import ccl.exception as ex
         
-        return self.f(scope)(scope, self.args, self)
+        f = self.f(scope)
+        
+        if not callable(f):
+            raise ex.NotCallable(self, f)
+        
+        return f(scope, self.args, self)
