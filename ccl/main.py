@@ -1,5 +1,4 @@
-"""
-ccl.main
+"""ccl.main
 
 The 'engine' of the interpreter.
 
@@ -49,10 +48,13 @@ class Token(object):
     def location_string(self):
         begin = self.string.rfind('\n', 0, self.lex_position) + 1
         end = self.string.find('\n', self.lex_position + 1)
+        col = self.lex_position - begin
+        ind = ' ' * col
         if end == -1:
             end = len(self.string)
-        return 'In file %r on line %s:\n%s' % (
-            self.file_name, self.line_number, self.string[begin : end])
+        return 'In file %r on line %s:\n\n%s\n%s*\n' % (
+            self.file_name, self.line_number, self.string[begin : end],
+            ind)
 
 def lex(string, file_name = ''):
     s = string   # string to parse (aliased for convenience)
@@ -86,12 +88,19 @@ def parse(string, file_name = ''):
         return token
     
     def expect(t):
-        if lookahead[0].type == t:
-            raise SyntaxError()
+        if lookahead[0].type != t:
+            se = SyntaxError('expected %r but found %r' %
+                (t, lookahead[0].type))
+            se.ast_stack = [lookahead[0]]
+            raise se
         return next_token()
     
     def consume(t):
-        return lookahead[0].type == t
+        if lookahead[0].type != t:
+            se = SyntaxError('expected %r but found %r' %
+                )
+        return next_token()
+        
     
     def multiple(rule, skip_newlines):
         elements = []
@@ -157,16 +166,14 @@ def parse(string, file_name = ''):
 ### ast (abstract syntax tree)
 class AbstractSyntaxTree(object):
     def __call__(self, ctx):
-        try: return self.call(ctx)
-        except BaseException as e:
-            if not hasattr(e, 'ast_stack'):
-                e.ast_stack = []
-            e.ast_stack.append(self)
-            raise
+        return self.call(ctx)
 
 class TokenDisplay(AbstractSyntaxTree):
     def __init__(self, token):
         self.token = token
+    
+    def __str__(self):
+        return self.token.value
 
 class TokenLiteralDisplay(TokenDisplay):
     def __init__(self, token):
@@ -187,7 +194,10 @@ class IntDisplay(TokenLiteralDisplay):
 
 class NameDisplay(TokenDisplay):
     def call(self, ctx):
-        return context_lookup(ctx, self.token.value)
+        try: return context_lookup(ctx, self.token.value)
+        except KeyError as ke:
+            ke.ast_stack = [self]
+            raise
 
 class ListDisplay(AbstractSyntaxTree):
     def __init__(self, token, atoms):
@@ -196,6 +206,9 @@ class ListDisplay(AbstractSyntaxTree):
     
     def call(self, ctx):
         return [atom(ctx) for atom in self.atoms]
+    
+    def __iter__(self):
+        return iter(self.atoms)
 
 class Block(AbstractSyntaxTree):
     def __init__(self, token, commands):
@@ -226,9 +239,14 @@ class Command(AbstractSyntaxTree):
     def call(self, ctx):
         f = self.f(ctx)
         
-        return (
-            f(ctx, self.args) if isinstance(f, SpecialForm) else
-            f(*[arg(ctx) for arg in self.args]))
+        try:
+            return (
+                f(ctx, self.args) if isinstance(f, SpecialForm) else
+                f(*[arg(ctx) for arg in self.args]))
+        except Exception as e:
+            if hasattr(e, 'ast_stack') and len(e.ast_stack) == 0:
+                e.ast_stack.append(self)
+            raise
 
 class SpecialForm(object):
     def __init__(self, f):
@@ -240,16 +258,20 @@ class SpecialForm(object):
 ### context
 
 def context_find(ctx, name):
+    original_context = ctx
+    
     while name not in ctx and '__parent__' in ctx:
         ctx = ctx['__parent__']
+    
+    if name not in ctx:
+        ctx = original_context
+    
     return ctx
 
 def context_lookup(ctx, name):
     return context_find(ctx, name)[name]
 
-global_context = {
-    'print' : print
-}
+global_context = dict()
 global_context['__context__'] = global_context
 
 def new_context(parent = global_context):
@@ -257,22 +279,37 @@ def new_context(parent = global_context):
     context['__context__'] = context
     return context
 
+def register(name):
+    def wrapper(f):
+        global_context[name] = f
+        return f
+    return wrapper
+
+def raise_(exception):
+    exception.ast_stack = []
+    raise exception
+
 ### repl
 
-def execute(string, context = None, file_name = '<unnamed>'):
+def execute(string, context = None, file_name = '<string>'):
     if context is None:
         context = new_context()
     
     return parse(string, file_name)(context)
 
-def run(string):
-    try: execute(string)
+def run(string, file_name = '<unnamed>'):
+    try: execute(string, None, file_name)
     except Exception as e:
-        print(repr(e))
-        for ast in e.ast_stack:
-            print('%s: %s' %
-                (ast.__class__.__name__,
-                    ast.token.location_string()))
+        if hasattr(e, 'ast_stack'):
+            print(repr(e))
+            for ast in e.ast_stack:
+                print(ast.token.location_string())
+        else:
+            raise
+
+def run_file(path):
+    with open(path) as f:
+        run(f.read(), path)
 
 def partially_formed(string):
     inners = '([{'

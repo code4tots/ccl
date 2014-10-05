@@ -1,5 +1,4 @@
-from ccl import run, repl
+from ccl import run, repl, run_file
 from sys import argv
 
-with open(argv[1]) as f:
-    run(f.read())
+run_file(argv[1])
