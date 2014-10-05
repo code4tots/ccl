@@ -84,6 +84,8 @@ def parse(string, file_name = ''):
         from ccl.ast import Command
         f = atom()
         args = multiple(atom, skip_newlines=False)
+        if consume('$'):
+            args.append(command())
         return Command(f,args)
     
     atom.start_symbols = (

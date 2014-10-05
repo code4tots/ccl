@@ -1,6 +1,6 @@
 import re
 
-literals = '()[]{}.;\n'
+literals = '()[]{}.;$\n'
 tokens = tuple((t, re.compile(r)) for t, r in (
     ('String', r'\"(?:\\\"|[^"])*\"' '|' r"\'(?:\\\'|[^'])*\'"),
     ('Float' , r'\-?\d+\.\d*|\-?\.\d+'),
