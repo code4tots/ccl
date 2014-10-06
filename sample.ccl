@@ -19,10 +19,12 @@ f 1.1
     print "exiting g"
 }
 
+= hello-world "hello world!"
+
 g
 
 # $ = main $ window {
-    = f $ $ frame {
+    = f $ frame {
     }
 }
 
