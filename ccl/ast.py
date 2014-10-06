@@ -30,6 +30,9 @@ class NameDisplay(TokenDisplay):
         except KeyError:
             import ccl.exception as ex
             raise ex.KeyError(self, self.token.value)
+    
+    def __str__(self):
+        return self.token.value
 
 class ListDisplay(AbstractSyntaxTree):
     def __init__(self, token, atoms):
@@ -67,6 +70,9 @@ class AttributeDisplay(AbstractSyntaxTree):
             return getattr(self.atom(scope), self.name)
         except AttributeError:
             raise ex.AttributeError(self, value, self.name)
+    
+    def __str__(self):
+        return '%s.%s' % (self.atom, self.name)
 
 class Command(AbstractSyntaxTree):
     def __init__(self, f, args):

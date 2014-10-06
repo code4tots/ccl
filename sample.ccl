@@ -1,32 +1,3 @@
-# {
-    = [x y] [1 2]
-    = [y x] [x y]
-    print x
-    print y
-}
+= m $ python-import 'math'
 
-= f $ \ a b c {
-    print a b c
-}
-
-f 1.1
-
-= g $ \\ scope args {
-    print "inside g!"
-    print $ len scope
-    print $ scope.keys
-    print $ len args
-    print "exiting g"
-}
-
-= hello-world "hello world!"
-
-g
-
-# $ = main $ window {
-    = f $ frame {
-    }
-}
-
-print #
-print g
+print $ m.sqrt 12
