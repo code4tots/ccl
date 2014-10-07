@@ -11,7 +11,7 @@ def macro(scope, args, ast):
         raise ex.WrongNumberOfArguments(ast, expected=3, got=len(args))
     
     if not all(isinstance(arg, NameDisplay) for arg in args[:-1]):
-        raise ex.RuntimException(
+        raise ex.RuntimeException(
             ast,
             'all arguments except the last must be names')
     
@@ -23,7 +23,10 @@ def macro(scope, args, ast):
         mscope = new_scope(scope)
         for name, arg in zip(names, args):
             mscope[name] = arg
-        return body(mscope)
+        try:
+            return body(mscope)
+        except ex.ReturnException as e:
+            return e.return_value
     
     return macro_function
 
@@ -31,7 +34,7 @@ def macro(scope, args, ast):
 @SpecialForm
 def lambda_(scope, args, ast):
     if not all(isinstance(arg, NameDisplay) for arg in args[:-1]):
-        raise ex.RuntimException(
+        raise ex.RuntimeException(
             ast,
             'all arguments except the last must be names')
     names = [arg.token.value for arg in args[:-1]]
@@ -45,7 +48,10 @@ def lambda_(scope, args, ast):
         for name in names:
             if name not in fscope:
                 fscope[name] = None
-        return body(fscope)
+        try:
+            return body(fscope)
+        except ex.ReturnException as e:
+            return e.return_value
     lambda_function.name = 'lambda_function'
     
     return lambda_function

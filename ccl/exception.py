@@ -69,3 +69,11 @@ class NotCallable(RuntimeException):
         super(NotCallable, self).__init__(
             ast,
             "%r is not callable" % (f,))
+
+class ReturnException(RuntimeException):
+    def __init__(self, ast, return_value):
+        super(ReturnException, self).__init__(
+            ast,
+            "Returned %r outside of function" % (return_value,))
+        
+        self.return_value = return_value

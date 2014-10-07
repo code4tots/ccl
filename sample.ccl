@@ -1,6 +1,16 @@
-= m $ python-import 'math'
+= f $ \ a {
+    print "before return"
+    return $ a.__add__ 1
+    print "after return"
+}
 
-print $ m.sqrt 12
+= g $ \\ scope args {
+    print "before return"
+    return $ len args
+    print "fater return"
+}
 
-
-and (or (print 1) 2) (print 2)
+print $ f 5.5
+print $ g {
+    
+}

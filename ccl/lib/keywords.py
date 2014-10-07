@@ -25,3 +25,13 @@ def or_(scope, args, ast):
     lhs = lhs(scope)
     return lhs if lhs else rhs(scope)
 
+@register('return')
+@SpecialForm
+def return_(scope, args, ast):
+    if len(args) != 1:
+        raise ex.WrongNumberOfArguments(ast, expected=1, got=len(args))
+    
+    return_value = args[0](scope)
+    
+    raise ex.ReturnException(ast, return_value)
+
