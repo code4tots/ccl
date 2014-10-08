@@ -35,3 +35,16 @@ def return_(scope, args, ast):
     
     raise ex.ReturnException(ast, return_value)
 
+@register('while')
+@SpecialForm
+def while_(scope, args, ast):
+    if len(args) != 2:
+        raise ex.WrongNumberOfArguments(ast, expected=2, got=len(args))
+    
+    condition, body = args
+    last = None
+    
+    while condition(scope):
+        last = body(scope)
+    
+    return last

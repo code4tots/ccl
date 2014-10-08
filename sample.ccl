@@ -1,16 +1,8 @@
-= f $ \ a {
-    print "before return"
-    return $ a.__add__ 1
-    print "after return"
+= f $ \ n {
+    while (n.__gt__ 0) {
+        => n $ n.__sub__ 1
+        print n
+    }
 }
 
-= g $ \\ scope args {
-    print "before return"
-    return $ len args
-    print "fater return"
-}
-
-print $ f 5.5
-print $ g {
-    
-}
+f 10
