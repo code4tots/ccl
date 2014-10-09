@@ -44,7 +44,18 @@ def while_(scope, args, ast):
     condition, body = args
     last = None
     
-    while condition(scope):
-        last = body(scope)
+    try:
+        while condition(scope):
+            last = body(scope)
+    except ex.BreakException:
+        pass
     
     return last
+
+@register('break')
+@SpecialForm
+def break_(scope, args, ast):
+    if len(args) != 0:
+        raise ex.WrongNumberOfArguments(ast, expected=0, got=len(args))
+    
+    raise ex.BreakException(ast)

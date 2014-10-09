@@ -1,8 +1,16 @@
-= f $ \ n {
-    while (n.__gt__ 0) {
-        => n $ n.__sub__ 1
-        print n
-    }
+print "before loop"
+
+= x 0
+
+while True {
+
+    print x
+    
+    = x (x.__add__ 1)
+    break
+    
+    # if (x.__eq__ 10) break
 }
 
-f 10
+print "after loop"
+
