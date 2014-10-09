@@ -59,3 +59,22 @@ def break_(scope, args, ast):
         raise ex.WrongNumberOfArguments(ast, expected=0, got=len(args))
     
     raise ex.BreakException(ast)
+
+@register('if')
+@SpecialForm
+def if_(scope, args, ast):
+    if len(args) not in (2, 3):
+        raise ex.WrongNumberOfArguments(ast, expected=(2,3), got=len(args))
+    
+    if len(args) == 2:
+        condition, ifbody = args
+        elsebody = None
+    
+    else:
+        condition, ifbody, elsebody = args
+    
+    if condition(scope):
+        return ifbody(scope)
+    elif elsebody is not None:
+        return elsebody(scope)
+

@@ -3,13 +3,8 @@ print "before loop"
 = x 0
 
 while True {
-
-    print x
-    
     = x (x.__add__ 1)
-    break
-    
-    # if (x.__eq__ 10) break
+    if (x.__eq__ 10) (break) $ print x
 }
 
 print "after loop"
