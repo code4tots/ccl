@@ -1,1 +1,5 @@
-print tkinter
+try {
+    print $ 1.__add__ '1'
+} Exception e {
+    print 'inside exception handler'
+}

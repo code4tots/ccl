@@ -78,3 +78,19 @@ def if_(scope, args, ast):
     elif elsebody is not None:
         return elsebody(scope)
 
+@register('try')
+@SpecialForm
+def try_(scope, args, ast):
+    if len(args) != 4:
+        raise ex.WrongNumberOfArguments(ast, expected=4, got=len(args))
+    
+    tryblock, etype, ename, elseblock = args
+    
+    etype = etype(scope)
+    ename = str(ename)
+    
+    try:
+        return tryblock(scope)
+    except etype as e:
+        scope[ename] = e
+        return elseblock(scope)

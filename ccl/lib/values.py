@@ -16,6 +16,8 @@ global_scope.update({
     'dict'  : dict,
     'set'   : set,
     
+    'Exception' : Exception,
+    
     'print'       : print,
     'len'         : len,
     
