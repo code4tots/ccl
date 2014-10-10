@@ -1,11 +1,1 @@
-print "before loop"
-
-= x 0
-
-while True {
-    = x (x.__add__ 1)
-    if (x.__eq__ 10) (break) $ print x
-}
-
-print "after loop"
-
+print tkinter
