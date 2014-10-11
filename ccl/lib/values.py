@@ -29,5 +29,7 @@ global_scope.update({
     'chr'         : chr,
     'classmethod' : classmethod,
     
-    'python-import' : import_module
+    'python-import' : import_module,
+    
+    'ImportError' : ImportError,
     })
