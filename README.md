@@ -44,26 +44,6 @@ Notes
 
 * The macro semantics is different from Commom Lisp.
 
-* 
-
-Philosophy
-==========
-
-* Be as strict as possible without hindering expressiveness.
-
-
-Rules/Wishlists
-==============
-
-A list of rules and goals that are consequences of my philosophy
-
-* Easy to 'do things'.
-
-    This is my number one reason for even working on this language.
-    
-    I want 
-    
-
 * Eventually, I want to move to static typing.
 
     My difficulty with static typing is two-folds. The first is that
