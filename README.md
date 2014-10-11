@@ -2,6 +2,49 @@ Computer Command Language
 
 A programming language with a very simple execution model
 
+Currently executable sample in 'sample.ccl'
+
+
+Goals and Philosophy
+====================
+
+* Make it conceptually easy for even casual computer users to make effective use of the language.
+
+    For instance, perhaps in the future, code like this could run:
+    
+        w = window {
+            
+            title = make-title "my videos"
+            
+            chart = make-pie-chart [
+                ['facebook-likes', 15],
+                ['retweets',       20]]
+            
+            like-button = make-button {
+                title = "like"
+                on-button-click = \ event {
+                    chart.count 'facebook-likes' += 1
+                }
+            }
+            
+            retweet-button = make-button {
+                title = "retweet"
+                on-button-click = \ event {
+                    chart.count 'rewteets' += 1
+                }
+            }
+        }
+        
+        
+
+Notes
+=====
+
+* I am considering migrating to OCaml for implementation.
+
+* The macro semantics is different from Commom Lisp.
+
+* 
 
 Philosophy
 ==========
@@ -13,6 +56,13 @@ Rules/Wishlists
 ==============
 
 A list of rules and goals that are consequences of my philosophy
+
+* Easy to 'do things'.
+
+    This is my number one reason for even working on this language.
+    
+    I want 
+    
 
 * Eventually, I want to move to static typing.
 
