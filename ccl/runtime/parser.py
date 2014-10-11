@@ -1,9 +1,13 @@
 """parser.py
 ccl has LL(1) grammar
 """
+class ParseError(Exception):
+    def __init__(self, message, token):
+        self.message = message
+
 def parse(string, file_name = ''):
     from ccl.exception import UnexpectedToken, ExpectedAtom
-    from ccl.lexer import lex
+    from ccl.runtime.lexer import lex
     
     generator = lex(string, file_name)
     lookahead = [next(generator)]

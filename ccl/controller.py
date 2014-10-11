@@ -2,11 +2,6 @@ import ccl.exception as ex
 from ccl.scope import global_scope, new_scope
 from ccl.parser import parse
 
-# Make sure the standard library is loaded
-# ccl.libccl is NOT loaded -- this is the part of the standard
-# library written in ccl itself. This is loaded in __init__
-import ccl.lib
-
 def run(string, file_name = '', scope = None):
     if scope is None:
         scope = new_scope(global_scope)

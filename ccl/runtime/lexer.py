@@ -8,6 +8,15 @@ tokens = tuple((t, re.compile(r)) for t, r in (
     ('Name'  , r'[0-9a-zA-Z_\\\-\+\*\/\<\>\=\#]+')) +
     tuple((s, re.escape(s)) for s in literals))
 
+class LexerError(Exception):
+    def __init__(self, token):
+        self.token = token
+        self.message = "%s\n%s" % (
+            "Unrecognized token %r" % (token,),
+            self.token.location)
+        
+        super(LexerError, self).__init__(message)
+
 class Location(object):
     def __init__(self, string, position, line_number, file_name):
         self.string = string
@@ -56,7 +65,6 @@ class Token(object):
         return '(%r,%r)' % (self.type, self.value)
 
 def lex(string, file_name = ''):
-    from ccl.exception import UnrecognizedToken
     s = string    # string to parse (aliased for convenience)
     f = file_name # file name
     i = 0         # current lex position
@@ -79,6 +87,6 @@ def lex(string, file_name = ''):
         else:
             m = re.compile(r'\S*').match(s, i)
             g = m.group()
-            raise UnrecognizedToken(Token(None, g, current_location()))
+            raise LexerError(Token(None, g, current_location()))
         while i < len(s) and s[i] in ' \t': i += 1
     yield Token(None, None, current_location())
