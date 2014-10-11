@@ -22,8 +22,8 @@ A list of rules and goals that are consequences of my philosophy
     typing.
     
     Secondly, and more fundamentally, I am still not finished designing
-    the type system. Ideally, I would like to have Haskell-like
-    typeclasses and type inferencing while still permitting mutations
+    the type system. Ideally, I would like to have OCaml-style type
+    inferencing while still permitting mutations
     like in a procedural language. The extent to which this is even
     theoretically possible is something I need to study and think more about.
 
