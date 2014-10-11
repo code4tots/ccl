@@ -11,6 +11,7 @@ global_scope.update({
     'True'  : True,
     'False' : False,
     
+    'str'   : str,
     'list'  : list,
     'tuple' : tuple,
     'dict'  : dict,
@@ -20,6 +21,8 @@ global_scope.update({
     
     'print'       : print,
     'len'         : len,
+    
+    'max'         : max,
     
     'abs'         : abs,
     'all'         : all,

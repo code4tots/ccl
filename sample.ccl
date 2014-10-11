@@ -1,5 +1,16 @@
-window W {
+print if
+print while
 
-    
-    
+print $ 1 .__add__ 2
+
+= pass-1-2-3 $ \ f {
+    print $ "The result is: " .__add__ $ str $ f 1 2 3
 }
+
+print "Passing 'max' to 'pass-1-2-3'"
+pass-1-2-3 max
+print
+
+print "Passing 'if' to 'pass-1-2-3'"
+pass-1-2-3 if
+print
