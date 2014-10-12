@@ -4,7 +4,7 @@
 PythonBaseException = BaseException
 PythonException = Exception
 
-### Scope
+### Scope utilities
 
 global_scope = dict()
 global_scope['__global__'] = global_scope

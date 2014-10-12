@@ -1,75 +1,33 @@
-class AbstractSyntaxTree(object):
-    pass
+import ccl.runtime.corelib as cl
 
-class TokenDisplay(AbstractSyntaxTree):
-    def __init__(self, token):
-        self.token = token
+class AbstractSyntaxTree(cl.Object):
+    def __init__(self, cst):
+        self.cst = cst
 
-class TokenLiteralDisplay(TokenDisplay):
-    def __init__(self, token):
-        self.token = token
-        self.value = self.convert(token.value)
+class ConstantDisplay(AbstractSyntaxTree):
+    def __init__(self, cst, value):
+        super(ConstantDisplay, self).__init__(cst)
+        self.value = value
     
     def __call__(self, scope):
         return self.value
 
-class StringDisplay(TokenLiteralDisplay):
-    convert = eval
-
-class FloatDisplay(TokenLiteralDisplay):
-    convert = float
-
-class IntDisplay(TokenLiteralDisplay):
-    convert = int
-
-class NameDisplay(TokenDisplay):
-    def __call__(self, scope):
-        from ccl.runtime.corelib import lookup
-        return lookup(self, scope, self.token.value)
-    
-    def __str__(self):
-        return self.token.value
-
-class ListDisplay(AbstractSyntaxTree):
-    def __init__(self, token, atoms):
-        self.token = token
-        self.atoms = atoms
-    
-    def __call__(self, scope):
-        return [atom(scope) for atom in self.atoms]
-    
-    def __iter__(self):
-        return iter(self.atoms)
-
 class Block(AbstractSyntaxTree):
-    def __init__(self, token, commands):
-        self.token = token
+    def __init__(self, cst, commands):
+        super(Block, self).__init__(cst)
         self.commands = commands
     
     def __call__(self, scope):
-        last = None
+        last = cl.none
         for command in self.commands:
             last = command(scope)
         return last
 
-class AttributeDisplay(AbstractSyntaxTree):
-    def __init__(self, atom, name):
-        self.token = atom.token
-        self.atom = atom
-        self.name = name
-    
-    def __call__(self, scope):
-        from ccl.runtime.corelib import get_attribute
-        return get_attribute(self, self.atom(scope), self.name)
-    
-    def __str__(self):
-        return '%s.%s' % (self.atom, self.name)
-
 class Command(AbstractSyntaxTree):
-    def __init__(self, f, args):
-        self.token = f.token
+    def __init__(self, cst, f, args):
+        super(Command, self).__init__(cst)
         self.f = f
         self.args = args
     
     def __call__(self, scope):
-        return self.f(scope)(scope, self.args, self)
+        return self.f(self, scope, self.args)

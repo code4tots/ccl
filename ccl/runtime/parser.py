@@ -1,14 +1,33 @@
 """parser.py
 ccl has LL(1) grammar
 """
+import ccl.runtime.cst
+from ccl.runtime.lexer import lex
+
 class ParseError(Exception):
     def __init__(self, message, token):
         self.message = message
+        self.token = token
+    
+    def __str__(self):
+        return "%s\n%s" % (
+            self.message,
+            self.token.location)
+
+class UnexpectedToken(ParseError):
+    def __init__(self, token, expected):
+        super(UnexpectedToken, self).__init__(
+            "Expected %r but got %r" % (expected, token),
+            token)
+
+class ExpectedAtom(ParseError):
+    def __init__(self, token):
+        super(ExpectedAtom, self).__init__(
+            "Expected an atom, but atoms don't start with %r" %
+                (token,),
+            token)
 
 def parse(string, file_name = ''):
-    from ccl.exception import UnexpectedToken, ExpectedAtom
-    from ccl.runtime.lexer import lex
-    
     generator = lex(string, file_name)
     lookahead = [next(generator)]
     
@@ -45,8 +64,6 @@ def parse(string, file_name = ''):
             next_token()
     
     def all_():
-        from ccl.lexer import Token, Location
-        from ccl.ast import Block
         return Block(
             Token(None, None, Location(string, 0, 1, file_name)),
             multiple(command, skip_newlines=True))
