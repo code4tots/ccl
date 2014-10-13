@@ -5,7 +5,6 @@ A programming language with a very simple execution model
 Currently executable sample in 'sample.ccl'
 
 
-
 Goals and Philosophy
 ====================
 
