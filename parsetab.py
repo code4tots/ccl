@@ -5,9 +5,9 @@ _tabversion = '3.2'
 
 _lr_method = 'LALR'
 
-_lr_signature = b"\xbbt\x1eo/q\x0c\xc7{\x92bk\x18$'P"
+_lr_signature = b"\xdb'\xee\x07@\xee\xc8di\x13L\x8f\x9ej!\xc1"
     
-_lr_action_items = {'$end':([0,1,2,3,4,5,6,7,8,11,12,15,16,17,],[-8,-13,0,-9,-1,-11,-2,-3,-10,-4,-7,-12,-5,-6,]),'NEWLINE':([0,1,3,4,5,6,7,8,9,11,12,13,15,16,17,],[-8,3,-9,-1,-11,-2,-3,-10,-8,-4,-7,3,-12,-5,-6,]),'INT':([3,4,5,6,7,10,11,12,14,15,16,17,],[6,-1,-11,-2,-3,-11,-4,6,6,-12,-5,-6,]),'FLOAT':([3,4,5,6,7,10,11,12,14,15,16,17,],[7,-1,-11,-2,-3,-11,-4,7,7,-12,-5,-6,]),'}':([3,4,5,6,7,8,9,11,12,13,15,16,17,],[-9,-1,-11,-2,-3,-10,-8,-4,-7,16,-12,-5,-6,]),'{':([3,4,5,6,7,10,11,12,14,15,16,17,],[9,-1,-11,-2,-3,-11,-4,9,9,-12,-5,-6,]),'[':([3,4,5,6,7,10,11,12,14,15,16,17,],[10,-1,-11,-2,-3,-11,-4,10,10,-12,-5,-6,]),'NAME':([3,4,5,6,7,10,11,12,14,15,16,17,],[11,-1,-11,-2,-3,-11,-4,11,11,-12,-5,-6,]),'STRING':([3,4,5,6,7,10,11,12,14,15,16,17,],[4,-1,-11,-2,-3,-11,-4,4,4,-12,-5,-6,]),']':([4,6,7,10,11,14,15,16,17,],[-1,-2,-3,-11,-4,17,-12,-5,-6,]),}
+_lr_action_items = {'.':([4,6,7,10,11,17,18,19,20,21,],[-3,13,-4,-2,-1,-7,13,-8,-5,-6,]),'$end':([0,1,2,3,4,6,7,8,10,11,14,17,18,19,20,21,],[-10,-15,0,-11,-3,-13,-4,-12,-2,-1,-9,-7,-14,-8,-5,-6,]),'{':([3,4,5,6,7,9,10,11,12,14,17,18,19,20,21,],[9,-3,-13,-13,-4,9,-2,-1,9,9,-7,-14,-8,-5,-6,]),'INT':([3,4,5,6,7,9,10,11,12,14,17,18,19,20,21,],[10,-3,-13,-13,-4,10,-2,-1,10,10,-7,-14,-8,-5,-6,]),'}':([3,4,6,7,8,9,10,11,14,15,16,17,18,19,20,21,],[-11,-3,-13,-4,-12,-10,-2,-1,-9,20,21,-7,-14,-8,-5,-6,]),'FLOAT':([3,4,5,6,7,9,10,11,12,14,17,18,19,20,21,],[4,-3,-13,-13,-4,4,-2,-1,4,4,-7,-14,-8,-5,-6,]),']':([4,5,7,10,11,12,17,18,19,20,21,],[-3,-13,-4,-2,-1,17,-7,-14,-8,-5,-6,]),'NEWLINE':([0,1,3,4,6,7,8,9,10,11,14,15,17,18,19,20,21,],[-10,3,-11,-3,-13,-4,-12,-10,-2,-1,-9,3,-7,-14,-8,-5,-6,]),'STRING':([3,4,5,6,7,9,10,11,12,14,17,18,19,20,21,],[11,-3,-13,-13,-4,11,-2,-1,11,11,-7,-14,-8,-5,-6,]),'[':([3,4,5,6,7,9,10,11,12,14,17,18,19,20,21,],[5,-3,-13,-13,-4,5,-2,-1,5,5,-7,-14,-8,-5,-6,]),'NAME':([3,4,5,6,7,9,10,11,12,13,14,17,18,19,20,21,],[7,-3,-13,-13,-4,7,-2,-1,7,19,7,-7,-14,-8,-5,-6,]),}
 
 _lr_action = { }
 for _k, _v in _lr_action_items.items():
@@ -16,7 +16,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'command_list':([0,9,],[1,13,]),'command':([3,],[8,]),'atom':([3,12,14,],[5,15,15,]),'all':([0,],[2,]),'atom_list':([5,10,],[12,14,]),}
+_lr_goto_items = {'command_list':([0,9,],[1,15,]),'all':([0,],[2,]),'command':([3,9,],[8,16,]),'atom':([3,9,12,14,],[6,6,18,18,]),'atom_list':([5,6,],[12,14,]),}
 
 _lr_goto = { }
 for _k, _v in _lr_goto_items.items():
@@ -26,17 +26,19 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> all","S'",1,None,None,None),
-  ('atom -> STRING','atom',1,'p_token_atom','ccl\\runtime.py',90),
-  ('atom -> INT','atom',1,'p_token_atom','ccl\\runtime.py',91),
-  ('atom -> FLOAT','atom',1,'p_token_atom','ccl\\runtime.py',92),
-  ('atom -> NAME','atom',1,'p_token_atom','ccl\\runtime.py',93),
-  ('atom -> { command_list }','atom',3,'p_block','ccl\\runtime.py',97),
-  ('atom -> [ atom_list ]','atom',3,'p_list','ccl\\runtime.py',101),
-  ('command -> atom atom_list','command',2,'p_command','ccl\\runtime.py',105),
-  ('command_list -> <empty>','command_list',0,'p_empty_command_list','ccl\\runtime.py',109),
-  ('command_list -> command_list NEWLINE','command_list',2,'p_command_list_with_newline','ccl\\runtime.py',113),
-  ('command_list -> command_list NEWLINE command','command_list',3,'p_command_list','ccl\\runtime.py',117),
-  ('atom_list -> <empty>','atom_list',0,'p_empty_atom_list','ccl\\runtime.py',122),
-  ('atom_list -> atom_list atom','atom_list',2,'p_atom_list','ccl\\runtime.py',126),
-  ('all -> command_list','all',1,'p_all','ccl\\runtime.py',131),
+  ('atom -> STRING','atom',1,'p_token_atom','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',104),
+  ('atom -> INT','atom',1,'p_token_atom','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',105),
+  ('atom -> FLOAT','atom',1,'p_token_atom','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',106),
+  ('atom -> NAME','atom',1,'p_token_atom','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',107),
+  ('atom -> { command_list }','atom',3,'p_block','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',111),
+  ('atom -> { command }','atom',3,'p_singleton_block','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',115),
+  ('atom -> [ atom_list ]','atom',3,'p_list','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',119),
+  ('atom -> atom . NAME','atom',3,'p_attribute','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',123),
+  ('command -> atom atom_list','command',2,'p_command','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',129),
+  ('command_list -> <empty>','command_list',0,'p_empty_command_list','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',133),
+  ('command_list -> command_list NEWLINE','command_list',2,'p_command_list_with_newline','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',137),
+  ('command_list -> command_list NEWLINE command','command_list',3,'p_command_list','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',141),
+  ('atom_list -> <empty>','atom_list',0,'p_empty_atom_list','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',146),
+  ('atom_list -> atom_list atom','atom_list',2,'p_atom_list','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',150),
+  ('all -> command_list','all',1,'p_all','C:\\Users\\math4tots\\Documents\\GitHub\\ccl\\ccl\\runtime.py',155),
 ]

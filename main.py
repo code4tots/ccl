@@ -1,4 +1,3 @@
-from ccl import run_file
-from sys import argv
+from ccl.runtime import main
+main()
 
-run_file(argv[1])

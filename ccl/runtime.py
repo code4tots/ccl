@@ -1,3 +1,13 @@
+class SpecialForm(object):
+    """Marker for functions that are passed scope and argument list
+    rather than evaluated arguments.
+    """
+    def __init__(self, f):
+        self.f = f
+    
+    def __call__(self, scope, args):
+        return self.f(scope, args)
+
 class Location(object):
     def __init__(self, filename, string, lexpos, lineno):
         self.string = string
@@ -29,7 +39,7 @@ class NameDisplay(Display):
         return scope
     
     def __call__(self, scope):
-        return self.find(scope)[name]
+        return self.find(scope)[self.name]
 
 class CommandDisplay(Display):
     def __init__(self, f, args):
@@ -42,9 +52,6 @@ class CommandDisplay(Display):
             return f(scope, self.args)
         else:
             return f(*[arg(scope) for arg in self.args])
-        return (
-            f(scope, self.args) if isinstance(f, SpecialForm) else
-            f(*[arg(scope) for arg in self.args]))
 
 class ListDisplay(Display):
     def __init__(self, atoms):
@@ -104,9 +111,19 @@ def p_block(p):
     "atom : '{' command_list '}'"
     p[0] = BlockDisplay(p[2])
 
+def p_singleton_block(p):
+    "atom : '{' command '}'"
+    p[0] = BlockDisplay([p[2]])
+
 def p_list(p):
     "atom : '[' atom_list ']'"
     p[0] = ListDisplay(p[2])
+
+def p_attribute(p):
+    "atom : atom '.' NAME"
+    p[0] = CommandDisplay(
+        NameDisplay('getattr'),
+        (p[1],LiteralDisplay(p[3].name)))
 
 def p_command(p):
     'command : atom atom_list'
@@ -145,9 +162,17 @@ parser = yacc.yacc()
 def parse(string):
     return parser.parse(string, lexer=lexer)
 
+def main():
+    from ccl.pylib import builtin_scope
+    parse('''
+
+let x [1 2 3]
+print x
+let y 77
+print [x y]
+print {[1 2].__len__}
+
+''')(builtin_scope)
+
 if __name__ == '__main__':
-    print(parse('''
-
-len [1 2 3]
-
-'''))
+    main()
