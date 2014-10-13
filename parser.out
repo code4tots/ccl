@@ -1,0 +1,317 @@
+Created by PLY version 3.4 (http://www.dabeaz.com/ply)
+
+Grammar
+
+Rule 0     S' -> all
+Rule 1     atom -> STRING
+Rule 2     atom -> INT
+Rule 3     atom -> FLOAT
+Rule 4     atom -> NAME
+Rule 5     atom -> { command_list }
+Rule 6     atom -> [ atom_list ]
+Rule 7     command -> atom atom_list
+Rule 8     command_list -> <empty>
+Rule 9     command_list -> command_list NEWLINE
+Rule 10    command_list -> command_list NEWLINE command
+Rule 11    atom_list -> <empty>
+Rule 12    atom_list -> atom_list atom
+Rule 13    all -> command_list
+
+Terminals, with rules where they appear
+
+FLOAT                : 3
+INT                  : 2
+NAME                 : 4
+NEWLINE              : 9 10
+STRING               : 1
+[                    : 6
+]                    : 6
+error                : 
+{                    : 5
+}                    : 5
+
+Nonterminals, with rules where they appear
+
+all                  : 0
+atom                 : 7 12
+atom_list            : 6 7 12
+command              : 10
+command_list         : 5 9 10 13
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . all
+    (13) all -> . command_list
+    (8) command_list -> .
+    (9) command_list -> . command_list NEWLINE
+    (10) command_list -> . command_list NEWLINE command
+
+    NEWLINE         reduce using rule 8 (command_list -> .)
+    $end            reduce using rule 8 (command_list -> .)
+
+    command_list                   shift and go to state 1
+    all                            shift and go to state 2
+
+state 1
+
+    (13) all -> command_list .
+    (9) command_list -> command_list . NEWLINE
+    (10) command_list -> command_list . NEWLINE command
+
+    $end            reduce using rule 13 (all -> command_list .)
+    NEWLINE         shift and go to state 3
+
+
+state 2
+
+    (0) S' -> all .
+
+
+
+state 3
+
+    (9) command_list -> command_list NEWLINE .
+    (10) command_list -> command_list NEWLINE . command
+    (7) command -> . atom atom_list
+    (1) atom -> . STRING
+    (2) atom -> . INT
+    (3) atom -> . FLOAT
+    (4) atom -> . NAME
+    (5) atom -> . { command_list }
+    (6) atom -> . [ atom_list ]
+
+    }               reduce using rule 9 (command_list -> command_list NEWLINE .)
+    NEWLINE         reduce using rule 9 (command_list -> command_list NEWLINE .)
+    $end            reduce using rule 9 (command_list -> command_list NEWLINE .)
+    STRING          shift and go to state 4
+    INT             shift and go to state 6
+    FLOAT           shift and go to state 7
+    NAME            shift and go to state 11
+    {               shift and go to state 9
+    [               shift and go to state 10
+
+    atom                           shift and go to state 5
+    command                        shift and go to state 8
+
+state 4
+
+    (1) atom -> STRING .
+
+    STRING          reduce using rule 1 (atom -> STRING .)
+    INT             reduce using rule 1 (atom -> STRING .)
+    FLOAT           reduce using rule 1 (atom -> STRING .)
+    NAME            reduce using rule 1 (atom -> STRING .)
+    {               reduce using rule 1 (atom -> STRING .)
+    [               reduce using rule 1 (atom -> STRING .)
+    NEWLINE         reduce using rule 1 (atom -> STRING .)
+    $end            reduce using rule 1 (atom -> STRING .)
+    }               reduce using rule 1 (atom -> STRING .)
+    ]               reduce using rule 1 (atom -> STRING .)
+
+
+state 5
+
+    (7) command -> atom . atom_list
+    (11) atom_list -> .
+    (12) atom_list -> . atom_list atom
+
+    STRING          reduce using rule 11 (atom_list -> .)
+    INT             reduce using rule 11 (atom_list -> .)
+    FLOAT           reduce using rule 11 (atom_list -> .)
+    NAME            reduce using rule 11 (atom_list -> .)
+    {               reduce using rule 11 (atom_list -> .)
+    [               reduce using rule 11 (atom_list -> .)
+    NEWLINE         reduce using rule 11 (atom_list -> .)
+    $end            reduce using rule 11 (atom_list -> .)
+    }               reduce using rule 11 (atom_list -> .)
+
+    atom_list                      shift and go to state 12
+
+state 6
+
+    (2) atom -> INT .
+
+    STRING          reduce using rule 2 (atom -> INT .)
+    INT             reduce using rule 2 (atom -> INT .)
+    FLOAT           reduce using rule 2 (atom -> INT .)
+    NAME            reduce using rule 2 (atom -> INT .)
+    {               reduce using rule 2 (atom -> INT .)
+    [               reduce using rule 2 (atom -> INT .)
+    NEWLINE         reduce using rule 2 (atom -> INT .)
+    $end            reduce using rule 2 (atom -> INT .)
+    }               reduce using rule 2 (atom -> INT .)
+    ]               reduce using rule 2 (atom -> INT .)
+
+
+state 7
+
+    (3) atom -> FLOAT .
+
+    STRING          reduce using rule 3 (atom -> FLOAT .)
+    INT             reduce using rule 3 (atom -> FLOAT .)
+    FLOAT           reduce using rule 3 (atom -> FLOAT .)
+    NAME            reduce using rule 3 (atom -> FLOAT .)
+    {               reduce using rule 3 (atom -> FLOAT .)
+    [               reduce using rule 3 (atom -> FLOAT .)
+    NEWLINE         reduce using rule 3 (atom -> FLOAT .)
+    $end            reduce using rule 3 (atom -> FLOAT .)
+    }               reduce using rule 3 (atom -> FLOAT .)
+    ]               reduce using rule 3 (atom -> FLOAT .)
+
+
+state 8
+
+    (10) command_list -> command_list NEWLINE command .
+
+    }               reduce using rule 10 (command_list -> command_list NEWLINE command .)
+    NEWLINE         reduce using rule 10 (command_list -> command_list NEWLINE command .)
+    $end            reduce using rule 10 (command_list -> command_list NEWLINE command .)
+
+
+state 9
+
+    (5) atom -> { . command_list }
+    (8) command_list -> .
+    (9) command_list -> . command_list NEWLINE
+    (10) command_list -> . command_list NEWLINE command
+
+    }               reduce using rule 8 (command_list -> .)
+    NEWLINE         reduce using rule 8 (command_list -> .)
+
+    command_list                   shift and go to state 13
+
+state 10
+
+    (6) atom -> [ . atom_list ]
+    (11) atom_list -> .
+    (12) atom_list -> . atom_list atom
+
+    ]               reduce using rule 11 (atom_list -> .)
+    STRING          reduce using rule 11 (atom_list -> .)
+    INT             reduce using rule 11 (atom_list -> .)
+    FLOAT           reduce using rule 11 (atom_list -> .)
+    NAME            reduce using rule 11 (atom_list -> .)
+    {               reduce using rule 11 (atom_list -> .)
+    [               reduce using rule 11 (atom_list -> .)
+
+    atom_list                      shift and go to state 14
+
+state 11
+
+    (4) atom -> NAME .
+
+    STRING          reduce using rule 4 (atom -> NAME .)
+    INT             reduce using rule 4 (atom -> NAME .)
+    FLOAT           reduce using rule 4 (atom -> NAME .)
+    NAME            reduce using rule 4 (atom -> NAME .)
+    {               reduce using rule 4 (atom -> NAME .)
+    [               reduce using rule 4 (atom -> NAME .)
+    NEWLINE         reduce using rule 4 (atom -> NAME .)
+    $end            reduce using rule 4 (atom -> NAME .)
+    }               reduce using rule 4 (atom -> NAME .)
+    ]               reduce using rule 4 (atom -> NAME .)
+
+
+state 12
+
+    (7) command -> atom atom_list .
+    (12) atom_list -> atom_list . atom
+    (1) atom -> . STRING
+    (2) atom -> . INT
+    (3) atom -> . FLOAT
+    (4) atom -> . NAME
+    (5) atom -> . { command_list }
+    (6) atom -> . [ atom_list ]
+
+    NEWLINE         reduce using rule 7 (command -> atom atom_list .)
+    $end            reduce using rule 7 (command -> atom atom_list .)
+    }               reduce using rule 7 (command -> atom atom_list .)
+    STRING          shift and go to state 4
+    INT             shift and go to state 6
+    FLOAT           shift and go to state 7
+    NAME            shift and go to state 11
+    {               shift and go to state 9
+    [               shift and go to state 10
+
+    atom                           shift and go to state 15
+
+state 13
+
+    (5) atom -> { command_list . }
+    (9) command_list -> command_list . NEWLINE
+    (10) command_list -> command_list . NEWLINE command
+
+    }               shift and go to state 16
+    NEWLINE         shift and go to state 3
+
+
+state 14
+
+    (6) atom -> [ atom_list . ]
+    (12) atom_list -> atom_list . atom
+    (1) atom -> . STRING
+    (2) atom -> . INT
+    (3) atom -> . FLOAT
+    (4) atom -> . NAME
+    (5) atom -> . { command_list }
+    (6) atom -> . [ atom_list ]
+
+    ]               shift and go to state 17
+    STRING          shift and go to state 4
+    INT             shift and go to state 6
+    FLOAT           shift and go to state 7
+    NAME            shift and go to state 11
+    {               shift and go to state 9
+    [               shift and go to state 10
+
+    atom                           shift and go to state 15
+
+state 15
+
+    (12) atom_list -> atom_list atom .
+
+    ]               reduce using rule 12 (atom_list -> atom_list atom .)
+    STRING          reduce using rule 12 (atom_list -> atom_list atom .)
+    INT             reduce using rule 12 (atom_list -> atom_list atom .)
+    FLOAT           reduce using rule 12 (atom_list -> atom_list atom .)
+    NAME            reduce using rule 12 (atom_list -> atom_list atom .)
+    {               reduce using rule 12 (atom_list -> atom_list atom .)
+    [               reduce using rule 12 (atom_list -> atom_list atom .)
+    NEWLINE         reduce using rule 12 (atom_list -> atom_list atom .)
+    $end            reduce using rule 12 (atom_list -> atom_list atom .)
+    }               reduce using rule 12 (atom_list -> atom_list atom .)
+
+
+state 16
+
+    (5) atom -> { command_list } .
+
+    STRING          reduce using rule 5 (atom -> { command_list } .)
+    INT             reduce using rule 5 (atom -> { command_list } .)
+    FLOAT           reduce using rule 5 (atom -> { command_list } .)
+    NAME            reduce using rule 5 (atom -> { command_list } .)
+    {               reduce using rule 5 (atom -> { command_list } .)
+    [               reduce using rule 5 (atom -> { command_list } .)
+    NEWLINE         reduce using rule 5 (atom -> { command_list } .)
+    $end            reduce using rule 5 (atom -> { command_list } .)
+    }               reduce using rule 5 (atom -> { command_list } .)
+    ]               reduce using rule 5 (atom -> { command_list } .)
+
+
+state 17
+
+    (6) atom -> [ atom_list ] .
+
+    STRING          reduce using rule 6 (atom -> [ atom_list ] .)
+    INT             reduce using rule 6 (atom -> [ atom_list ] .)
+    FLOAT           reduce using rule 6 (atom -> [ atom_list ] .)
+    NAME            reduce using rule 6 (atom -> [ atom_list ] .)
+    {               reduce using rule 6 (atom -> [ atom_list ] .)
+    [               reduce using rule 6 (atom -> [ atom_list ] .)
+    NEWLINE         reduce using rule 6 (atom -> [ atom_list ] .)
+    $end            reduce using rule 6 (atom -> [ atom_list ] .)
+    }               reduce using rule 6 (atom -> [ atom_list ] .)
+    ]               reduce using rule 6 (atom -> [ atom_list ] .)
+
