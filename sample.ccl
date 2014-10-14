@@ -1,2 +1,3 @@
+let sample2 $ import 'sample2.ccl'
 print $ 1 .__add__ 2
 print {{1 .__add__ 2} .__truediv__ 0}
