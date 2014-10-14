@@ -1,4 +1,4 @@
-from ccl import run_file
 from sys import argv
+from ccl.runtime import run_script
 
-run_file(argv[1])
+run_script(argv[1])
