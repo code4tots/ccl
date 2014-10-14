@@ -47,7 +47,7 @@ def import_(scope, args):
 @register('print-exception-message')
 def print_exception_message(exception, call_stack):
     print("**** UNCAUGHT EXCEPTION **** ")
-    print(str(type(exception)) + ' ' + str(exception))
+    print(str(type(exception)) + '\n' + str(exception))
     for display in call_stack:
         print(display.location_string)
 

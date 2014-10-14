@@ -1,3 +1,5 @@
+import re
+
 class SpecialForm(object):
     """Marker for functions that are passed scope and argument list
     rather than evaluated arguments.
@@ -176,6 +178,10 @@ def t_NEWLINE(t):
     t.lexer.lineno += len(t.value)
     return t
 
+def t_error(t):
+    m = re.match(r'\S+', t.value)
+    raise Exception(m.group())
+
 lexer = lex.lex()
 
 def p_token_atom(p):
@@ -245,6 +251,9 @@ def p_all(p):
     'all : command_list'
     p[0] = BlockDisplay(p[1])
     p[0].lexpos = p.lexpos(1)
+
+def p_error(p):
+    raise Exception('parse failed at token %r' % (yacc.token(),))
 
 start = 'all'
 

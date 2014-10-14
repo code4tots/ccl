@@ -1,3 +1,5 @@
+let s2 $ import 'sample2.ccxl'
+let s2 $ import 'sample2.ccl'
 print let
 print len
 
