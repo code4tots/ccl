@@ -84,12 +84,8 @@ class NameDisplay(LeafDisplay):
     
     def __call__(self, scope):
         scope['__global__']['__call_stack__'].append(self)
-        try:
-            result = self.find(scope)[self.name]
-        except Exception:
-            raise
-        else:
-            scope['__global__']['__call_stack__'].pop()
+        result = self.find(scope)[self.name]
+        scope['__global__']['__call_stack__'].pop()
         return result
 
 class BranchDisplay(Display):
@@ -110,15 +106,11 @@ class CommandDisplay(BranchDisplay):
             args = [arg(scope) for arg in self.args]
         
         scope['__global__']['__call_stack__'].append(self)
-        try:
-            if isinstance(f, SpecialForm):
-                result = f(scope, self.args)
-            else:
-                result = f(*args)
-        except Exception:
-            raise
+        if isinstance(f, SpecialForm):
+            result = f(scope, self.args)
         else:
-            scope['__global__']['__call_stack__'].pop()
+            result = f(*args)
+        scope['__global__']['__call_stack__'].pop()
             
         return result
     
