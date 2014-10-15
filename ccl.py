@@ -10,6 +10,39 @@ class Location(object):
         self.string = string
         self.path = path
         self.position = position
+    
+    @property
+    def line_begin(self):
+        return self.string.rfind('\n', 0, self.position) + 1
+    
+    @property
+    def line_end(self):
+        e = self.string.find('\n', self.position, len(self.string))
+        return len(self.string) if e == -1 else e
+    
+    @property
+    def line(self):
+        return self.string[self.line_begin:self.line_end]
+    
+    @property
+    def line_number(self):
+        return 1 + self.string.count('\n', 0, self.position)
+    
+    @property
+    def column_number(self):
+        return 1 + self.position - self.line_begin
+    
+    @property
+    def column_star(self):
+        return (self.column_number - 1) * ' ' + '*'
+    
+    def __str__(self):
+        return 'In %r on line %s, column %s\n%s\n%s' % (
+            self.path,
+            self.line_number,
+            self.column_number,
+            self.line,
+            self.column_star)
 
 class Token(object):
     def __init__(self, location, type_, value):
@@ -18,46 +51,12 @@ class Token(object):
         self.value = value
 
 class SpecialForm(object):
-    def __init__(self, f, name='unnamed'):
+    def __init__(self, f, name):
         self.f = f
         self.name = name
     
     def __call__(self, scope, args):
         return self.f(scope, args)
-
-### scope
-def get_global(scope, key):
-    return scope['__global__'][key]
-
-def find_scope(scope, key):
-    while key not in scope and '__parent__' in scope:
-        scope = scope['__parent__']
-    return scope
-
-def new_scope(parent):
-    scope = dict()
-    scope.update({
-        '__parent__' : parent,
-        '__global__' : parent['__global__'],
-        '__builtins__' : parent['__builtins__'],
-        '__scope__' : scope})
-    return scope
-
-def new_module_scope(parent):
-    scope = new_scope(parent)
-    return scope
-
-def new_global_scope():
-    scope = dict()
-    scope.update({
-        '__call_stack__'  : [],
-        '__stack_trace__' : [],
-        '__imports__' : dict(),
-        '__parent__' : builtins_scope,
-        '__global__' : scope,
-        '__builtins__' : builtins_scope,
-        '__scope__' : scope})
-    return scope
 
 ### display
 class Display(object):
@@ -67,7 +66,8 @@ class Display(object):
             value = f()
         except Exception as e:
             if not hasattr(e, 'stack_trace'):
-                e.stack_trace = tuple(get_global(scope, '__stack_trace__'))
+                e.stack_trace = tuple(get_global(scope, '__call_stack__'))
+                
             raise
         finally:
             get_global(scope, '__call_stack__').pop()
@@ -99,8 +99,9 @@ class CommandDisplay(Display):
     
     def __call__(self, scope):
         f = self.f(scope)
-        if not isinstance(f, SpecialForm):
-            args = [arg(scope) for arg in self.args]
+        args = (
+            self.args if isinstance(f, SpecialForm) else
+            [arg(scope) for arg in self.args])
         
         def ff():
             return (
@@ -125,7 +126,7 @@ class BlockDisplay(Display):
     def __call__(self, scope):
         last = None
         for command in self.commands:
-            last = commands(scope)
+            last = command(scope)
         return last
 
 ### lexer
@@ -134,6 +135,7 @@ symbols = '{}[]$.'
 type_regex_pairs = tuple(
     (symbol, re.compile(re.escape(symbol))) for symbol in symbols
     ) + tuple((t,re.compile(r)) for t, r in (
+        ('\n', r'\n\s*'),
         ('string',
             r'\"(?:\\\"|[^"])*\"|'
             r"\'(?:\\\'|[^'])*\'"),
@@ -157,6 +159,7 @@ def lex(string, path):
             if match is not None:
                 value = match.group()
                 yield Token(location, type_, value)
+                i = match.end()
                 break
         else:
             # TODO: smarter exception handling
@@ -209,15 +212,19 @@ def parse(string, path):
             return items
         return sequence_production
     
-    def statement():
+    def command():
         f = atom()
         args = arguments()
+        
+        if consume('$'):
+            args.append(command())
+        
         return CommandDisplay(f.location, f, args)
     
     def atom():
         location = here()
         if consume('{'):
-            block = BlockDisplay(location, statements())
+            block = BlockDisplay(location, commands())
             expect('}')
             return_value = block
         elif consume('['):
@@ -244,7 +251,7 @@ def parse(string, path):
                     return_value,
                     LiteralDisplay(
                         name_location,
-                        step().value)])
+                        "'" + step().value + "'")])
             
             dot_location = here()
         
@@ -252,13 +259,13 @@ def parse(string, path):
     
     def all_():
         location = here()
-        block = BlockDisplay(location, statements())
+        block = BlockDisplay(location, commands())
         if not at('end'):
             # TODO: smarter exception handling
             raise Exception()
         return block
     
-    statements = atom_sequence(statement, skip=newlines)
+    commands = atom_sequence(command, skip=newlines)
     arguments = atom_sequence(atom, skip=lambda : None)
     list_items = atom_sequence(atom, skip=newlines)
     
@@ -267,12 +274,19 @@ def parse(string, path):
 ### builtins
 builtins_scope = dict()
 builtins_scope.update({
-    'print' : print})
+    'print' : print,
+    'getattr' : getattr})
 
 def special_form(name):
     def wrapper(f):
+        builtins_scope[name] = form = SpecialForm(f, name)
+        return f
+    return wrapper
+
+def function(name):
+    def wrapper(f):
         builtins_scope[name] = f
-        return SpecialForm(f, name)
+        return f
     return wrapper
 
 ### api
@@ -282,6 +296,7 @@ def import_(scope, args):
     path = path_display(scope)
     return load(scope, path)
 
+@function('load')
 def load(scope, path):
     path = os.path.realpath(path)
     with open(path) as f:
@@ -289,3 +304,59 @@ def load(scope, path):
     module_scope = new_module_scope(scope)
     parse(contents, path)(module_scope)
     return scope
+
+### scope
+@function('get-global')
+def get_global(scope, key):
+    return scope['__global__'][key]
+
+@function('find-scope')
+def find_scope(scope, key):
+    while key not in scope and '__parent__' in scope:
+        scope = scope['__parent__']
+    return scope
+
+@function('new-scope')
+def new_scope(parent):
+    scope = dict()
+    scope.update({
+        '__parent__' : parent,
+        '__global__' : parent['__global__'],
+        '__builtins__' : parent['__builtins__'],
+        '__scope__' : scope})
+    return scope
+
+@function('new-module-scope')
+def new_module_scope(parent):
+    scope = new_scope(parent)
+    return scope
+
+@function('new-global-scope')
+def new_global_scope():
+    scope = dict()
+    scope.update({
+        '__call_stack__'  : [],
+        '__imports__' : dict(),
+        '__parent__' : builtins_scope,
+        '__global__' : scope,
+        '__builtins__' : builtins_scope,
+        '__scope__' : scope})
+    return scope
+
+### main
+def main():
+    from sys import argv
+    try:
+        load(new_global_scope(), argv[1])
+    except Exception as e:
+        print(type(e).__name__)
+        print(str(e))
+        for location in e.stack_trace:
+            print(location)
+
+def debug():
+    from sys import argv
+    load(new_global_scope(), argv[1])
+
+if __name__ == '__main__':
+    main()
