@@ -145,6 +145,13 @@ class BlockDisplay(BranchDisplay):
 from ply import lex
 from ply import yacc
 
+class ParseError(Exception):
+    def __init__(self, lexpos):
+        self.lexpos = lexpos
+
+class LexError(ParseError):
+    pass
+
 tokens = ('STRING', 'INT', 'FLOAT', 'NAME', 'NEWLINE')
 literals = '{}[].$'
 t_ignore = ' \t'
@@ -171,8 +178,7 @@ def t_NEWLINE(t):
     return t
 
 def t_error(t):
-    m = re.match(r'\S+', t.value)
-    raise Exception(m.group())
+    raise LexError(t.lexer.lexpos)
 
 lexer = lex.lex()
 
