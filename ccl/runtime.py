@@ -142,6 +142,10 @@ class BlockDisplay(BranchDisplay):
     def __iter__(self):
         return iter(self.commands)
 
+class ParseErrorDisplay(Display):
+    def __init__(self, lexpos):
+        self.lexpos = lexpos
+
 from ply import lex
 from ply import yacc
 
@@ -150,7 +154,8 @@ class ParseError(Exception):
         self.lexpos = lexpos
 
 class LexError(ParseError):
-    pass
+    def __str__(self):
+        return 'unrecognized token'
 
 tokens = ('STRING', 'INT', 'FLOAT', 'NAME', 'NEWLINE')
 literals = '{}[].$'
@@ -258,7 +263,13 @@ start = 'all'
 parser = yacc.yacc()
 
 def parse(string, file_name=''):
-    display = parser.parse(string, lexer=lexer)
+    try:
+        display = parser.parse(string, lexer=lexer)
+    except ParseError as e:
+        e.display = ParseErrorDisplay(e.lexpos)
+        e.display.string = string
+        e.display.file_name = file_name
+        raise
     
     @display.walk
     def f(d):
@@ -269,7 +280,12 @@ def parse(string, file_name=''):
 
 def run_string(string, file_name, scope):
     import ccl.pylib
-    return parse(string, file_name)(scope)
+    try:
+        display = parse(string, file_name)
+    except ParseError as e:
+        scope['__global__']['__call_stack__'].append(e.display)
+        raise
+    return display(scope)
 
 def quick_run_string(string):
     from ccl.pylib import builtin_scope, new_scope, print_exception_message
