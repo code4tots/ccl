@@ -3,6 +3,7 @@
 ### import
 import re
 import os
+import operator
 
 ### misc
 class Location(object):
@@ -274,6 +275,10 @@ def parse(string, path):
 ### builtins
 builtins_scope = dict()
 builtins_scope.update({
+    
+    'lt' : operator.lt,
+    'gt' : operator.gt,
+    
     'print' : print,
     'getattr' : getattr})
 
