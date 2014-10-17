@@ -340,6 +340,8 @@ def new_module_scope(parent):
 def new_global_scope():
     scope = dict()
     scope.update({
+        'True' : True,
+        'False' : False,
         '__call_stack__'  : [],
         '__imports__' : dict(),
         '__parent__' : builtins_scope,
