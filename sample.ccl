@@ -1,3 +1,7 @@
 import 'sample2.ccl'
 
 print $ lt 1 2
+
+{\\ scope args {
+    print $ { args.__getitem__ 2 } scope
+}} "hello" "world" 333

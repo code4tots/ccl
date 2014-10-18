@@ -142,7 +142,7 @@ type_regex_pairs = tuple(
             r"\'(?:\\\'|[^'])*\'"),
         ('float', r'\d+\.\d*'),
         ('int', r'\d+'),
-        ('name', r'[0-9a-zA-Z_\-]+')))
+        ('name', r'[0-9a-zA-Z_\-\\]+')))
 
 def lex(string, path):
     s = space_re
@@ -309,6 +309,22 @@ def load(scope, path):
     module_scope = new_module_scope(scope)
     parse(contents, path)(module_scope)
     return scope
+
+@special_form(r'\\')
+def anonymous_special_form(scope, args):
+    
+    scope_name_display, args_name_display, body_display = args
+    
+    scope_name = scope_name_display.name
+    args_name = args_name_display.name
+    
+    def form(form_scope, form_args):
+        new_form_scope = new_scope(scope)
+        new_form_scope[scope_name] = form_scope
+        new_form_scope[args_name] = form_args
+        return body_display(new_form_scope)
+    
+    return SpecialForm(form, 'anonymous')
 
 ### scope
 @function('get-global')
