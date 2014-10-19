@@ -367,19 +367,26 @@ def new_global_scope():
     return scope
 
 ### main
+
+# If debug is True, all exceptions will be propogated so that
+# user can see location in the Python code that raised this
+# exception.
+debug = False
+
 def main():
     from sys import argv
     try:
-        load(new_global_scope(), argv[1])
+        for path in argv[1:]:
+            load(new_global_scope(), path)
     except Exception as e:
-        print(type(e).__name__)
-        print(str(e))
-        for location in e.stack_trace:
-            print(location)
-
-def debug():
-    from sys import argv
-    load(new_global_scope(), argv[1])
+        if hasattr(e,'stack_trace'):
+            print(type(e).__name__)
+            print(str(e))
+            for location in e.stack_trace:
+                print(location)
+        
+        if debug or not hasattr(e, 'stack_trace'):
+            raise
 
 if __name__ == '__main__':
     main()
