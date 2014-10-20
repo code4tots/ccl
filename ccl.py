@@ -131,6 +131,13 @@ class BlockDisplay(Display):
         return last
 
 ### lexer
+class LexError(Exception):
+    def __init__(self, string, path, position):
+        self.stack_trace = [Location(string, path, position)]
+    
+    def __str__(self):
+        return 'Unrecognized token'
+
 space_re = re.compile(r'[ \t]*')
 symbols = '{}[]$.'
 type_regex_pairs = tuple(
@@ -163,8 +170,7 @@ def lex(string, path):
                 i = match.end()
                 break
         else:
-            # TODO: smarter exception handling
-            raise Exception()
+            raise LexError(string, path, i)
         
         i = s.match(string, i).end()
     
