@@ -4,11 +4,14 @@ Reconsidering whether C++ can give me the flexibility I want.
 
 Uses C++11 features.
 
+Tries to follow C-style memory semantics.
+
 */
 
 #include <initializer_list>
 #include <iostream>
 typedef long long Int;
+typedef double Float;
 typedef bool Bool;
 
 template <class T>
@@ -95,7 +98,7 @@ Int hash(Int i) {
 }
 
 Int hash(Float f) {
-    
+    return (Int) f;
 }
 
 int main(int argc, char** argv) {
@@ -103,7 +106,7 @@ int main(int argc, char** argv) {
     list.init({1, 2, 3});
     std::cout << list << std::endl;
     
-    while (size(list) > 0)
+    while (!list.empty())
         std::cout << list.pop() << std::endl;
     
     return 0;
