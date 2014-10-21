@@ -27,7 +27,7 @@ struct List {
     Int size, capacity;
 };
 
-template <class T>
+template <class K, class V>
 struct Map {
     
 };
