@@ -27,6 +27,11 @@ struct List {
     Int size, capacity;
 };
 
+template <class T>
+struct Map {
+    
+};
+
 // function declarations
 
 // List
@@ -40,6 +45,9 @@ template <class T> void _reallocate(List<T>&, Int);
 template <class T> T* begin(List<T>&);
 template <class T> T* end(List<T>&);
 template <class T> std::ostream& std::operator<<(std::ostream&, List<T>&);
+
+// Map
+template <class K, class V> void init(Map<K,V>&);
 
 // function definitions
 template <class T>
