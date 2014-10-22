@@ -16,7 +16,7 @@ has virtual methods).
 
 #include <initializer_list>
 #include <iostream>
-typedef int Int;
+typedef long long Int;
 typedef double Float;
 typedef bool Bool;
 
@@ -29,7 +29,9 @@ struct List {
 
 template <class K, class V>
 struct Map {
-    
+    List<Bool> occupied;
+    List<K> keys;
+    List<V> values;
 };
 
 // function declarations
@@ -44,7 +46,7 @@ template <class T> T pop(List<T>&);
 template <class T> void _reallocate(List<T>&, Int);
 template <class T> T* begin(List<T>&);
 template <class T> T* end(List<T>&);
-template <class T> std::ostream& std::operator<<(std::ostream&, List<T>&);
+template <class T> std::ostream& operator<<(std::ostream&, List<T>&);
 
 // Map
 template <class K, class V> void init(Map<K,V>&);
@@ -111,7 +113,7 @@ T * end(List<T>& list) {
 }
 
 template <class T>
-std::ostream& std::operator<<(std::ostream& out, List<T>& list) {
+std::ostream& operator<<(std::ostream& out, List<T>& list) {
     out << '[';
     for (auto i = begin(list); i != end(list); ++i) {
         if (i != begin(list))
@@ -119,10 +121,11 @@ std::ostream& std::operator<<(std::ostream& out, List<T>& list) {
         out << *i;
     }
     out << ']';
+    return out;
 }
 
 int main(int argc, char** argv) {
     List<Int> list;
-    init(list, {1,2,3});
+    init(list, {1LL,2LL,3LL});
     std::cout << list << std::endl;
 }
