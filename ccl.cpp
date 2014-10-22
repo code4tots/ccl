@@ -20,7 +20,7 @@ typedef long long Int;
 typedef double Float;
 typedef bool Bool;
 
-// struct definitions
+/// struct definitions
 template <class T>
 struct List {
     T * buffer;
@@ -29,18 +29,26 @@ struct List {
 
 template <class K, class V>
 struct Map {
-    List<Bool> occupied;
-    List<K> keys;
-    List<V> values;
+    struct Entry {
+        Bool occupied;
+        K key;
+        V value;
+    };
+    
+    List<Entry> entries;
 };
 
-// function declarations
+/// function declarations
 
-// List
+/// Int prototypes
+template <class T> Int hash(Int&);
+
+/// List prototypes
 template <class T> void init(List<T>&);
 template <class T> void init(List<T>&, Int);
 template <class T> void init(List<T>&, std::initializer_list<T>);
 template <class T> void deinit(List<T>&);
+template <class T> Int size(List<T>&);
 template <class T> void push(List<T>&, T);
 template <class T> T pop(List<T>&);
 template <class T> void _reallocate(List<T>&, Int);
@@ -48,10 +56,19 @@ template <class T> T* begin(List<T>&);
 template <class T> T* end(List<T>&);
 template <class T> std::ostream& operator<<(std::ostream&, List<T>&);
 
-// Map
+/// Map prototypes
 template <class K, class V> void init(Map<K,V>&);
 
-// function definitions
+/// function definitions
+
+/// Int definitions
+template <class T>
+Int hash(Int& i) {
+    return i;
+}
+
+/// List definitions
+
 template <class T>
 void init(List<T>& list) {
     init(list, 0);
@@ -74,6 +91,11 @@ void init(List<T>& list, std::initializer_list<T> items) {
 template <class T>
 void deinit(List<T>& list) {
     delete[] list.buffer;
+}
+
+template <class T>
+Int size(List<T>& list) {
+    return list.size;
 }
 
 template <class T>
@@ -122,6 +144,18 @@ std::ostream& operator<<(std::ostream& out, List<T>& list) {
     }
     out << ']';
     return out;
+}
+
+/// Map definitions
+
+template <class K, class V>
+void init(Map<K,V>& m) {
+    init(m.entries);
+}
+
+template <class K, class V>
+void deinit(Map<K,V>& m) {
+    deinit(m.entries);
 }
 
 int main(int argc, char** argv) {
