@@ -133,18 +133,6 @@ class BlockDisplay(Display):
         return last
 
 ### lexer
-class ParseError(Exception):
-    def __init__(self, location):
-        self.stack_trace = [location]
-
-class LexError(ParseError):
-    def __str__(self):
-        return 'Unrecognized token'
-
-class UnexpectedToken(ParseError):
-    def __str__(self):
-        return 'Unexpected token'
-
 space_re = re.compile(r'[ \t]*')
 symbols = '{}[]$.'
 type_regex_pairs = tuple(
@@ -305,6 +293,22 @@ def function(name):
         builtins_scope[name] = f
         return f
     return wrapper
+
+### parse error exceptions
+@function('ParseError')
+class ParseError(Exception):
+    def __init__(self, location):
+        self.stack_trace = [location]
+
+@function('LexError')
+class LexError(ParseError):
+    def __str__(self):
+        return 'Unrecognized token'
+
+@function('UnexpectedToken')
+class UnexpectedToken(ParseError):
+    def __str__(self):
+        return 'Unexpected token'
 
 ### api
 @special_form('import')
