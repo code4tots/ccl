@@ -290,7 +290,9 @@ builtins_scope.update({
     'gt' : operator.gt,
     
     'print' : print,
-    'getattr' : getattr})
+    'getattr' : getattr,
+    'dict' : dict,
+    'list' : list})
 
 def special_form(name):
     def wrapper(f):
@@ -341,9 +343,13 @@ def if_(scope, args):
     condition, branch1, branch2 = args
     return branch1(scope) if condition(scope) else branch2(scope)
 
-@function('dict')
-def dict_(*args,**kwargs):
-    return dict(*args,**kwargs)
+@special_form(r'while')
+def while_(scope, args):
+    condition, body = args
+    last = None
+    while condition(scope):
+        last = body(scope)
+    return last
 
 ### scope
 @function('get-global')

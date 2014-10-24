@@ -12,3 +12,5 @@ print $ dict [
 ]
 
 print $ "standing on ".__add__ $ "shoulders of ".__add__ "giants."
+
+print if
