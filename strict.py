@@ -1,9 +1,8 @@
 """A much stricter language
 
-function f(a : Int, b : Int) : Int {
-    
+function capacity(container : Container) : Int {
+    return size(container);
 }
-
 
 
 """
