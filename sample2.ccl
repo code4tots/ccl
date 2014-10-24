@@ -1,2 +1,8 @@
 print 'sample2.ccl being imported!'
 
+if {1 .__eq__ 1} {
+    print "1 is equal to 1"
+} {
+    print "1 is not equal to 1"
+}
+

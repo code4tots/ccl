@@ -1,6 +1,8 @@
 """ccl
 """
 ### import
+from __future__ import print_function
+
 import re
 import os
 import operator
@@ -331,6 +333,11 @@ def anonymous_special_form(scope, args):
         return body_display(new_form_scope)
     
     return SpecialForm(form, 'anonymous')
+
+@special_form(r'if')
+def if_(scope, args):
+    condition, branch1, branch2 = args
+    return branch1(scope) if condition(scope) else branch2(scope)
 
 ### scope
 @function('get-global')

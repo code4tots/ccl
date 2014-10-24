@@ -7,4 +7,3 @@ print $ lt 1 2
 }} "hello" "world" 333
 
 
-%
