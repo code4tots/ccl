@@ -15,3 +15,5 @@ print $ "standing on ".__add__ $ "shoulders of ".__add__ "giants."
 
 print if
 print while
+
+print __scope__['__global__']
