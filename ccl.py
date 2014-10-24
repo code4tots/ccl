@@ -133,12 +133,17 @@ class BlockDisplay(Display):
         return last
 
 ### lexer
-class LexError(Exception):
-    def __init__(self, string, path, position):
-        self.stack_trace = [Location(string, path, position)]
-    
+class ParseError(Exception):
+    def __init__(self, location):
+        self.stack_trace = [location]
+
+class LexError(ParseError):
     def __str__(self):
         return 'Unrecognized token'
+
+class UnexpectedToken(ParseError):
+    def __str__(self):
+        return 'Unexpected token'
 
 space_re = re.compile(r'[ \t]*')
 symbols = '{}[]$.'
@@ -172,7 +177,7 @@ def lex(string, path):
                 i = match.end()
                 break
         else:
-            raise LexError(string, path, i)
+            raise LexError(here())
         
         i = s.match(string, i).end()
     
@@ -200,8 +205,7 @@ def parse(string, path):
     
     def expect(type_):
         if not at(type_):
-            # TODO: smarter exception handling
-            raise Exception()
+            raise UnexpectedToken(here())
         return step()
     
     def newlines():
@@ -209,7 +213,7 @@ def parse(string, path):
             step()
     
     def at_atom_start():
-        return lookahead[0].type in ('{','(','int','float','string','name')
+        return lookahead[0].type in ('{','(','[','int','float','string','name')
     
     def atom_sequence(production, skip):
         def sequence_production():
@@ -248,8 +252,7 @@ def parse(string, path):
         dot_location = here()
         while consume('.'):
             if not at('name'):
-                # TOOD: smart exception
-                raise Exception()
+                raise UnexpectedToken(here())
             
             name_location = here()
             
@@ -270,8 +273,7 @@ def parse(string, path):
         location = here()
         block = BlockDisplay(location, commands())
         if not at('end'):
-            # TODO: smarter exception handling
-            raise Exception()
+            raise UnexpectedToken(here())
         return block
     
     commands = atom_sequence(command, skip=newlines)
@@ -338,6 +340,10 @@ def anonymous_special_form(scope, args):
 def if_(scope, args):
     condition, branch1, branch2 = args
     return branch1(scope) if condition(scope) else branch2(scope)
+
+@function('dict')
+def dict_(*args,**kwargs):
+    return dict(*args,**kwargs)
 
 ### scope
 @function('get-global')
