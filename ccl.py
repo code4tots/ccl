@@ -342,10 +342,11 @@ def anonymous_special_form(scope, args):
     
     return SpecialForm(form, 'anonymous')
 
-@special_form(r'if')
-def if_(scope, args):
-    condition, branch1, branch2 = args
-    return branch1(scope) if condition(scope) else branch2(scope)
+## What if 'if' was defined in stdlib.ccl?
+# @special_form(r'if')
+# def if_(scope, args):
+#     condition, branch1, branch2 = args
+#     return branch1(scope) if condition(scope) else branch2(scope)
 
 @special_form(r'while')
 def while_(scope, args):
@@ -354,6 +355,14 @@ def while_(scope, args):
     while condition(scope):
         last = body(scope)
     return last
+
+@special_form(r'assign')
+def assign(scope, args):
+    name_display, value_display = args
+    name = name_display.name
+    value = value_display(scope)
+    scope[name] = value
+    return value
 
 ### scope
 @function('get-global')

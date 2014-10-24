@@ -1,0 +1,18 @@
+assign make-global $ \\ scope args {
+    assign name_display $ args .__getitem__ 0
+    assign name name_display.name
+    assign value $ {find-scope scope name}.__getitem__ name
+    { scope .__getitem__ '__global__' }.__setitem__ name value
+    print name
+    print $ scope .__getitem__ '__global__'
+}
+
+assign if $ \\ scope args {
+    
+}
+
+assign comment $ \\ scope args { }
+
+comment { print make-global }
+make-global if
+
