@@ -1,10 +1,9 @@
-assign make-global $ \\ scope args {
+assign make-builtin $ \\ scope args {
     assign name_display $ args .__getitem__ 0
     assign name name_display.name
     assign value $ {find-scope scope name}.__getitem__ name
-    { scope .__getitem__ '__global__' }.__setitem__ name value
+    __builtins__.__setitem__ name value
     print name
-    print $ scope .__getitem__ '__global__'
 }
 
 assign if $ \\ scope args {
@@ -13,6 +12,6 @@ assign if $ \\ scope args {
 
 assign comment $ \\ scope args { }
 
+make-builtin if
 comment { print make-global }
-make-global if
-
+comment $ print $ list $ __global__.keys
