@@ -13,6 +13,8 @@ A very terse forth-like language.
 ( [ p p + ] =f ) =g
 1 2 f
 
+{1 2 3}
+
 """
 
 def parse(string):
@@ -22,9 +24,9 @@ def parse(string):
         if token in ('(', '['):
             stack.append([])
         elif token == ')':
-            stack[-2].append(tuple(stack.pop()))
-        elif token == ']':
             stack[-2].append(list(stack.pop()))
+        elif token == ']':
+            stack[-2].append(tuple(stack.pop()))
         else:
             stack[-1].append(token)
     if len(stack) != 1:
@@ -50,12 +52,22 @@ def execute(thunk, environment=None, stack=None):
         elif all(d.isdigit() or d in '+-.' for d in thunk):
             stack.append(float(thunk))
         else:
-            name = thunk[1:]
-            execute(environment[name], environment, stack)
-    elif isinstance(thunk, list):
-        stack.append(tuple(thunk))
+            execute(environment[thunk], environment, stack)
     elif isinstance(thunk, tuple):
+        stack.append(list(thunk))
+    elif isinstance(thunk, list):
         for subthunk in thunk:
             execute(subthunk, environment, stack)
     else:
         raise Exception()
+
+string = """
+[ 2 ] =f f f
+5 =g $g
+"""
+
+environment = dict()
+stack = list()
+
+execute(parse(string), environment, stack)
+print(stack)
