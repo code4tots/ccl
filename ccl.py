@@ -6,6 +6,8 @@ MAKE IT FUN.
 
 What if the language was regular-expression-esq?
 
+"Write only" language
+
 A very terse forth-like language.
 
 ( p p + ) =f 1 2 $f
@@ -47,9 +49,9 @@ def execute(thunk, environment=None, stack=None):
         elif thunk.startswith('$'):
             name = thunk[1:]
             stack.append(environment[name])
-        elif all(d.isdigit() or d in '+-' for d in thunk):
+        elif any(d.isdigit() for d in thunk) and all(d.isdigit() or d in '+-' for d in thunk):
             stack.append(int(thunk))
-        elif all(d.isdigit() or d in '+-.' for d in thunk):
+        elif any(d.isdigit() for d in thunk) and all(d.isdigit() or d in '+-.' for d in thunk):
             stack.append(float(thunk))
         else:
             execute(environment[thunk], environment, stack)
@@ -58,16 +60,29 @@ def execute(thunk, environment=None, stack=None):
     elif isinstance(thunk, list):
         for subthunk in thunk:
             execute(subthunk, environment, stack)
+    elif callable(thunk):
+        thunk(environment, stack)
     else:
         raise Exception()
 
 string = """
-[ 2 ] =f f f
-5 =g $g
+2 5 + p
 """
 
 environment = dict()
 stack = list()
 
+def register(name):
+    def wrapper(f):
+        environment[name] = f
+    return wrapper
+
+@register('+')
+def add(environment, stack):
+    stack[-2] += stack[-1]; stack.pop()
+
+@register('p')
+def p(environment, stack):
+    print(stack.pop())
+
 execute(parse(string), environment, stack)
-print(stack)
