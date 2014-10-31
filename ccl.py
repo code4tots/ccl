@@ -6,13 +6,11 @@ MAKE IT FUN.
 
 What if the language was regular-expression-esq?
 
-"Write only" language
+"Write only" language perlier than perl.
 
 A very terse forth-like language.
 
-( p p + ) =f 1 2 $f
-
-( [ p p + ] =f ) =g
+[ p p + ] =f =g
 1 2 f
 
 {1 2 3}
@@ -23,10 +21,8 @@ def parse(string):
     tokens = string.split()
     stack = [ [] ]
     for token in tokens:
-        if token in ('(', '['):
+        if token == '[':
             stack.append([])
-        elif token == ')':
-            stack[-2].append(list(stack.pop()))
         elif token == ']':
             stack[-2].append(tuple(stack.pop()))
         else:
@@ -49,6 +45,9 @@ def execute(thunk, environment=None, stack=None):
         elif thunk.startswith('$'):
             name = thunk[1:]
             stack.append(environment[name])
+        elif thunk.startswith(':'):
+            value = thunk[1:]
+            stack.append(value)
         elif any(d.isdigit() for d in thunk) and all(d.isdigit() or d in '+-' for d in thunk):
             stack.append(int(thunk))
         elif any(d.isdigit() for d in thunk) and all(d.isdigit() or d in '+-.' for d in thunk):
@@ -67,6 +66,9 @@ def execute(thunk, environment=None, stack=None):
 
 string = """
 2 5 + p
+[ * + ] =f
+3 2 1 f p
+:hello_world p
 """
 
 environment = dict()
@@ -78,11 +80,14 @@ def register(name):
     return wrapper
 
 @register('+')
-def add(environment, stack):
-    stack[-2] += stack[-1]; stack.pop()
-
+def add(environment, stack): stack[-2] += stack[-1]; stack.pop()
+@register('-')
+def subtract(environment, stack): stack[-2] -= stack[-1]; stack.pop()
+@register('*')
+def multiply(environment, stack): stack[-2] *= stack[-1]; stack.pop()
+@register('/')
+def divide(environment, stack): stack[-2] /= stack[-1]; stack.pop()
 @register('p')
-def p(environment, stack):
-    print(stack.pop())
+def p(environment, stack): print(stack.pop())
 
 execute(parse(string), environment, stack)
