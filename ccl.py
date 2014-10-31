@@ -27,8 +27,7 @@ def parse(string):
             stack[-2].append(tuple(stack.pop()))
         else:
             stack[-1].append(token)
-    if len(stack) != 1:
-        raise Exception()
+    assert len(stack) == 1, "Mismatched parenthesis"
     return stack[0]
 
 def execute(thunk, environment=None, stack=None):
@@ -69,6 +68,12 @@ string = """
 [ * + ] =f
 3 2 1 f p
 :hello_world p
+
+[] 2 , 3 , 4 , 5 ,
+
+[] :1 , e
+
+s p
 """
 
 environment = dict()
@@ -89,5 +94,13 @@ def multiply(environment, stack): stack[-2] *= stack[-1]; stack.pop()
 def divide(environment, stack): stack[-2] /= stack[-1]; stack.pop()
 @register('p')
 def p(environment, stack): print(stack.pop())
+@register('s')
+def s(environment, stack): stack.append(stack)
+@register('e')
+def e(environment, stack): execute(stack.pop(), environment, stack)
+@register(',')
+def comma(environment, stack): stack[-2].append(stack[-1]); stack.pop()
+@register('[]')
+def empty(environment, stack): stack.append([])
 
 execute(parse(string), environment, stack)
