@@ -64,26 +64,17 @@ def execute(thunk, environment=None, stack=None):
         raise Exception()
 
 string = """
-
-2 5 + @
-[ * + ] =f
-3 2 1 f @
-:hello_world @
-
-
-:Da_Stack @
-
+[ hello world ] #
 [ Comments are here ] #
 
     1 . :a , .
     2 . :b , ,
     3 . :c , ,
-    ## @
+    -d -p
 
-5 . 6 , 7 , 8 , 9 , @
+5 . 6 , 7 , 8 , 9 , -p
 
-#s @
-
+-s -p
 
 """
 
@@ -105,16 +96,16 @@ def multiply(environment, stack): stack[-2] *= stack[-1]; stack.pop()
 def divide(environment, stack): stack[-2] /= stack[-1]; stack.pop()
 @register('#')
 def comment(environment, stack): stack.pop()
+@register(',')
+def append(environment, stack): stack[-2].append(stack[-1]); stack.pop()
+@register('.')
+def singleton(environment, stack): stack.append([stack.pop()])
 @register('-p')
 def print_(environment, stack): print(stack.pop())
 @register('-s')
 def s(environment, stack): stack.append(stack)
 @register('-e')
 def execute_(environment, stack): execute(stack.pop(), environment, stack)
-@register(',')
-def append(environment, stack): stack[-2].append(stack[-1]); stack.pop()
-@register('.')
-def singleton(environment, stack): stack.append([stack.pop()])
 @register('-d')
 def dict_(environment, stack): stack.append(dict(stack.pop()))
 
