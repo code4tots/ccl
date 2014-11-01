@@ -13,8 +13,6 @@ A very terse forth-like language.
 [ p p + ] =f =g
 1 2 f
 
-{1 2 3}
-
 """
 
 def parse(string):
@@ -64,17 +62,31 @@ def execute(thunk, environment=None, stack=None):
         raise Exception()
 
 string = """
-[ hello world ] #
-[ Comments are here ] #
+[ Comments here ] #
 
+[ arithmetic ] -p
+    1 2 3 * + -p
+
+[ making a dictionary ] -p
     1 . :a , .
     2 . :b , ,
     3 . :c , ,
     -d -p
 
-5 . 6 , 7 , 8 , 9 , -p
+[ making a list ] -p
+    5 . 6 , 7 , 8 , 9 , -p
 
--s -p
+[ printing the stack ] -p
+    -s -p
+
+[ executing thunks ] -p
+    1 $-p -e
+
+[ duplicating elemnts ] -p
+    [ 5521 -p ] -- -e -s -p #
+    1 2 3 4 5 4 ++ -s -p
+
+
 
 """
 
@@ -100,6 +112,10 @@ def comment(environment, stack): stack.pop()
 def append(environment, stack): stack[-2].append(stack[-1]); stack.pop()
 @register('.')
 def singleton(environment, stack): stack.append([stack.pop()])
+@register('--')
+def duplicate(environment, stack): stack.append(stack[-1])
+@register('++')
+def duplicate2(environment, stack): stack.extend(stack[-stack.pop():])
 @register('-p')
 def print_(environment, stack): print(stack.pop())
 @register('-s')
