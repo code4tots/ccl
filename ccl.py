@@ -64,16 +64,27 @@ def execute(thunk, environment=None, stack=None):
         raise Exception()
 
 string = """
-2 5 + p
+
+2 5 + @
 [ * + ] =f
-3 2 1 f p
-:hello_world p
+3 2 1 f @
+:hello_world @
 
-[] 2 , 3 , 4 , 5 ,
 
-[] :1 , e
+:Da_Stack @
 
-s p
+[ Comments are here ] #
+
+    1 . :a , .
+    2 . :b , ,
+    3 . :c , ,
+    ## @
+
+5 . 6 , 7 , 8 , 9 , @
+
+#s @
+
+
 """
 
 environment = dict()
@@ -92,15 +103,20 @@ def subtract(environment, stack): stack[-2] -= stack[-1]; stack.pop()
 def multiply(environment, stack): stack[-2] *= stack[-1]; stack.pop()
 @register('/')
 def divide(environment, stack): stack[-2] /= stack[-1]; stack.pop()
-@register('p')
-def p(environment, stack): print(stack.pop())
-@register('s')
+@register('#')
+def comment(environment, stack): stack.pop()
+@register('-p')
+def print_(environment, stack): print(stack.pop())
+@register('-s')
 def s(environment, stack): stack.append(stack)
-@register('e')
-def e(environment, stack): execute(stack.pop(), environment, stack)
+@register('-e')
+def execute_(environment, stack): execute(stack.pop(), environment, stack)
 @register(',')
-def comma(environment, stack): stack[-2].append(stack[-1]); stack.pop()
-@register('[]')
-def empty(environment, stack): stack.append([])
+def append(environment, stack): stack[-2].append(stack[-1]); stack.pop()
+@register('.')
+def singleton(environment, stack): stack.append([stack.pop()])
+@register('-d')
+def dict_(environment, stack): stack.append(dict(stack.pop()))
+
 
 execute(parse(string), environment, stack)
