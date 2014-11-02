@@ -1,8 +1,6 @@
 """This time, completely ignore extensibility.
 
-Just make it a language I would want to use for fun.
-
-MAKE IT FUN.
+JUST MAKE IT FUN.
 
 What if the language was regular-expression-esq?
 
@@ -10,120 +8,98 @@ What if the language was regular-expression-esq?
 
 A very terse forth-like language.
 
+A very EVIL langauge. It treats you like an adult.
+
 [ p p + ] =f =g
 1 2 f
 
 """
 
 def parse(string):
-    tokens = string.split()
-    stack = [ [] ]
-    for token in tokens:
-        if token == '[':
-            stack.append([])
-        elif token == ']':
-            stack[-2].append(tuple(stack.pop()))
-        else:
-            stack[-1].append(token)
-    assert len(stack) == 1, "Mismatched parenthesis"
+    stack = [[]]
+    for token in string.split():
+        if   token == '[': stack.append([])
+        elif token == ']': stack[-2].append(tuple(stack.pop()))
+        else:              stack[-1].append(token)
+    assert len(stack) == 1, "Mismatched brackets"
     return stack[0]
 
-def execute(thunk, environment=None, stack=None):
-    if environment is None:
-        environment = dict()
-
-    if stack is None:
-        stack = []
-
+def execute(thunk, stack, environment):
     if isinstance(thunk, str):
-        if thunk.startswith('='):
-            name = thunk[1:]
-            environment[name] = stack.pop()
-        elif thunk.startswith('$'):
-            name = thunk[1:]
-            stack.append(environment[name])
-        elif thunk.startswith(':'):
-            value = thunk[1:]
-            stack.append(value)
-        elif any(d.isdigit() for d in thunk) and all(d.isdigit() or d in '+-' for d in thunk):
-            stack.append(int(thunk))
-        elif any(d.isdigit() for d in thunk) and all(d.isdigit() or d in '+-.' for d in thunk):
-            stack.append(float(thunk))
-        else:
-            execute(environment[thunk], environment, stack)
+        assert len(thunk) > 0, "Empty token"
+        c = thunk[0]
+        rest = thunk[1:]
+        if c.isdigit() or c in '+-' and len(rest) > 1 and rest[0].isdigit():
+            stack.append((float if '.' in rest else int)(thunk))
+        elif c == ':': stack.append(rest)
+        elif c == '$': stack.append(environment[rest])
+        elif c == '=': environment[rest] = stack.pop()
+        else:          environment[thunk](stack, environment)
     elif isinstance(thunk, tuple):
         stack.append(list(thunk))
     elif isinstance(thunk, list):
-        for subthunk in thunk:
-            execute(subthunk, environment, stack)
-    elif callable(thunk):
-        thunk(environment, stack)
-    else:
-        raise Exception()
+        for part in thunk:
+            execute(part, stack, environment)
+
+model_environment = dict()
+
+def new_environment():
+    return {k:v for k,v in model_environment.items()}
+
+def register(name):
+    def wrapper(function):
+        model_environment[name] = function
+        return function
+    return wrapper
+
+@register('-pop-stack')
+def pop_stack(stack, environment): stack.pop()
+@register('-push-environment')
+def push_environment(stack, environment): 
+@register('-add')
+def add(stack, environment): stack[-2] += stack.pop()
+@register('-subtract')
+def subtract(stack, environment): stack[-2] -= stack.pop()
+@register('-multiply')
+def multiply(stack, environment): stack[-2] *= stack.pop()
+@register('-divide')
+def divide(stack, environment): stack[-2] /= stack.pop()
+@register('-duplicate')
+def duplicate(stack, environment): stack.extend(stack[-stack.pop():])
+@register('-stack')
+def stack(stack, environment): stack.append(stack)
+@register('-print')
+def print_(stack, environment): print(stack.pop())
+@register('-execute')
+def execute_(stack, environment): execute(stack.pop(), stack, environment)
+
 
 string = """
-[ Comments here ] #
+[ aliases ] -pop-stack
 
-[ arithmetic ] -p
-    1 2 3 * + -p
+    [ language ] -pop-stack
+        $-push-environment =(
+        $-pop-environment =)
+        $-pop-stack =#
+        $-duplicate =++
+        [ 2 -duplicate ] =+++
+        [ ] =-repeat
 
-[ making a dictionary ] -p
-    1 . :a , .
-    2 . :b , ,
-    3 . :c , ,
-    -d -p
+    [ arithmetic operations ] #
+        $-add =+
+        $-subtract =-
+        $-multiply =*
+        $-divide =/
 
-[ making a list ] -p
-    5 . 6 , 7 , 8 , 9 , -p
+    [ debugging ] #
+        $-print =p
 
-[ printing the stack ] -p
-    -s -p
+[ :thunk_evaluation -print ] -execute
 
-[ executing thunks ] -p
-    1 $-p -e
+-stack -print
 
-[ duplicating elemnts ] -p
-    [ 5521 -p ] -- -e -s -p #
-    1 2 3 4 5 4 ++ -s -p
-
-
+:hello_world -print
 
 """
 
-environment = dict()
-stack = list()
-
-def register(name):
-    def wrapper(f):
-        environment[name] = f
-    return wrapper
-
-@register('+')
-def add(environment, stack): stack[-2] += stack[-1]; stack.pop()
-@register('-')
-def subtract(environment, stack): stack[-2] -= stack[-1]; stack.pop()
-@register('*')
-def multiply(environment, stack): stack[-2] *= stack[-1]; stack.pop()
-@register('/')
-def divide(environment, stack): stack[-2] /= stack[-1]; stack.pop()
-@register('#')
-def comment(environment, stack): stack.pop()
-@register(',')
-def append(environment, stack): stack[-2].append(stack[-1]); stack.pop()
-@register('.')
-def singleton(environment, stack): stack.append([stack.pop()])
-@register('--')
-def duplicate(environment, stack): stack.append(stack[-1])
-@register('++')
-def duplicate2(environment, stack): stack.extend(stack[-stack.pop():])
-@register('-p')
-def print_(environment, stack): print(stack.pop())
-@register('-s')
-def s(environment, stack): stack.append(stack)
-@register('-e')
-def execute_(environment, stack): execute(stack.pop(), environment, stack)
-@register('-d')
-def dict_(environment, stack): stack.append(dict(stack.pop()))
-
-
-execute(parse(string), environment, stack)
+execute(parse(string), [], new_environment())
