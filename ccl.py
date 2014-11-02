@@ -1,22 +1,5 @@
 """This time, completely ignore extensibility.
-
-JUST MAKE IT FUN.
-
-What if the language was regular-expression-esq?
-
-"Write only" language perlier than perl.
-
-A very terse forth-like language.
-
-A very EVIL langauge. We're all adults here.
-
-Hmm, right now I have dynamic scoping.
-If I feel like it at some point, I may implement static scoping.
-
-[ p p + ] =f =g
-1 2 f
-
-
+Dynamically typed. Dynamically scoped.
 """
 
 def parse(string):
@@ -29,7 +12,9 @@ def parse(string):
     return stack[0]
 
 def execute(thunk, stack, environment):
-    if isinstance(thunk, str):
+    if callable(thunk):
+        thunk(stack, environment)
+    elif isinstance(thunk, str):
         assert len(thunk) > 0, "Empty token"
         c = thunk[0]
         rest = thunk[1:]
@@ -38,14 +23,19 @@ def execute(thunk, stack, environment):
         elif c == ':': stack.append(rest)
         elif c == '$': stack.append(environment[rest])
         elif c == '=': environment[rest] = stack.pop()
-        else:          environment[thunk](stack, environment)
+        else:          execute(environment[thunk], stack, environment)
     elif isinstance(thunk, tuple):
         stack.append(list(thunk))
     elif isinstance(thunk, list):
         for part in thunk:
             execute(part, stack, environment)
+    else:
+        raise TypeError(thunk)
 
 model_environment = dict()
+
+def new_environment():
+    return {k:v for k,v in model_environment.items()}
 
 class Environment(object):
     def __init__(self, model_environment):
@@ -110,8 +100,8 @@ string = """
         $-push-environment =(
         $-pop-environment =)
         $-pop-stack =#
-        $-duplicate =++
-        [ 2 -duplicate ] =+++
+        $-duplicate =-dupn
+        [ 2 -duplicate ] =-dup
         [ ( =second =first $second $first ) ] =-swap
         [ ( =n =thunk $n  ) ] =-repeat
 
@@ -133,8 +123,14 @@ string = """
 (
     12 =f
     $f -print
-    =i [ 1 2 3 ] [ 4 5 6 ] $i 5 -lt -if
 )
+
+
+1 2
+-stack -print
+
+-swap
+-stack -print
 
 """
 
