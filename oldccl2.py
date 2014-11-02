@@ -10,12 +10,8 @@ A very terse forth-like language.
 
 A very EVIL langauge. We're all adults here.
 
-Hmm, right now I have dynamic scoping.
-If I feel like it at some point, I may implement static scoping.
-
 [ p p + ] =f =g
 1 2 f
-
 
 """
 
@@ -46,6 +42,9 @@ def execute(thunk, stack, environment):
             execute(part, stack, environment)
 
 model_environment = dict()
+
+def new_environment():
+    return {k:v for k,v in model_environment.items()}
 
 class Environment(object):
     def __init__(self, model_environment):
@@ -133,7 +132,6 @@ string = """
 (
     12 =f
     $f -print
-    =i [ 1 2 3 ] [ 4 5 6 ] $i 5 -lt -if
 )
 
 """
