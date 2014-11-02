@@ -81,6 +81,7 @@ def push_environment(stack, environment): environment.push()
 @register('-pop-environment')
 def pop_environment(stack, environment): environment.pop()
 @register('-eq')
+
 @register('-add')
 def add(stack, environment): stack[-2] += stack.pop()
 @register('-subtract')
