@@ -32,10 +32,7 @@ def execute(thunk, stack, environment):
     else:
         raise TypeError(thunk)
 
-model_environment = dict()
-
-def new_environment():
-    return {k:v for k,v in model_environment.items()}
+model_environment = { '-None' : None }
 
 class Environment(object):
     def __init__(self, model_environment):
@@ -65,72 +62,7 @@ def register(name):
         return function
     return wrapper
 
-@register('-pop-stack')
-def pop_stack(stack, environment): stack.pop()
-@register('-push-environment')
-def push_environment(stack, environment): environment.push()
-@register('-pop-environment')
-def pop_environment(stack, environment): environment.pop()
-@register('-equal')
-def equal(stack, environment): stack.append(stack.pop() == stack.pop())
-@register('-less-than')
-def less_than(stack, environment): stack.append(stack.pop() > stack.pop())
-@register('-add')
-def add(stack, environment): stack[-2] += stack.pop()
-@register('-subtract')
-def subtract(stack, environment): stack[-2] -= stack.pop()
-@register('-multiply')
-def multiply(stack, environment): stack[-2] *= stack.pop()
-@register('-divide')
-def divide(stack, environment): stack[-2] /= stack.pop()
-@register('-duplicate')
-def duplicate(stack, environment): stack.extend(stack[-stack.pop():])
-@register('-stack')
-def stack(stack, environment): stack.append(stack)
-@register('-print')
-def print_(stack, environment): print(stack.pop())
-@register('-execute')
-def execute_(stack, environment): execute(stack.pop(), stack, environment)
-
-
-string = """
-[ aliases ] -pop-stack
-
-    [ language ] -pop-stack
-        $-push-environment =(
-        $-pop-environment =)
-        $-pop-stack =#
-        $-duplicate =-dupn
-        [ 2 -duplicate ] =-dup
-        [ ( =second =first $second $first ) ] =-swap
-        [ ( =n =thunk $n  ) ] =-repeat
-
-    [ arithmetic operations ] #
-        $-add =+
-        $-subtract =-
-        $-multiply =*
-        $-divide =/
-
-    [ debugging ] #
-        [ Hmm. Do I need anything here? ] #
-
-[ :thunk_evaluation -print ] -execute
-
--stack -print
-
-:hello_world -print
-
-(
-    12 =f
-    $f -print
-)
-
-
-1 2
--stack -print
-
--swap
--stack -print
+string = r"""
 
 """
 
