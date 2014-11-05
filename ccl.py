@@ -1,5 +1,6 @@
 """Fun to use and easy to implement programming language."""
 import os
+import sys
 
 try:                from   urllib import request
 except ImportError: import urllib2 as    request
@@ -58,6 +59,10 @@ def register(f):
 @register
 def __print(stack, scope):
     print(stack.pop())
+
+@register
+def __read(stack, scope):
+    stack.append(sys.stdin.readline())
 
 @register
 def __stack(stack, scope):
@@ -133,6 +138,7 @@ cclrc = """
 [ Comments here !!! ] =
 
 $__print =p
+$__read =r
 $__stack =s
 $__add =+
 $__subtract =-
@@ -160,6 +166,10 @@ ls p
 s p
 
 [ :http://en.wikipedia.org/w/api.php?format=json&action=query&titles=Main%20Page&prop=revisions&rvprop=content http-get ] =
+
+r =Message
+
+:you_typed: $Message + p
 
 """
 
