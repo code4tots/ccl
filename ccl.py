@@ -67,6 +67,7 @@ def __read(stack, scope):
 def __stack(stack, scope):
     stack.append(stack)
 
+@register
 def __map(stack, scope):
     f = stack.pop()
     items = stack.pop()
@@ -153,6 +154,7 @@ cclrc = """
 $__print =p
 $__read =r
 $__stack =s
+$__map =map
 $__add =+
 $__subtract =-
 $__multiply =*
@@ -184,9 +186,13 @@ s p
 
 [ :http://en.wikipedia.org/w/api.php?format=json&action=query&titles=Main%20Page&prop=revisions&rvprop=content http-get ] =
 
-rs =Message
-:you \s + :typed: + \s + $Message + p
-:you . :typed , $Message , \s j p
+[
+    rs =Message
+    :you \s + :typed: + \s + $Message + p
+    :you . :typed , $Message , \s j p
+] =
+
+1 . 2 , 3 , [ 1 + ] map p
 
 """
 
