@@ -34,14 +34,16 @@ def execute(thunk, stack, scope):
         elif thunk.startswith('$'):
             stack.append(scope[thunk[1:]])
         else:
-            value = scope[thunk]
-            if isinstance(value, list):
-                for item in value:
-                    execute(item, stack, scope)
-            else:
-                value(stack, scope)
+            summon(scope[thunk], stack, scope)
     else:
         raise Exception(thunk)
+
+def summon(thunk, stack, scope):
+    if isinstance(thunk, list):
+        for item in thunk:
+            execute(item, stack, scope)
+    else:
+        thunk(stack, scope)
 
 def run(string, stack, scope):
     for thunk in parse(string):
@@ -60,6 +62,15 @@ def __print(stack, scope):
 @register
 def __stack(stack, scope):
     stack.append(stack)
+
+def __map(stack, scope):
+    f = stack.pop()
+    items = stack.pop()
+    results = []
+    for item in items:
+        results.append(item)
+        summon(f, results, scope)
+    stack.append(results)
 
 @register
 def __add(stack, scope):
