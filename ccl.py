@@ -1,6 +1,9 @@
 """Fun to use and easy to implement programming language."""
 import os
 
+try:                from   urllib import request
+except ImportError: import urllib2 as    request
+
 def parse(string):
     stack = [[]]
     for token in string.split():
@@ -55,6 +58,10 @@ def __print(stack, scope):
     print(stack.pop())
 
 @register
+def __stack(stack, scope):
+    stack.append(stack)
+
+@register
 def __add(stack, scope):
     stack[-2] += stack[-1]; stack.pop()
 
@@ -94,8 +101,28 @@ def __ls_(stack, scope):
 def __cd(stack, scope):
     os.chdir(stack.pop())
 
+@register
+def __http_get(stack, scope):
+    try:
+        f = request.urlopen(stack.pop())
+    except Exception as e:
+        stack.append(e)
+        return
+    
+    try:
+        stack.append(f.read())
+    except Exception as e:
+        stack.append(e)
+    finally:
+        f.close()
+
+
+
 cclrc = """
+[ Comments here !!! ] =
+
 $__print =p
+$__stack =s
 $__add =+
 $__subtract =-
 $__multiply =*
@@ -106,6 +133,7 @@ $__cwd =cwd
 $__ls =ls
 $__ls_ =ls-
 $__cd =cd
+$__http_get =http-get
 
 1 2 + p
 5 . 6 , 7 , p
@@ -115,6 +143,12 @@ cwd ls- p
 ls p
 
 :.. cd cwd p ls p
+
+[ :http://www.google.com http-get ] =
+
+s p
+
+[ :http://en.wikipedia.org/w/api.php?format=json&action=query&titles=Main%20Page&prop=revisions&rvprop=content http-get ] =
 
 """
 
