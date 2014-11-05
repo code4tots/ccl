@@ -87,7 +87,7 @@ def __subtract(stack, scope):
 
 @register
 def __multiply(stack, scope):
-    stack[-2] += stack[-1]; stack.pop()
+    stack[-2] *= stack[-1]; stack.pop()
 
 @register
 def __divide(stack, scope):
@@ -192,7 +192,7 @@ s p
     :you . :typed , $Message , \s j p
 ] =
 
-1 . 2 , 3 , [ 1 + ] map p
+1 . 2 , 3 , [ 1 + 5 * ] map p
 
 """
 
