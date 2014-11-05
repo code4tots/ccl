@@ -47,8 +47,7 @@ def summon(thunk, stack, scope):
         thunk(stack, scope)
 
 def run(string, stack, scope):
-    for thunk in parse(string):
-        execute(thunk, stack, scope)
+    summon(parse(string), stack, scope)
 
 scope = dict()
 
@@ -118,6 +117,20 @@ def __cd(stack, scope):
     os.chdir(stack.pop())
 
 @register
+def __space(stack, scope):
+    stack.append(' ')
+
+@register
+def __join(stack, scope):
+    separator = stack.pop()
+    strings = stack.pop()
+    stack.append(separator.join(strings))
+
+@register
+def __strip(stack, scope):
+    stack[-1] = stack[-1].strip()
+
+@register
 def __http_get(stack, scope):
     try:
         f = request.urlopen(stack.pop())
@@ -150,6 +163,10 @@ $__cwd =cwd
 $__ls =ls
 $__ls_ =ls-
 $__cd =cd
+$__space =\s
+$__join =j
+$__strip =strip
+[ r strip ] =rs
 $__http_get =http-get
 
 1 2 + p
@@ -167,9 +184,9 @@ s p
 
 [ :http://en.wikipedia.org/w/api.php?format=json&action=query&titles=Main%20Page&prop=revisions&rvprop=content http-get ] =
 
-r =Message
-
-:you_typed: $Message + p
+rs =Message
+:you \s + :typed: + \s + $Message + p
+:you . :typed , $Message , \s j p
 
 """
 
