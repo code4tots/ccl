@@ -150,30 +150,30 @@ def __http_get(stack, scope):
 
 cclrc = """
 [ language ] =
-$__stack =s
-$__singleton =.
-$__append =,
-$__add =+
-$__subtract =-
-$__multiply =*
-$__divide =/
-$__space =\s
-$__strip =strip
-$__join =join
-$__map =map
+    $__stack =s
+    $__singleton =.
+    $__append =,
+    $__add =+
+    $__subtract =-
+    $__multiply =*
+    $__divide =/
+    $__space =\s
+    $__strip =strip
+    $__join =join
+    $__map =map
 
 [ file io ] =
-$__print =p
-$__read =r
-[ r strip ] =rs
-$__cwd =cwd
-$__ls_ =ls-
-[ cwd ls- ] =ls
-$__cd =cd
-$__open =open
+    $__print =p
+    $__read =read
+    [ read strip ] =rs
+    $__cwd =cwd
+    $__ls_ =ls-
+    [ cwd ls- ] =ls
+    $__cd =cd
+    $__open =open
 
 [ internet ] =
-$__http_get =http-get
+    $__http_get =http-get
 
 s p
 1 . 2 , 3 , =x
