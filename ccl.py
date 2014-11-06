@@ -161,14 +161,19 @@ $__multiply =*
 $__divide =/
 $__singleton =.
 $__append =,
+
+$__join =j
+$__strip =strip
+[ r strip ] =rs
+$__space =\s
+
+[ file systems ] =
 $__cwd =cwd
 $__ls =ls
 $__ls_ =ls-
 $__cd =cd
-$__space =\s
-$__join =j
-$__strip =strip
-[ r strip ] =rs
+
+[ internet ] =
 $__http_get =http-get
 
 1 2 + p
