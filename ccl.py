@@ -56,26 +56,16 @@ def register(f):
     return f
 
 @register
-def __print(stack, scope):
-    print(stack.pop())
-
-@register
-def __read(stack, scope):
-    stack.append(sys.stdin.readline())
-
-@register
 def __stack(stack, scope):
     stack.append(stack)
 
 @register
-def __map(stack, scope):
-    f = stack.pop()
-    items = stack.pop()
-    results = []
-    for item in items:
-        results.append(item)
-        summon(f, results, scope)
-    stack.append(results)
+def __singleton(stack, scope):
+    stack.append([stack.pop()])
+
+@register
+def __append(stack, scope):
+    stack[-2].append(stack[-1]); stack.pop()
 
 @register
 def __add(stack, scope):
@@ -94,20 +84,40 @@ def __divide(stack, scope):
     stack[-2] /= stack[-1]; stack.pop()
 
 @register
-def __singleton(stack, scope):
-    stack.append([stack.pop()])
+def __space(stack, scope):
+    stack.append(' ')
 
 @register
-def __append(stack, scope):
-    stack[-2].append(stack[-1]); stack.pop()
+def __strip(stack, scope):
+    stack.append(stack.pop().strip())
+
+@register
+def __join(stack, scope):
+    separator = stack.pop()
+    strings = stack.pop()
+    stack.append(separator.join(strings))
+
+@register
+def __map(stack, scope):
+    f = stack.pop()
+    items = stack.pop()
+    results = []
+    for item in items:
+        results.append(item)
+        summon(f, results, scope)
+    stack.append(results)
+
+@register
+def __print(stack, scope):
+    print(stack.pop())
+
+@register
+def __read(stack, scope):
+    stack.append(sys.stdin.readline())
 
 @register
 def __cwd(stack, scope):
     stack.append(os.getcwd())
-
-@register
-def __ls(stack, scope):
-    stack.append(os.listdir(os.getcwd()))
 
 @register
 def __ls_(stack, scope):
@@ -118,18 +128,10 @@ def __cd(stack, scope):
     os.chdir(stack.pop())
 
 @register
-def __space(stack, scope):
-    stack.append(' ')
-
-@register
-def __join(stack, scope):
-    separator = stack.pop()
-    strings = stack.pop()
-    stack.append(separator.join(strings))
-
-@register
-def __strip(stack, scope):
-    stack[-1] = stack[-1].strip()
+def __open(stack, scope):
+    # TODO: Crossplatform. On Windows
+    # You can use os.startfile.
+    os.system("open " + stack.pop())
 
 @register
 def __http_get(stack, scope):
@@ -146,59 +148,57 @@ def __http_get(stack, scope):
     finally:
         f.close()
 
-
-
 cclrc = """
-[ Comments here !!! ] =
-
-$__print =p
-$__read =r
+[ language ] =
 $__stack =s
-$__map =map
+$__singleton =.
+$__append =,
 $__add =+
 $__subtract =-
 $__multiply =*
 $__divide =/
-$__singleton =.
-$__append =,
-
-$__join =j
-$__strip =strip
-[ r strip ] =rs
 $__space =\s
+$__strip =strip
+$__join =join
+$__map =map
 
-[ file systems ] =
+[ file io ] =
+$__print =p
+$__read =r
+[ r strip ] =rs
 $__cwd =cwd
-$__ls =ls
 $__ls_ =ls-
+[ cwd ls- ] =ls
 $__cd =cd
+$__open =open
 
 [ internet ] =
 $__http_get =http-get
 
-1 2 + p
-5 . 6 , 7 , p
-:hello . :world , p
+s p
+1 . 2 , 3 , =x
+$x p
+$x [ 7 * 1 + ] map p
 
-cwd ls- p
+:Hello . :world! , \s join p
+
+cwd p
 ls p
 
-:.. cd cwd p ls p
-
-[ :http://www.google.com http-get ] =
-
-s p
-
-[ :http://en.wikipedia.org/w/api.php?format=json&action=query&titles=Main%20Page&prop=revisions&rvprop=content http-get ] =
-
-[
-    rs =Message
-    :you \s + :typed: + \s + $Message + p
-    :you . :typed , $Message , \s j p
-] =
-
-1 . 2 , 3 , [ 1 + 5 * ] map p
+:README.md open
 
 """
 
 run(cclrc, [], scope)
+
+def main():
+    stack = []
+    while True:
+        sys.stdout.write('>> ')
+        line = sys.stdin.readline()
+        if not line:
+            break
+        run(line, stack, scope)
+
+if __name__ == '__main__':
+    main()
