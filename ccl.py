@@ -1,6 +1,7 @@
 """Fun to use and easy to implement programming language."""
 import os
 import sys
+import re
 
 try:                from   urllib import request
 except ImportError: import urllib2 as    request
@@ -108,6 +109,10 @@ def __map(stack, scope):
     stack.append(results)
 
 @register
+def __regex(stack, scope):
+    stack.append(re.compile(stack.pop()))
+
+@register
 def __print(stack, scope):
     print(stack.pop())
 
@@ -162,6 +167,9 @@ cclrc = """
     $__join =join
     $__map =map
 
+[ regex ] =
+    $__regex =//
+
 [ file io ] =
     $__print =p
     $__read =read
@@ -185,7 +193,9 @@ $x [ 7 * 1 + ] map p
 cwd p
 ls p
 
-:README.md open
+[ :README.md open ] =
+
+:^x$ // p
 
 """
 
