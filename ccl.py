@@ -197,6 +197,7 @@ ls p
 
 :^x$ // p
 
+
 """
 
 run(cclrc, [], scope)
