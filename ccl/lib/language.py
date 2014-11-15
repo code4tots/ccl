@@ -22,7 +22,6 @@ def init(scope):
 $__push_scope =(
 $__pop_scope =)
 $__print =p
-$__python_import =python-import
 
 """, [], scope)
 

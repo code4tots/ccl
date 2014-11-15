@@ -1,3 +1,36 @@
+from importlib import import_module
+
+class Scope(object):
+    def __init__(self):
+        self.tables = [{
+            'python-import': (lambda stack, scope:
+                import_module(stack.pop()).init(scope)),
+            'import': (lambda stack, scope: (
+                lambda file_: file_.__enter__() and 
+                    run(file_.read(), stack, scope) and file_.__exit__()))}]
+    
+    def __getitem__(self, key):
+        table = self.tables[-1]
+        while key not in table and '__parent__' in table:
+            table = table['__parent__']
+        return table[key]
+    
+    def __setitem__(self, key, value):
+        self.tables[-1][key] = value
+    
+    def register(self, f):
+        self[f.__name__] = f
+    
+    # TODO: For now Scope will only support dynamic scoping.
+    # However, in the future, push and pop may accept parent arguments
+    # so that we may support static typing.
+    
+    def push(self):
+        self.tables.append(dict())
+    
+    def pop(self):
+        self.tables.pop()
+
 def parse(string):
     stack = [[]]
     for token in string.split():
@@ -40,4 +73,4 @@ def summon(thunk, stack, scope):
         thunk(stack, scope)
 
 def run(string, stack, scope):
-    summon(parse(string), stack, scope)
+    summon(parse(string), stack or [], scope or Scope())
