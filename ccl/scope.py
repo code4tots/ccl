@@ -11,6 +11,9 @@ class Scope(object):
     def __setitem__(self, key, value):
         self.tables[-1][key] = value
     
+    def register(self, f):
+        self[f.__name__] = f
+    
     # TODO: For now Scope will only support dynamic scoping.
     # However, in the future, push and pop may accept parent arguments
     # so that we may support static typing.
