@@ -1,5 +1,3 @@
-GLOBAL_TABLE = dict()
-
 class Scope(object):
     def __init__(self, global_table=GLOBAL_TABLE):
         self.tables = [global_table]
@@ -22,8 +20,3 @@ class Scope(object):
     
     def pop(self):
         self.tables.pop()
-
-def register(f):
-    GLOBAL_TABLE[f.__name__] = f
-    return f
-

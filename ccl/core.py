@@ -1,5 +1,3 @@
-from ccl.scope import Scope
-
 def parse(string):
     stack = [[]]
     for token in string.split():
@@ -41,7 +39,5 @@ def summon(thunk, stack, scope):
     else:
         thunk(stack, scope)
 
-def run(string, stack=None, scope=None):
-    stack = stack or []
-    scope = scope or Scope()
+def run(string, stack, scope):
     summon(parse(string), stack, scope)
