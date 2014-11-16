@@ -35,6 +35,10 @@ def init(scope):
     def __square_root(stack, scope):
         stack.append(math.sqrt(stack.pop()))
     
+    @scope.register
+    def __less_than(stack, scope):
+        stack.append(stack.pop() < stack.pop())
+    
     run("""
 $__add =+
 $__subtract =-
@@ -43,4 +47,5 @@ $__divide =/
 $__floor_divide =//
 $__exponentiate =**
 $__square_root =sqrt
+$__less_than =lt
 """, [], scope)

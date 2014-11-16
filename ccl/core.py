@@ -26,7 +26,7 @@ class Scope(object):
     # so that we may support static typing.
     
     def push(self):
-        self.tables.append(dict())
+        self.tables.append({'__parent__': self.tables[-1]})
     
     def pop(self):
         self.tables.pop()
