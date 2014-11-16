@@ -36,4 +36,5 @@ $__subtract =-
 $__multiply =*
 $__divide =/
 $__floor_divide =//
+$__exponentiate =**
 """, [], scope)
