@@ -1,4 +1,5 @@
 from ccl.core import run
+import math
 
 def init(scope):
     
@@ -30,6 +31,10 @@ def init(scope):
     def __exponentiate(stack, scope):
         stack.append(stack.pop() ** stack.pop())
     
+    @scope.register
+    def __square_root(stack, scope):
+        stack.append(math.sqrt(stack.pop()))
+    
     run("""
 $__add =+
 $__subtract =-
@@ -37,4 +42,5 @@ $__multiply =*
 $__divide =/
 $__floor_divide =//
 $__exponentiate =**
+$__square_root =sqrt
 """, [], scope)
