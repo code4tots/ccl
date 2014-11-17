@@ -11,6 +11,10 @@ def init(scope):
         scope.pop()
     
     @scope.register
+    def __duplicate_stack(stack, scope):
+        stack.extend(stack[-stack.pop():])
+    
+    @scope.register
     def __print(stack, scope):
         print(stack.pop())
     
@@ -39,6 +43,7 @@ def init(scope):
     run("""
 $__push_scope =(
 $__pop_scope =)
+$__duplicate_stack =dup
 $__print =p
 $__true =true
 $__false =false
@@ -56,6 +61,13 @@ true =__debug
     
     [ make sure that False is equal to False ] =
     false false eq assert
+    
+    [ make sure dup works as intended ] =
+    5 6 2 dup
+        6 eq assert
+        5 eq assert
+        6 eq assert
+        5 eq assert
     
 ) ] test
 """, [], scope)
