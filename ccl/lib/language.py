@@ -11,8 +11,20 @@ def init(scope):
         scope.pop()
     
     @scope.register
+    def __slice_stack(stack, scope):
+        stack.append(stack[-stack.pop():])
+    
+    @scope.register
     def __duplicate_stack(stack, scope):
         stack.extend(stack[-stack.pop():])
+    
+    @scope.register
+    def __singleton(stack, scope):
+        stack.append([stack.pop()])
+    
+    @scope.register
+    def __append(stack, scope):
+        stack.append(stack.pop().append(stack.pop()))
     
     @scope.register
     def __print(stack, scope):
@@ -43,6 +55,9 @@ def init(scope):
     run("""
 $__push_scope =(
 $__pop_scope =)
+$__slice_stack =slice-stack
+$__singleton =.
+$__append =,
 $__duplicate_stack =dup
 $__print =p
 $__true =true
@@ -68,6 +83,11 @@ true =__debug
         5 eq assert
         6 eq assert
         5 eq assert
+    
+    1 2 3
+        3 slice-stack
+    1 . 2 , 3 ,
+        eq assert
     
 ) ] test
 """, [], scope)
