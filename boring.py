@@ -58,11 +58,30 @@ def parse(token_stream):
   assert len(stack) == 1, 'unclosed parenthesis'
   return stack[0]
 
+def evaluate(context, thunk):
+  if isinstance(thunk, List):
+    f, *args = thunk.values
+    return evaluate(context, f)(context, args)
+  elif isinstance(thunk, Token):
+    process = (float                if thunk.type == 'FLOAT'  else
+               int                  if thunk.type == 'INT'    else
+               lambda v: context[v] if thunk.type == 'ID'     else
+               eval                 if thunk.type == 'STRING' else
+               None)
+    if process is None: raise ValueError(thunk.type)
+    return process(thunk.value)
+  raise TypeError(thunk)
 
+def execute(context, thunks):
+  last = None
+  for thunk in thunks:
+    last = evaluate(context, thunk)
+  return last
 
-print(parse(lex("""
-(list (1 2 3 4))
+print(execute(dict(), parse(lex("""
 
-(a (id 'homepage'))
+(div (id 'left-column') (body (
+  (sign-in-widget)
+  )))
 
-""")))
+"""))))
