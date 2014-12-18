@@ -1,4 +1,5 @@
-import os
+#!/usr/bin/python
+import os, sys
 from ply import lex, yacc
 
 start = 'command'
@@ -62,8 +63,9 @@ def register(name=None):
 def cat(file_name):
   with open(file_name) as f: return f.read()
 @register()
-def printf(string, *args):
-  return string % args
+def printf(string, *args): return string % args
+@register()
+def ccl(string): return parse(string).eval(context)
 @register()
 def echo(value): return value
 @register('print')
@@ -72,7 +74,5 @@ def print_(value): print(value); return value
 def ls(): return os.listdir()
 @register()
 def add(lhs, rhs): return lhs + rhs
-parse('''
-echo "hi" | add " there" | print ;
-print "wut"
-''').eval(context)
+
+if __name__ == '__main__': ccl(sys.stdin.read())
