@@ -1,3 +1,4 @@
+from __future__ import print_function
 import operator
 from collections import namedtuple
 
@@ -132,19 +133,43 @@ class Parser(object):
         return token.value
       return thunk
 
+  def name_atom(self):
+    token = self.consume('NAME')
+    if token is not None:
+      name = token.value
+      def thunk(context):
+        return context[name]
+      return thunk
+
   def parenthetical_expression(self):
     if self.consume('('):
       expression = self.expression()
       self.expect(')')
       return expression
 
-  def atom(self):
+  def atom_expression(self):
     return (
         self.token_atom('INT') or
         self.token_atom('FLOAT') or
         self.token_atom('STRING') or
-        self.token_atom('NAME') or
+        self.name_atom() or
         self.parenthetical_expression())
+
+  def function_call_expression(self):
+    lhs = self.atom_expression()
+    while self.consume('('):
+      args = []
+      if not self.consume(')'):
+        args.append(self.expect(self.expression))
+        while not self.consume(')'):
+          self.expect(',')
+          args.append(self.expect(self.expression))
+      def scope(lhs, args):
+        def thunk(context):
+          return lhs(context)(*[arg(context) for arg in args])
+        return thunk
+      lhs = scope(lhs, args)
+    return lhs
 
   def sign_expression(self):
     if self.consume('+'):
@@ -155,7 +180,7 @@ class Parser(object):
         return -expression(context)
       return thunk
     else:
-      return self.atom()
+      return self.function_call_expression()
 
   def multiplicative_expression(self):
     lhs = self.sign_expression()
@@ -225,11 +250,11 @@ class Parser(object):
 
 text = """
 
-y = x = "hi " + "there" ; z = "I see."
+y = x = "hi " + "there" ; z = "I see." ; print(y + y)
 
 """
 
 thunk = Parser(Lexer(text)).expression()
 
-thunk(dict())
+thunk({'print': print})
 
