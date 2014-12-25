@@ -4,7 +4,7 @@ from collections import namedtuple
 Token = namedtuple('Token', 'type value text mark')
 KEYWORDS = ['for']
 SYMBOLS = list(sorted(
-    ('+', '-', '*', '/', '=', '(', ')'),
+    ('+', '-', '*', '/', '=', '(', ')', ';'),
     reverse=True))
 
 
@@ -96,16 +96,25 @@ class Parser(object):
 
   def __init__(self, lexer):
     self._lexer = lexer
-    self._peek = lexer.next()
+    self._peek_stack = [lexer.next()]
+
+  @property
+  def _peek(self):
+    return self._peek_stack[-1]
 
   def next(self):
-    pass
+    self._peek_stack.pop()
+    if not self._peek_stack:
+      self._peek_stack = [self._lexer.next()]
+
+  def put_back(self, token):
+    self._peek_stack.append(token)
 
   def consume(self, construct):
     if isinstance(construct, str):
       if self._peek.type == construct:
         token = self._peek
-        self._peek = self._lexer.next()
+        self.next()
         return token
     else:
       return construct()
@@ -181,15 +190,46 @@ class Parser(object):
       lhs = scope(op, lhs, rhs)
     return lhs
 
-  def expression(self):
+  def assignment_expression(self):
+    name = self.consume('NAME')
+    if name:
+      equal = self.consume('=')
+      if equal:
+        lhs = name.value
+        rhs = self.assignment_expression()
+        def thunk(context):
+          context[lhs] = value = rhs(context)
+          return value
+        return thunk
+      else:
+        self.put_back(name)
     return self.additive_expression()
+
+  def semicolon_expression(self):
+    lhs = self.assignment_expression()
+    while True:
+      op = (
+          (lambda a, b: b)   if self.consume(';') else
+          None)
+      if op is None: break
+      rhs = self.expect(self.assignment_expression)
+      def scope(op, lhs, rhs):
+        def thunk(context):
+          return op(lhs(context), rhs(context))
+        return thunk
+      lhs = scope(op, lhs, rhs)
+    return lhs
+
+  def expression(self):
+    return self.semicolon_expression()
 
 text = """
 
-"hi " + "there"
+y = x = "hi " + "there" ; z = "I see."
 
 """
 
 thunk = Parser(Lexer(text)).expression()
 
-print(thunk(dict()))
+thunk(dict())
+
