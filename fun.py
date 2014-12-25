@@ -34,6 +34,5 @@ def execute():
     execute_statement()
     skip_empty_lines()
 
-
-execute()
-
+if __name__ == '__main__':
+  execute()
