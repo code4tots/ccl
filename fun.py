@@ -5,7 +5,7 @@ from collections import namedtuple
 Token = namedtuple('Token', 'type value text mark')
 KEYWORDS = ['for']
 SYMBOLS = list(sorted(
-    ('+', '-', '*', '/', '=', '(', ')', ';'),
+    ('+', '-', '*', '/', '=', '(', ')', ';', ','),
     reverse=True))
 
 
@@ -248,13 +248,15 @@ class Parser(object):
   def expression(self):
     return self.semicolon_expression()
 
-text = """
+text = r"""
 
-y = x = "hi " + "there" ; z = "I see." ; print(y + y)
+y = x = "hi " + "there" ; z = "I see." ; print(y + '\n' + y, 'fi')
 
 """
 
 thunk = Parser(Lexer(text)).expression()
 
-thunk({'print': print})
+thunk({
+    'print': print
+})
 
