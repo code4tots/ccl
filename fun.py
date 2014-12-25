@@ -166,14 +166,12 @@ class Parser(object):
       raise SyntaxError((construct, self._peek))
     return result
 
-  def token_atom(self, type_):
+  def token_literal_expression(self, type_):
     token = self.consume(type_)
     if token is not None:
-      def thunk(context):
-        return token.value
-      return thunk
+      return LiteralThunk(token.value)
 
-  def name_atom(self):
+  def name_expression(self):
     token = self.consume('NAME')
     if token is not None:
       name = token.value
@@ -189,10 +187,10 @@ class Parser(object):
 
   def atom_expression(self):
     return (
-        self.token_atom('INT') or
-        self.token_atom('FLOAT') or
-        self.token_atom('STRING') or
-        self.name_atom() or
+        self.token_literal_expression('INT') or
+        self.token_literal_expression('FLOAT') or
+        self.token_literal_expression('STRING') or
+        self.name_expression() or
         self.parenthetical_expression())
 
   def function_call_expression(self):
