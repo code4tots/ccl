@@ -9,6 +9,46 @@ SYMBOLS = list(sorted(
     reverse=True))
 
 
+class Thunk(object):
+  pass
+
+
+class AssignableThunk(Thunk):
+  pass
+
+
+class LiteralThunk(Thunk):
+
+  def __init__(self, value):
+    self.value = value
+
+  def __call__(self, context):
+    return self.value
+
+
+class NameThunk(Thunk):
+
+  def __init__(self, name):
+    self.name = name
+
+  def __call__(self, context):
+    return context[self.name]
+
+  def assign(self, context, value):
+    context[self.name] = value
+    return value
+
+class FunctionCallThunk(Thunk):
+
+  def __init__(self, function, arguments):
+    self.function = function
+    self.arguments = arguments
+
+
+  def __call__(self, context):
+    return self.function(context)(*[arg(context) for arg in self.args])
+
+
 class Lexer(object):
 
   def __init__(self, text, mark=0):
