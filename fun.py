@@ -174,10 +174,7 @@ class Parser(object):
   def name_expression(self):
     token = self.consume('NAME')
     if token is not None:
-      name = token.value
-      def thunk(context):
-        return context[name]
-      return thunk
+      return NameThunk(token.value)
 
   def parenthetical_expression(self):
     if self.consume('('):
