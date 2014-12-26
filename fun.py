@@ -26,7 +26,7 @@ class LiteralThunk(Thunk):
     return self.value
 
 
-class NameThunk(Thunk):
+class NameThunk(AssignableThunk):
 
   def __init__(self, name):
     self.name = name
@@ -38,6 +38,7 @@ class NameThunk(Thunk):
     context[self.name] = value
     return value
 
+
 class FunctionCallThunk(Thunk):
 
   def __init__(self, function, arguments):
@@ -46,7 +47,41 @@ class FunctionCallThunk(Thunk):
 
 
   def __call__(self, context):
-    return self.function(context)(*[arg(context) for arg in self.args])
+    return self.function(context)(*[arg(context) for arg in self.arguments])
+
+
+class FunctionCallSyntacticSugarThunk(FunctionCallThunk):
+
+  def __init__(self, *arguments):
+    self.arguments = arguments
+
+
+class NegativeThunk(FunctionCallSyntacticSugarThunk):
+  function = NameThunk('__neg__')
+
+
+class PositiveThunk(FunctionCallSyntacticSugarThunk):
+  function = NameThunk('__pos__')
+
+
+class AddThunk(FunctionCallSyntacticSugarThunk):
+  function = NameThunk('__add__')
+
+
+class SubtractThunk(FunctionCallSyntacticSugarThunk):
+  function = NameThunk('__sub__')
+
+
+class MultiplyThunk(FunctionCallSyntacticSugarThunk):
+  function = NameThunk('__mul__')
+
+
+class DivideThunk(FunctionCallSyntacticSugarThunk):
+  function = NameThunk('__truediv__')
+
+
+class ModuloThunk(FunctionCallSyntacticSugarThunk):
+  function = NameThunk('__mod__')
 
 
 class Lexer(object):
@@ -199,21 +234,14 @@ class Parser(object):
         while not self.consume(')'):
           self.expect(',')
           args.append(self.expect(self.expression))
-      def scope(lhs, args):
-        def thunk(context):
-          return lhs(context)(*[arg(context) for arg in args])
-        return thunk
-      lhs = scope(lhs, args)
+      lhs = FunctionCallThunk(lhs, args)
     return lhs
 
   def sign_expression(self):
     if self.consume('+'):
-      return self.expect(self.sign_expression)
+      return PositiveThunk(self.expect(self.sign_expression))
     elif self.consume('-'):
-      expression = self.expect(self.sign_expression)
-      def thunk(context):
-        return -expression(context)
-      return thunk
+      return NegativeThunk(self.expect(self.sign_expression))
     else:
       return self.function_call_expression()
 
@@ -221,33 +249,23 @@ class Parser(object):
     lhs = self.sign_expression()
     while True:
       op = (
-          operator.mul     if self.consume('*') else
-          operator.truediv if self.consume('/') else
-          operator.mod     if self.consume('%') else
+          MultiplyThunk    if self.consume('*') else
+          DivideThunk      if self.consume('/') else
+          ModuloThunk      if self.consume('%') else
           None)
       if op is None: break
-      rhs = self.expect(self.sign_expression)
-      def scope(op, lhs, rhs):
-        def thunk(context):
-          return op(lhs(context), rhs(context))
-        return thunk
-      lhs = scope(op, lhs, rhs)
+      lhs = op(lhs, self.expect(self.sign_expression))
     return lhs
 
   def additive_expression(self):
     lhs = self.multiplicative_expression()
     while True:
       op = (
-          operator.add     if self.consume('+') else
-          operator.sub     if self.consume('-') else
+          AddThunk          if self.consume('+') else
+          SubtractThunk     if self.consume('-') else
           None)
       if op is None: break
-      rhs = self.expect(self.multiplicative_expression)
-      def scope(op, lhs, rhs):
-        def thunk(context):
-          return op(lhs(context), rhs(context))
-        return thunk
-      lhs = scope(op, lhs, rhs)
+      lhs = op(lhs, self.expect(self.multiplicative_expression))
     return lhs
 
   def assignment_expression(self):
@@ -285,13 +303,22 @@ class Parser(object):
 
 text = r"""
 
-y = x = "hi " + "there" ; z = "I see." ; print(y + '\n' + y, 'fi')
+y = x = "hi " + "there" ; z = "I see." ; print(y + '\n' + y, 'fi') ;
+print(+5 + -3 - 7) ;
+print(5 / 2)
 
 """
 
 thunk = Parser(Lexer(text)).expression()
 
 thunk({
+    '__mul__': operator.mul,
+    '__truediv__': operator.truediv,
+    '__mod__': operator.mod,
+    '__add__': operator.add,
+    '__sub__': operator.sub,
+    '__pos__': operator.pos,
+    '__neg__': operator.neg,
     'print': print
 })
 
