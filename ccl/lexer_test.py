@@ -2,6 +2,24 @@ from unittest import TestCase, main
 from .lexer import Token, Lexer
 
 class LexerTestCase(TestCase):
+
+  def testOne(self):
+    text = "1234"
+    self.assertEqual(
+        [
+            Token(
+                type='INT',
+                value=1234,
+                text=text,
+                mark=0),
+            Token(
+                type='EOF',
+                value=None,
+                text=text,
+                mark=4),
+        ],
+        list(Lexer(text)))
+
   def testAll(self):
     text = "24.3 55 name 'string' +"
     self.assertEqual(

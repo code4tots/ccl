@@ -1,4 +1,6 @@
+from . import thunk
 from collections import namedtuple
+
 Token = namedtuple('Token', 'type value text mark')
 KEYWORDS = ['for']
 SYMBOLS = list(sorted(
@@ -19,13 +21,13 @@ class Lexer(object):
 
   @property
   def _c(self):
-    return self._text[self._mark]
+    return self._text[self._mark:self._mark+1]
 
   def next(self):
     if self._mark > len(self._text):
       raise StopIteration()
 
-    while self._mark < len(self._text) and self._c.isspace():
+    while self._c.isspace():
       self._mark += 1
 
     mark = self._mark
