@@ -56,11 +56,11 @@ class FunctionCallSyntacticSugarThunk(FunctionCallThunk):
     self.arguments = arguments
 
 
-class NegativeThunk(FunctionCallSyntacticSugarThunk):
+class NegThunk(FunctionCallSyntacticSugarThunk):
   function = NameThunk('__neg__')
 
 
-class PositiveThunk(FunctionCallSyntacticSugarThunk):
+class PosThunk(FunctionCallSyntacticSugarThunk):
   function = NameThunk('__pos__')
 
 
@@ -68,19 +68,19 @@ class AddThunk(FunctionCallSyntacticSugarThunk):
   function = NameThunk('__add__')
 
 
-class SubtractThunk(FunctionCallSyntacticSugarThunk):
+class SubThunk(FunctionCallSyntacticSugarThunk):
   function = NameThunk('__sub__')
 
 
-class MultiplyThunk(FunctionCallSyntacticSugarThunk):
+class MulThunk(FunctionCallSyntacticSugarThunk):
   function = NameThunk('__mul__')
 
 
-class DivideThunk(FunctionCallSyntacticSugarThunk):
+class TrueDiv(FunctionCallSyntacticSugarThunk):
   function = NameThunk('__truediv__')
 
 
-class ModuloThunk(FunctionCallSyntacticSugarThunk):
+class ModThunk(FunctionCallSyntacticSugarThunk):
   function = NameThunk('__mod__')
 
 
@@ -239,9 +239,9 @@ class Parser(object):
 
   def sign_expression(self):
     if self.consume('+'):
-      return PositiveThunk(self.expect(self.sign_expression))
+      return PosThunk(self.expect(self.sign_expression))
     elif self.consume('-'):
-      return NegativeThunk(self.expect(self.sign_expression))
+      return NegThunk(self.expect(self.sign_expression))
     else:
       return self.function_call_expression()
 
@@ -249,9 +249,9 @@ class Parser(object):
     lhs = self.sign_expression()
     while True:
       op = (
-          MultiplyThunk    if self.consume('*') else
-          DivideThunk      if self.consume('/') else
-          ModuloThunk      if self.consume('%') else
+          MulThunk   if self.consume('*') else
+          TrueDiv    if self.consume('/') else
+          ModThunk   if self.consume('%') else
           None)
       if op is None: break
       lhs = op(lhs, self.expect(self.sign_expression))
@@ -261,8 +261,8 @@ class Parser(object):
     lhs = self.multiplicative_expression()
     while True:
       op = (
-          AddThunk          if self.consume('+') else
-          SubtractThunk     if self.consume('-') else
+          AddThunk     if self.consume('+') else
+          SubThunk     if self.consume('-') else
           None)
       if op is None: break
       lhs = op(lhs, self.expect(self.multiplicative_expression))
