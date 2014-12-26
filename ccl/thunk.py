@@ -1,5 +1,6 @@
 class Thunk(object):
-  pass
+  def __eq__(self, other):
+    return type(self) == type(other) and self.__dict__ == other.__dict__
 
 class Assignable(Thunk):
   pass
