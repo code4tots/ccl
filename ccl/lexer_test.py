@@ -21,7 +21,7 @@ class LexerTestCase(TestCase):
         list(Lexer(text)))
 
   def testAll(self):
-    text = "24.3 55 name 'string' +"
+    text = "24.3 55 name 'string' + if"
     self.assertEqual(
         [
             Token(
@@ -50,10 +50,15 @@ class LexerTestCase(TestCase):
                 text=text,
                 mark=22),
             Token(
+                type='if',
+                value='if',
+                text=text,
+                mark=24),
+            Token(
                 type='EOF',
                 value=None,
                 text=text,
-                mark=23),
+                mark=26),
         ],
         list(Lexer(text)))
 

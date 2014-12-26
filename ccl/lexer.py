@@ -2,7 +2,8 @@ from . import thunk
 from collections import namedtuple
 
 Token = namedtuple('Token', 'type value text mark')
-KEYWORDS = ['for']
+KEYWORDS = frozenset((
+    'if', 'else'))
 SYMBOLS = list(sorted(
     ('+', '-', '*', '/', '=', '(', ')', ';', ','),
     reverse=True))
