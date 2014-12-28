@@ -5,6 +5,14 @@ class Thunk(object):
 class Assignable(Thunk):
   pass
 
+class Assign(Thunk):
+  def __init__(self, lhs_thunk, rhs_thunk):
+    self.lhs_thunk = lhs_thunk
+    self.rhs_thunk = rhs_thunk
+
+  def __call__(self, context):
+    self.lhs_thunk.assign(context, self.rhs_thunk)
+
 class Literal(Thunk):
   def __init__(self, value):
     self.value = value
@@ -19,9 +27,20 @@ class Name(Assignable):
   def __call__(self, context):
     return context[self.name]
 
-  def assign(self, context, value):
-    context[self.name] = value
+  def assign(self, context, value_thunk):
+    context[self.name] = value = value_thunk(context)
     return value
+
+class GetAttribute(Assignable):
+  def __init__(self, owner_thunk, attribute_name):
+    self.owner_thunk = owner_thunk
+    self.attribute_name = attribute_name
+
+  def __call__(self, context):
+    return getattr(self.owner_thunk(context), self.attribute_name)
+
+  def assign(self, context, value_thunk):
+    setattr(self.owner_thunk(context), self.attribute_name, value_thunk(context))
 
 class FunctionCall(Thunk):
   def __init__(self, f, args):

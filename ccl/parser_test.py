@@ -49,5 +49,32 @@ class ParserTestCase(TestCase):
         thunk.Name('hi'),
         parser.name_expression())
 
+  def test_parenthetical_expression(self):
+    parser = Parser(Lexer('(hi)'))
+
+    self.assertEqual(
+        thunk.Name('hi'),
+        parser.parenthetical_expression())
+
+    parser = Parser(Lexer('hi'))
+
+    self.assertEqual(
+        None,
+        parser.parenthetical_expression())
+
+  def test_atom_expression(self):
+    parser = Parser(Lexer('(hi)'))
+
+    self.assertEqual(
+        thunk.Name('hi'),
+        parser.atom_expression())
+
+    parser = Parser(Lexer('hi'))
+
+    self.assertEqual(
+        thunk.Name('hi'),
+        parser.atom_expression())
+
+
 if __name__ == '__main__':
   main()

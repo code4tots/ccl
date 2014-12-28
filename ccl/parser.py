@@ -49,5 +49,23 @@ class Parser(object):
         self.parenthetical_expression() or
         None)
 
+  def get_attribute_expression(self):
+    expression = self.atom_expression()
+    while self.consume('.'):
+      expression = thunk.GetAttribute(expression, self.expect('NAME').value)
+    return expression
+
+  def function_call_expression(self):
+    expression = self.get_attribute_expression()
+    while self.consume('('):
+      args = []
+      if not self.consume(')'):
+        args.append(self.expect(self.expression))
+        while not self.consume(')'):
+          self.expect(',')
+          args.append(self.expect(self.expression))
+      expression = thunk.FunctionCall(expression, args)
+    return expression
+
   def expression(self):
-    return self.atom_expression()
+    return self.function_call_expression()
