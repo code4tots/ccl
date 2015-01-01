@@ -1,2 +1,0 @@
-#!/bin/bash
-for f in ccl/*_test.py; do echo $f &&  python -m $(basename $(echo $f | sed 's$/$.$') '.py'); done
