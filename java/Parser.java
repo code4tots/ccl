@@ -1,12 +1,21 @@
 import java.util.ArrayList;
 
+/**
+ * TODO: Instead of throwing Error, throw something more appropriate...
+ */
 public class Parser {
-  public int i;
-  public String s;
+  private int i;
+  private String s;
 
   public Parser(String text) {
     s = text;
     i = 0;
+  }
+  
+  public ArrayList<Object> all() {
+    ArrayList<Object> ii = items();
+    if (c() != null) throw new Error();
+    return ii;
   }
 
   public ArrayList<Object> items() {
@@ -16,15 +25,15 @@ public class Parser {
     return ii;
   }
 
-  public ArrayList<Object> list() {
-    skipSpaces();
-    if (c() == null || c() != '[') return null;
-    i++;
-    ArrayList<Object> l = items();
-    skipSpaces();
-    if (c() != ']') throw new Error();
-    i++;
-    return new ArrayList<Object>(java.util.Arrays.asList(new Object[]{"__list__", l}));
+  public Object item() {
+    Object ret;
+    ret = number();        if (ret != null) return ret;
+    ret = stringLiteral(); if (ret != null) return ret;
+    ret = name();          if (ret != null) return ret;
+    ret = list();          if (ret != null) return ret;
+    ret = dict();          if (ret != null) return ret;
+    ret = command();       if (ret != null) return ret;
+    return null;
   }
 
   Character c() { return i < s.length() ? s.charAt(i) : null; }
@@ -61,15 +70,15 @@ public class Parser {
     return s.substring(j, i);
   }
 
-  Object item() {
-    Object ret;
-    ret = number();        if (ret != null) return ret;
-    ret = stringLiteral(); if (ret != null) return ret;
-    ret = name();          if (ret != null) return ret;
-    ret = list();          if (ret != null) return ret;
-    ret = dict();          if (ret != null) return ret;
-    ret = command();       if (ret != null) return ret;
-    return null;
+  public ArrayList<Object> list() {
+    skipSpaces();
+    if (c() == null || c() != '[') return null;
+    i++;
+    ArrayList<Object> l = items();
+    skipSpaces();
+    if (c() != ']') throw new Error();
+    i++;
+    return new ArrayList<Object>(java.util.Arrays.asList(new Object[]{"__list__", l}));
   }
 
   ArrayList<Object> dict() {

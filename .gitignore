@@ -3,3 +3,4 @@ parsetab.py
 parser.out
 a.out
 a.exe
+*.class

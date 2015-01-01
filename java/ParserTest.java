@@ -5,21 +5,7 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class ParserTest {
-  public static void eq(Object expected, Object actual) {
-    if (!expected.equals(actual)) {
-      System.out.println(actual);
-      throw new Error();
-    }
-  }
-
-  public static void ne(Object not_expected, Object actual) {
-    eq(false, not_expected.equals(actual));
-  }
-
-  public static ArrayList<Object> list(Object... args) {
-    return new ArrayList<Object>(Arrays.asList(args));
-  }
+public class ParserTest extends Test {
 
   public static void main(String[] args) {
 
@@ -34,6 +20,9 @@ public class ParserTest {
     eq(true, Character.isJavaIdentifierStart('h'));
     eq(true, Character.isJavaIdentifierPart('h'));
     eq("hi", new Parser("hi").name());
+
+    // test dict()
+    eq(list("__dict__", list(1.0, 2.0)), new Parser("{1 2}").dict());
 
     // test item()
     eq(list("hi", "there"), new Parser("(hi there)").item());
