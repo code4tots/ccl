@@ -10,28 +10,36 @@ class Context(object):
     self._table[key] = value
 
 
-def evaluate(context, thunk):
+class Object(object):
+  def __init__(self, value):
+    self.value = value
 
-  if isinstance(thunk, (int, float)):
-    return thunk
+class Number(Object):
+  def evaluate(self, context):
+    return self
 
-  elif isinstance(thunk, str):
-    return context[thunk]
+class String(Object):
+  def evaluate(self, context):
+    return context[self.value]
 
-  elif isinstance(thunk, list):
-    macro = evaluate(context, thunk[0])
-    return macro(context, thunk[1:])
+class List(Object):
+  def evaluate(self, context):
+    macro = self.value[0].evaluate(context)
+    return macro(context, self.value[1:])
 
-  else:
-    raise TypeError('Thunks must be int, float, str or list but found %r' % type(thunk))
+class Map(Object):
+  pass
 
+class Macro(Object):
+  def __call__(self, context, argument_thunks):
+    return self.value(context, argument_thunks)
 
 BASE_CONTEXT = dict()
 
 def register(name):
   def wrappper(macro):
-    BASE_CONTEXT[name] = macro
-    return macro
+    result = BASE_CONTEXT[name] = Macro(macro)
+    return result
   return wrappper
 
 @register('call-method')
