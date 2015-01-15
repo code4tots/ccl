@@ -1,15 +1,21 @@
-import unittest, ccl, os
+#!/usr/bin/python
+import ccl, unittest
 
-try:
-  from unittest import mock
-except ImportError:
-  import mock
+class CclTest(unittest.TestCase):
 
+	def test_lex(self):
+		self.assertItemsEqual(
+				['(', 'ax', '2', ')'],
+				ccl.lex(' (ax 2) '))
 
-class ShellServiceTest(unittest.TestCase):
+	def test_parse(self):
+		self.assertEqual(
+				['ls'],
+				ccl.parse(ccl.lex('ls')))
 
-  def test_ls(self):
-    self.assertItemsEqual(ccl.X.ls(), os.listdir())
+		self.assertEqual(
+				['cat', ['ls', '.']],
+				ccl.parse(ccl.lex('cat (ls .)')))
 
 if __name__ == '__main__':
-  unittest.main()
+	unittest.main()

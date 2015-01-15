@@ -1,27 +1,31 @@
 #!/usr/bin/python
+import re
 
-import code, os, sys, readline, rlcompleter
+def lex(string):
+	return [token for token in re.findall(
+			r'\s+|'
+			r'\"(?:\\\"|[^"]*)\"|'
+			r'[()]|'
+			r'[^\s\"()]+',
+			string) if token.strip()]
 
-PATH = os.environ['PATH'].split(os.pathsep)
+def parse(tokens):
+	stack = [[]]
+	for token in tokens:
+		if   token == '(': stack.append([])
+		elif token == ')': stack[-2].append(stack.pop())
+		else: stack[-1].append(token)
+	assert len(stack) == 1
+	return stack[0]
 
-class ShellService(object):
+def execute(thunk):
+	pass
 
-  def __getitem__(self, attribute):
-    for path in PATH:
-      os.listdir(path)
-    raise AttributeError(attribute)
+def run(file_):
+	buffer_ = ''
 
-X = ShellService()
-
-
-
-def run_file(file_path):
-  execfile(file_path, globals())
-
-def repl():
-  readline.parse_and_bind('bind ^I rl_complete' if sys.platform == 'darwin' else 'tab: complete')
-  console = code.InteractiveConsole(locals=globals())
-  while console.interact('-- ccl shell --'): pass
-
-if __name__ == '__main__':
-  repl()
+	for line in file_:
+		buffer_ += line
+		if tokens.count('(') == tokens.count(')'):
+			execute(parse(tokens))
+			buffer_ = ''
