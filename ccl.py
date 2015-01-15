@@ -18,9 +18,6 @@ def parse(tokens):
 	assert len(stack) == 1
 	return stack[0]
 
-def execute(thunk):
-	pass
-
 def run(file_):
 	buffer_ = ''
 
@@ -29,3 +26,6 @@ def run(file_):
 		if tokens.count('(') == tokens.count(')'):
 			execute(parse(tokens))
 			buffer_ = ''
+
+def execute(thunk):
+	pass
