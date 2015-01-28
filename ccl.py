@@ -1,5 +1,8 @@
 #!/usr/bin/python
-import re
+import re, io, os, sys
+
+try: input = raw_input
+except NameError: pass
 
 def lex(string):
 	return [token for token in re.findall(
@@ -18,14 +21,61 @@ def parse(tokens):
 	assert len(stack) == 1
 	return stack[0]
 
+class Runtime(object):
+
+	def __init__(self, context):
+		self._buffer = ''
+		self._context = context
+
+	def input(self, string):
+		self._buffer += str(string)
+
+	def execute(self):
+		result = execute(parse(lex(self._buffer)), self._context)
+		self._buffer = ''
+		return result
+
+	def complete(self):
+		tokens = lex(self._buffer)
+		return self._buffer and tokens.count('(') == tokens.count(')')
+
 def run(file_):
-	buffer_ = ''
-
+	runtime = Runtime(CCL_BUILTINS)
 	for line in file_:
-		buffer_ += line
-		if tokens.count('(') == tokens.count(')'):
-			execute(parse(tokens))
-			buffer_ = ''
+		runtime.input(line)
+		if runtime.complete():
+			runtime.execute()
 
-def execute(thunk):
-	pass
+def repl():
+	runtime = Runtime(CCL_BUILTINS)
+	try:
+		while True:
+			runtime.input(input('>>> '))
+			while not runtime.complete():
+				runtime.input(input('... '))
+			result = runtime.execute()
+			if result is not None:
+				print(result)
+	except EOFError:
+		pass
+
+def execute(thunk, context):
+	return (context[thunk] if isinstance(thunk, str) else
+		      execute(thunk[0], context)(*thunk[1:]))
+
+CCL_BUILTINS = dict()
+
+def function(f):
+	CCL_BUILTINS[f.__name__] = f
+	return f
+
+@function
+def ls(path='.'):
+	return os.listdir(path)
+
+@function
+def cwd():
+	return os.getcwd()
+
+if __name__ == '__main__':
+	repl()
