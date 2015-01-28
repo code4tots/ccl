@@ -58,6 +58,11 @@ class Let(nt('name value expr')):
 
 @ast
 class Print(nt('expr')):
+
+	@property
+	def type(self):
+		return self.expr.type
+
 	@classmethod
 	def parse(cls, stream):
 		if stream.token == '.':
@@ -66,6 +71,15 @@ class Print(nt('expr')):
 
 	def __str__(self):
 		return '([](%s x){cout << x; return x;})(%s)' % (self.expr.type, self.expr)
+
+@ast
+class Number(str):
+	type = 'double'
+
+	@classmethod
+	def parse(cls, stream):
+		if all(c.isdigit() or c in '-.' for c in stream.token):
+			return Number(stream.next())
 
 @ast
 class Name(str):
