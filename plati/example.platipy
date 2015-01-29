@@ -1,2 +1,6 @@
-p 'hi\n
-p : 5 'hi '\n ;
+.p 'hi\n
+.p : 5 'hi '\n ;
+x= 'hey
+.p : x .s x .s 'ok .s 'yo '\n ;
+.r int
+.r string
