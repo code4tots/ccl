@@ -1,2 +1,2 @@
-cat example.platipy | python plati.py > x.cpp && g++ --std=c++11 -O3 x.cpp && ./a.out
+cat example.platipy | python plati.py > x.cpp && g++ --std=c++11 -O3 x.cpp && echo "3 hi" | ./a.out
 rm -f x.cpp a.out

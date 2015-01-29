@@ -76,12 +76,15 @@ def translate(s):
 
 @ast
 class Number(str):
-	type = 'double'
+	type = 'long double'
 
 	@staticmethod
 	def parse(s):
 		if s.token != '.' and all(c.isdigit() or c in '+-.' for c in s.token):
-			return Number(s.next())
+			tok = s.next()
+			if '.' not in tok:
+				tok += '.0'
+			return Number(tok+'L')
 
 @ast
 class String(str):
@@ -123,6 +126,16 @@ class Print(nt('x')):
 		return '([](%s x){cout << x; return x;})(%s)' % (self.x.type, self.x)
 
 @ast
+class Read(nt('type')):
+	@staticmethod
+	def parse(s):
+		if s.consume('.r'):
+			return Read(s.next())
+
+	def __str__(self):
+		return '([](){%s x;cin>>x;return x;})()' % (self.type)
+
+@ast
 class Space(object):
 	type = 'string'
 
@@ -162,7 +175,9 @@ class Let(nt('name value expr')):
 		if s.token.endswith('='):
 			name = s.next()[:-1]
 			value = parse(s)
+			assert value is not None
 			expr = Chain.parse(s)
+			assert expr is not None
 			return Let(name, value, expr)
 
 	def __str__(self):
