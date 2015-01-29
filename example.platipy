@@ -6,3 +6,8 @@ a= .r int
 b= .r string
 c= 44.0
 .p : a .s b .s c '\n ;
+{
+	x= 'woa
+	.p : x '\n ;
+}
+.p : x '\n ;

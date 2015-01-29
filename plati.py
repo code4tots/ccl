@@ -187,5 +187,21 @@ class Let(nt('name value expr')):
 		return '([&](%s %s){return %s;})(%s)' % (
 				self.value.type, self.name, expr_str, self.value)
 
+@ast
+class Block(nt('x')):
+	@property
+	def type(self):
+		return self.x.type
+
+	@staticmethod
+	def parse(s):
+		if s.consume('{'):
+			x = Chain.parse(s)
+			assert s.consume('}')
+			return Block(x)
+
+	def __str__(self):
+		return str(self.x)
+
 if __name__ == '__main__':
 	sys.stdout.write(translate(sys.stdin.read()))
