@@ -1,2 +1,0 @@
-cat c.al | python al.py > x.cpp && g++ --std=c++11 -O3 x.cpp && ./a.out
-rm -f x.cpp a.out
