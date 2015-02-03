@@ -223,5 +223,17 @@ class Write(nte('stream value')):
 				self.value.type.declare('x'),
 				self.stream, self.value)
 
+@register_atom
+class Read(nte('type stream')):
+	@staticmethod
+	def parse(s):
+		if s.consume('.read'):
+			return Read(s.parse_type(True), s.parse_atom(True))
+
+	def __str__(self):
+		return '([](%s){%s;fin>>x;return x;})(%s)' % (
+				Reference(self.stream.type).declare('fin'),
+				self.type.declare('x'), self.stream)
+
 if __name__ == '__main__':
 	sys.stdout.write(translate(sys.stdin.read()))
