@@ -1,207 +1,125 @@
-import collections, sys
+import re, collections, io, sys
 
-header = """
-#include <cassert>
-#include <algorithm>
-#include <regex>
-#include <utility>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <streambuf>
+header = '''
 #include <string>
-#include <vector>
-#include <deque>
-#include <map>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
-#include <array>
-#include <tuple>
-#include <queue>
 using namespace std;
-"""
+'''
 
 def nt(s): return collections.namedtuple('x', s)
 
 class Stream(object):
 	def __init__(self, string):
-		self.gen = iter(string.split() + [None])
+		self.gen = iter(re.sub(r'#[^\n]*\n', '\n', string).split() + [None])
 		self.token = next(self.gen)
 
 	def next(self):
-		last = self.token
+		last_token = self.token
 		self.token = next(self.gen)
-		return last
+		return last_token
 
-	def consume(self, val):
-		if self.token == val:
+	def consume(self, value):
+		if self.token == value:
 			return self.next()
 
-types = []
-asts = []
+ast_classes = []
+variable_types = []
 
-class Bind(nt('name, value_type')):
-	def __enter__(self):
-		types.append((self.name, self.value_type))
+class AstMetaclass(type):
+	def __init__(self, class_name, super_classes, class_dict):
+		ast_classes.append(self)
 
-	def __exit__(self, type, value, traceback):
-		types.pop()
-
-def ast(a): asts.append(a); return a
+class Ast(AstMetaclass('BaseAst', (), {})):
+	pass
 
 def parse(s):
-	if s.token is not None:
-		for a in asts:
-			r = a.parse(s)
-			if r is not None:
-				return r
+	for ast_class in ast_classes:
+		if hasattr(ast_class, 'parse'):
+			result = ast_class.parse(s)
+			if result is not None:
+				return result
+
+def force_parse(s):
+	result = parse(s)
+	if result is None:
+		raise SyntaxError(s.token)
+	return result
+
+def translate(string):
+	return str(Chain.parse(Stream(string)))
+
+class Bind(nt('name variable_type')):
+	def __enter__(self):
+		variable_types.append((self.name, self.variable_type))
+
+	def __exit__(*_):
+		variable_types.pop()
 
 class Chain(nt('lhs rhs')):
 	@property
-	def type(self): return self.rhs.type if self.rhs else self.lhs
+	def type(self):
+		return self.rhs.type
 
 	@staticmethod
 	def parse(s):
 		lhs = parse(s)
-		if lhs:
-			rhs = Chain.parse(s)
-			return Chain(lhs, rhs) if rhs else lhs
+		if lhs is not None:
+			rhs = parse(s)
+			return lhs if rhs is None else Chain(lhs,rhs)
 
 	def __str__(self):
-		return '((%s), (%s))' % (self.lhs, self.rhs) if self.rhs else str(self.lhs)
+		return '([](%s a,%s b){return b;})(%s,%s)' % (
+				self.lhs.type, self.rhs.type, self.lhs, self.rhs)
 
-def translate(s):
-	return '%s\nint main(){%s;}\n' % (header, str(Chain.parse(Stream(s))))
-
-@ast
-class Number(str):
+class Number(Ast, str):
 	type = 'long double'
 
 	@staticmethod
 	def parse(s):
-		if s.token != '.' and all(c.isdigit() or c in '+-.' for c in s.token):
-			tok = s.next()
-			if '.' not in tok:
-				tok += '.0'
-			return Number(tok+'L')
+		if s.token and all(c.isdigit() or c in '+-.' for c in s.token):
+			return Number(s.next())
 
-@ast
-class String(str):
+class Name(Ast, str):
+	@property
+	def type(self):
+		for name, variable_type in reversed(variable_types):
+			if self == name:
+				return variable_type
+		raise ValueError(self)
+
+	@staticmethod
+	def parse(s):
+		if s.token and all(c.isalnum() and c in '_' for c in s.token):
+			return Name(s.next())
+
+class String(Ast, str):
 	type = 'string'
 
 	@staticmethod
 	def parse(s):
-		if s.token.startswith("'"):
+		if s.token and s.token.startswith(':'):
 			return String(s.next()[1:])
 
 	def __str__(self):
 		return '"' + self + '"'
 
-@ast
-class Name(str):
-	@property
-	def type(self):
-		for name, value_type in types:
-			if self == name:
-				return value_type
-		raise NameError('undefined name: ' + self)
-
-	@staticmethod
-	def parse(s):
-		if all(c.isalnum() or c in '_' for c in s.token):
-			return Name(s.next())
-
-@ast
-class Print(nt('x')):
-	@property
-	def type(self): return self.x.type
-
-	@staticmethod
-	def parse(s):
-		if s.consume('.p'):
-			return Print(parse(s))
-
-	def __str__(self):
-		return '([](%s x){cout << x; return x;})(%s)' % (self.x.type, self.x)
-
-@ast
-class Read(nt('type')):
-	@staticmethod
-	def parse(s):
-		if s.consume('.r'):
-			return Read(s.next())
-
-	def __str__(self):
-		return '([](){%s x;cin>>x;return x;})()' % (self.type)
-
-@ast
-class Space(object):
+class StringStream(Ast, tuple):
 	type = 'string'
 
 	@staticmethod
 	def parse(s):
-		if s.consume('.s'):
-			return Space()
+		if s.consume('.('):
+			values = []
+			while not s.consume(')'):
+				values.append(force_parse(s))
+			return StringStream(values)
 
 	def __str__(self):
-		return '" "'
+		return '([](%s){ostringstream ss;%s;return ss.str();})(%s)' % (
+				','.join('%s x%d' % (v.type, i) for i, v in enumerate(self)),
+				';'.join('ss<<x%d' for i in range(len(self))),
+				','.join(map(str, self)))
 
-@ast
-class StringStream(nt('xs')):
-	type = 'string'
+# if __name__ == '__main__':
+# 	sys.stdout.write(translate(sys.stdin.read()))
 
-	@staticmethod
-	def parse(s):
-		if s.consume(':'):
-			xs = []
-			while not s.consume(';'):
-				xs.append(parse(s))
-			return StringStream(xs)
-
-	def __str__(self):
-		return '([&](){ostringstream _ss;%s;return _ss.str();})()' % ';'.join(
-				'_ss << ' + str(x) for x in  self.xs)
-
-@ast
-class Let(nt('name value expr')):
-	@property
-	def type(self):
-		with Bind(name, self.value.type):
-			return self.expr.type
-
-	@staticmethod
-	def parse(s):
-		if s.token.endswith('='):
-			name = s.next()[:-1]
-			value = parse(s)
-			assert value is not None
-			expr = Chain.parse(s)
-			assert expr is not None
-			return Let(name, value, expr)
-
-	def __str__(self):
-		with Bind(self.name, self.value.type):
-			expr_str = str(self.expr)
-
-		return '([&](%s %s){return %s;})(%s)' % (
-				self.value.type, self.name, expr_str, self.value)
-
-@ast
-class Block(nt('x')):
-	@property
-	def type(self):
-		return self.x.type
-
-	@staticmethod
-	def parse(s):
-		if s.consume('{'):
-			x = Chain.parse(s)
-			assert s.consume('}')
-			return Block(x)
-
-	def __str__(self):
-		return str(self.x)
-
-if __name__ == '__main__':
-	sys.stdout.write(translate(sys.stdin.read()))
+print translate('.( :hi )')
