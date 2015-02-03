@@ -1,6 +1,7 @@
 import collections, sys
 
 header = """
+// Translated/compiled from platipy to C++11.
 #include <cassert>
 #include <algorithm>
 #include <regex>
