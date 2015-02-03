@@ -96,7 +96,7 @@ class Stream(object):
 
 ## types
 
-class SimpleType(object):
+class SimpleType(ntt('')):
 	@classmethod
 	def parse(cls, s):
 		if s.consume(cls.name):
