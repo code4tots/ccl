@@ -48,7 +48,7 @@ class Bind(nt('stream name type')):
 	def __enter__(self):
 		self.stream.stack.append((self.name, self.type))
 
-	def __exit__(self):
+	def __exit__(self, *_):
 		self.stream.stack.pop()
 
 class Stream(object):
@@ -164,6 +164,22 @@ class Name(nte('type name')):
 
 	def __str__(self):
 		return self.name
+
+@register_atom
+class Let(nte('name value block type')):
+	@staticmethod
+	def parse(s):
+		if s.consume('.let'):
+			name = s.next()
+			value = s.parse_atom(True)
+			with Bind(s, name, value.type):
+				block = s.parse()
+			return Let(name, value, block, block.type)
+
+	def __str__(self):
+		return '([](%s){return %s;})(%s)' % (
+				self.value.type.declare(self.name),
+				self.block, self.value)
 
 @register_atom
 class Space(nte('')):
