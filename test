@@ -2,6 +2,5 @@ if [ -z "$1" ]
 then
 	./test_all
 else
-	./compile "$1/src.platipy" && cat "$1/stdin" | ./a.out `cat "$1/args"` > stdout
-	diff stdout "$1/stdout"
+	./compile "$1/src.platipy" && cat "$1/stdin" | ./a.out `cat "$1/args"` > stdout && diff stdout "$1/stdout"
 fi
