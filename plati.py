@@ -1,6 +1,16 @@
+<<<<<<< HEAD
 import re, collections, io, sys
 
 header = '''
+// Translated/compiled from platipy to C++11.
+#include <cassert>
+#include <algorithm>
+#include <regex>
+#include <utility>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <streambuf>
 #include <string>
 using namespace std;
 '''
