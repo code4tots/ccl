@@ -5,3 +5,4 @@ a.cpp
 a.out
 a.exe
 *.class
+/stdout

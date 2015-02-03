@@ -1,0 +1,2 @@
+./compile "$1/src.platipy" && cat "$1/stdin" | ./a.out "${@:2}" > stdout
+diff stdout "$1/stdout"

@@ -1,0 +1,1 @@
+.write cout .str( :hello \s :world! \n )
