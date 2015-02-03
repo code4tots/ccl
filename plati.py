@@ -182,6 +182,20 @@ class Let(nte('name value block type')):
 				self.block, self.value)
 
 @register_atom
+class Block(nte('expression')):
+	wraps = 'expression'
+
+	@staticmethod
+	def parse(s):
+		if s.consume('{'):
+			expression = s.parse()
+			assert s.consume('}')
+			return Block(expression)
+
+	def __str__(self):
+		return str(self.expression)
+
+@register_atom
 class Space(nte('')):
 	type = StringType()
 
