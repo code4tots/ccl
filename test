@@ -1,6 +1,6 @@
 if [ -z "$1" ]
 then
-	./test_all
+	for t in testcase_*; do ./test $t; done
 else
 	./compile "$1/src.platipy" && cat "$1/stdin" | ./a.out `cat "$1/args"` > stdout && diff stdout "$1/stdout"
 fi
