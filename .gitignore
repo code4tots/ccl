@@ -1,6 +1,7 @@
 *.pyc
 parsetab.py
 parser.out
+a.cpp
 a.out
 a.exe
 *.class
