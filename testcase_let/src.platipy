@@ -1,2 +1,3 @@
-.let x :hi
-.write cout str( x x :! \n )
+.let x :hello
+.let y :world
+.write cout str( x \s y :! \n )

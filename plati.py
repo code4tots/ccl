@@ -177,7 +177,7 @@ class Let(nte('name value block type')):
 			return Let(name, value, block, block.type)
 
 	def __str__(self):
-		return '([](%s){return %s;})(%s)' % (
+		return '([&](%s){return %s;})(%s)' % (
 				self.value.type.declare(self.name),
 				self.block, self.value)
 
