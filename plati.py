@@ -53,7 +53,7 @@ class Bind(nt('stream name type')):
 
 class Stream(object):
 	def __init__(self, string):
-		self.gen = iter(re.sub(r'#.*?\n', '\n', string).split() + [''])
+		self.gen = iter(re.sub(r'#.*?\n?', '\n', string).split() + [''])
 		self.token = next(self.gen)
 		self.stack = [
 			('cin', Istream()),
