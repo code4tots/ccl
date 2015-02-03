@@ -195,7 +195,7 @@ class StringStream(nte('args')):
 
 	@staticmethod
 	def parse(s):
-		if s.consume('.str('):
+		if s.consume('str('):
 			args = []
 			while not s.consume(')'):
 				args.append(s.parse_atom(True))
