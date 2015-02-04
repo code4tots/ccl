@@ -1,4 +1,4 @@
-import collections, sys
+import collections, re, sys
 
 HEADER = '''
 #include <iostream>
@@ -31,7 +31,7 @@ def nte(s):
 	return X
 
 def translate(string):
-	return '%s\nint main(){%s;}\n' % (HEADER, Stream(string).parse_all() or '')
+	return '%s\nint main(){%s;}\n' % (HEADER, Stream(string).parse() or '')
 
 ATOMS = []
 
@@ -54,53 +54,18 @@ class Bind(nt('stream name type')):
 
 class Stream(object):
 	def __init__(self, string):
-		self.string = string
-		self.i = 0
-		self.token = None
-		self.next()
+		self.gen = iter(re.sub(r'#.*?(\n|\Z)', '\n', string).split() + [''])
+		self.token = next(self.gen)
 		self.stack = [
 			('cin', Istream()),
 			('cout', Ostream()),
 			('true', BoolType()),
 			('false', BoolType())]
 
-	@property
-	def c(self):
-		return self.string[self.i] if self.i < len(self.string) else ''
-
 	def next(self):
 		last_token = self.token
-
-		while self.c.isspace() or self.c == '#':
-			if self.c == '#':
-				while self.c and self.c != '\n':
-					self.i += 1
-			else:
-				self.i += 1
-
-		if self.c == '':
-			self.token == ''
-
-		else:
-			i = self.i
-			while self.c and not self.c.isspace():
-				self.i += 1
-
-			self.token = self.string[i:self.i]
-
+		self.token = next(self.gen)
 		return last_token
-
-	@property
-	def line_number(self):
-		return 1+self.string[:self.i].count('\n')
-
-	@property
-	def line(self):
-		start = self.string.rfind('\n', 0, self.i) + 1
-		end = self.string.find('\n', self.i)
-		if end == -1:
-			end = len(self.string)
-		return self.string[start:end]
 
 	def consume(self, token):
 		if self.token == token:
@@ -345,8 +310,4 @@ class Read(nte('type stream')):
 				self.type.declare('x'), self.stream)
 
 if __name__ == '__main__':
-	try:
-		sys.stdout.write(translate(sys.stdin.read()))
-	except SyntaxError as e:
-		sys.stderr.write(str(e))
-		exit(1)
+	sys.stdout.write(translate(sys.stdin.read()))
