@@ -54,7 +54,7 @@ class Bind(nt('stream name type')):
 
 class Stream(object):
 	def __init__(self, string):
-		self.string = string
+		self.string = string + '\n'
 		self.i = 0
 		self.token = None
 		self.next()
@@ -78,21 +78,21 @@ class Stream(object):
 			else:
 				self.i += 1
 
-		if self.c == '':
-			self.token == ''
+		i = self.i
+		while self.c and not self.c.isspace():
+			self.i += 1
 
-		else:
-			i = self.i
-			while self.c and not self.c.isspace():
-				self.i += 1
-
-			self.token = self.string[i:self.i]
+		self.token = self.string[i:self.i]
 
 		return last_token
 
 	@property
 	def line_number(self):
-		return 1+self.string[:self.i].count('\n')
+		return 1+self.string.count('\n', 0, self.i)
+
+	@property
+	def column_number(self):
+		return self.i - self.string.rfind('\n', 0, self.i) - len(self.token)
 
 	@property
 	def line(self):
@@ -115,9 +115,10 @@ class Stream(object):
 	def parse_all(self):
 		try:
 			return self.parse_to_completion()
-		except (SyntaxError, ValueError) as e:
-			raise SyntaxError("Error while parsing on line %s:\n%s\n%s\n" %
-					(self.line_number, self.line, e))
+		except (SyntaxError, ValueError, AssertionError) as e:
+			raise SyntaxError("Error while parsing on line %s:\n%s\n%s\n%s\n"%(
+					self.line_number, self.line,
+					' ' * (self.column_number-1) + '*', e))
 
 	def parse_to_completion(self):
 		results = self.parse()
@@ -134,19 +135,19 @@ class Stream(object):
 			rhs = self.parse()
 			return lhs if rhs is None else Chain(lhs, rhs)
 
-	def parse_generic(self, clss, require):
+	def parse_generic(self, clss, require, kind):
 		for cls in clss:
 			result = cls.parse(self)
 			if result is not None:
 				return result
 		if require:
-			raise SyntaxError()
+			raise SyntaxError("Expected " + kind)
 
 	def parse_atom(self, require=False):
-		return self.parse_generic(ATOMS, require)
+		return self.parse_generic(ATOMS, require, "atom")
 
 	def parse_type(self, require=False):
-		return self.parse_generic(TYPES, require)
+		return self.parse_generic(TYPES, require, "type")
 
 ## types
 

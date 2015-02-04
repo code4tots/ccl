@@ -24,4 +24,3 @@
 	.write cout str( :I \s :guess \s :true \s :isn't \s :true?\n )
 
 .write cout str( .if false :true :false \n )
-
