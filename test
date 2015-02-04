@@ -1,2 +1,2 @@
-cat test_stdin | ./runccl test_program.platipy `cat test_args` > stdout
+cat test_stdin | ./runccl test_program.platipy `cat test_args` > stdout && \
 diff stdout test_stdout
