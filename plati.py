@@ -114,8 +114,10 @@ class Stream(object):
 
 	def parse_all(self):
 		try:
-			return self.parse()
-		except (SyntaxError, ValueError) as e:
+			result = self.parse()
+			if self.token != '':
+				raise SyntaxError("Unrecognized token: " + self.token)
+		except (SyntaxError, ValueError, AssertionError) as e:
 			raise SyntaxError("Error while parsing on line %s:\n%s\n%s\n" %
 					(self.line_number, self.line, e))
 
