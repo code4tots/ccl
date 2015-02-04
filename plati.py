@@ -114,10 +114,19 @@ class Stream(object):
 
 	def parse_all(self):
 		try:
-			return self.parse()
+			return self.parse_to_completion()
 		except (SyntaxError, ValueError) as e:
 			raise SyntaxError("Error while parsing on line %s:\n%s\n%s\n" %
 					(self.line_number, self.line, e))
+
+	def parse_to_completion(self):
+		results = self.parse()
+
+		# Force an exception
+		if self.token != '':
+			self.parse_atom(True)
+
+		return results
 
 	def parse(self):
 		lhs = self.parse_atom()
