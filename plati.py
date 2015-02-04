@@ -122,7 +122,7 @@ class Stream(object):
 			return self.parse_to_completion()
 		except (SyntaxError, ValueError, AssertionError) as e:
 			raise SyntaxError(
-					"Error while parsing %s%s\n" + self.location_message)
+					"Error while parsing %s%s\n" % (self.location_message, e))
 
 	@property
 	def location_message(self):
@@ -251,10 +251,11 @@ class If(nte('condition if_ else_')):
 	def parse(s):
 		if s.consume('.if'):
 			condition = s.parse_atom(True)
-			assert condition.type == BoolType()
+			assert condition.type == BoolType(), "Expected bool expression"
 			if_ = s.parse_atom(True)
 			else_ = s.parse_atom(True)
-			assert if_.type == else_.type
+			assert if_.type == else_.type, (
+					"Both branches of if else must have same type")
 			return If(condition, if_, else_)
 
 	def __str__(self):
@@ -286,7 +287,7 @@ class Block(nte('expression')):
 	def parse(s):
 		if s.consume('{'):
 			expression = s.parse()
-			assert s.consume('}')
+			assert s.consume('}'), "Expected '}'"
 			return Block(expression)
 
 	def __str__(self):
