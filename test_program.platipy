@@ -1,7 +1,11 @@
-.let x :hello
+### test program!
+
+## test let constructs
+.let x :hello # comments!
 .let y :world
 .write cout str( x \s y :! \n \n )
 
+## test blocks
 .let x :a
 {
 	.let x :b
@@ -9,6 +13,7 @@
 }
 .write cout str( x x \n \n )
 
+## test read
 .write cout str(
 	.read string cin \n
 	.read number cin \n )
