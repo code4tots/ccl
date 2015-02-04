@@ -6,6 +6,7 @@ HEADER = '''
 #include <string>
 #include <sstream>
 using namespace std;
+typedef long double number;
 '''
 
 def nt(s):
@@ -142,6 +143,15 @@ class Chain(nte('lhs rhs')):
 				self.lhs.type.declare('lhs'),
 				self.rhs.type.declare('rhs'),
 				self.lhs, self.rhs)
+
+@register_atom
+class NumberLiteral(str):
+	type = NumberType()
+
+	@staticmethod
+	def parse(s):
+		if s.token and all(c.isdigit() or c in '+-.' for c in s.token):
+			return NumberLiteral(s.token)
 
 @register_atom
 class StringLiteral(str):

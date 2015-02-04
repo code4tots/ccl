@@ -1,1 +1,3 @@
-.write cout str( .read string cin \n )
+.write cout str(
+	.read string cin \n
+	.read number cin \n )
