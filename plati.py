@@ -25,8 +25,8 @@ def nte(s):
 	class X(nt(s)):
 		def __new__(cls, *args, **kwargs):
 			self = super(X, cls).__new__(cls, *args, **kwargs)
-			if hasattr(cls, 'wraps'):
-				self.type = getattr(self, cls.wraps).type
+			if hasattr(cls, 'same_type_as'):
+				self.type = getattr(self, cls.same_type_as).type
 			return self
 	return X
 
@@ -136,7 +136,7 @@ class Reference(ntt('type')):
 ## expressions
 
 class Chain(nte('lhs rhs')):
-	wraps = 'rhs'
+	same_type_as = 'rhs'
 
 	def __str__(self):
 		return '([](%s,%s){return rhs;})(%s,%s)' % (
@@ -177,7 +177,7 @@ class Name(nte('type name')):
 
 @register_atom
 class Let(nte('name value block')):
-	wraps = 'block'
+	same_type_as = 'block'
 
 	@staticmethod
 	def parse(s):
@@ -195,7 +195,7 @@ class Let(nte('name value block')):
 
 @register_atom
 class Block(nte('expression')):
-	wraps = 'expression'
+	same_type_as = 'expression'
 
 	@staticmethod
 	def parse(s):
@@ -252,7 +252,7 @@ class StringStream(nte('args')):
 
 @register_atom
 class Write(nte('stream value')):
-	wraps = 'value'
+	same_type_as = 'value'
 
 	@staticmethod
 	def parse(s):
