@@ -26,5 +26,5 @@
 
 .write cout str( .if false :true :false \n )
 
-##! Try turning this true into false to see assertion get triggered!
+##! Try turning this true into false to see assert get triggered!
 .assert true str( :true \s :should \s :be \s :true )
