@@ -58,7 +58,9 @@ class Stream(object):
 		self.token = next(self.gen)
 		self.stack = [
 			('cin', Istream()),
-			('cout', Ostream())]
+			('cout', Ostream()),
+			('true', BoolType()),
+			('false', BoolType())]
 
 	def next(self):
 		last_token = self.token
@@ -110,6 +112,10 @@ class SimpleType(ntt('')):
 		return isinstance(other, type(self))
 
 @register_type
+class BoolType(SimpleType):
+	name = 'bool'
+
+@register_type
 class StringType(SimpleType):
 	name = 'string'
 
@@ -151,7 +157,7 @@ class NumberLiteral(str):
 	@staticmethod
 	def parse(s):
 		if s.token and all(c.isdigit() or c in '+-.' for c in s.token):
-			return NumberLiteral(s.token)
+			return NumberLiteral(s.next())
 
 @register_atom
 class StringLiteral(str):
@@ -174,6 +180,23 @@ class Name(nte('type name')):
 
 	def __str__(self):
 		return self.name
+
+@register_atom
+class If(nte('condition if_ else_')):
+	same_type_as = 'if_'
+
+	@staticmethod
+	def parse(s):
+		if s.consume('.if'):
+			condition = s.parse_atom(True)
+			assert condition.type == BoolType()
+			if_ = s.parse_atom(True)
+			else_ = s.parse_atom(True)
+			assert if_.type == else_.type
+			return If(condition, if_, else_)
+
+	def __str__(self):
+		return '(%s?%s:%s)' % (self.condition, self.if_, self.else_)
 
 @register_atom
 class Let(nte('name value block')):
