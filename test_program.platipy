@@ -1,0 +1,14 @@
+.let x :hello
+.let y :world
+.write cout str( x \s y :! \n \n )
+
+.let x :a
+{
+	.let x :b
+	.write cout str( x x \n )
+}
+.write cout str( x x \n \n )
+
+.write cout str(
+	.read string cin \n
+	.read number cin \n )

@@ -1,6 +1,0 @@
-.let x :a
-{
-	.let x :b
-	.write cout str( x x \n )
-}
-.write cout str( x x \n )
