@@ -208,7 +208,7 @@ class Block(nte('expression')):
 		return str(self.expression)
 
 @register_atom
-class Space(nte('')):
+class Space(object):
 	type = StringType()
 
 	@staticmethod
@@ -220,7 +220,7 @@ class Space(nte('')):
 		return '" "'
 
 @register_atom
-class Newline(nte('')):
+class Newline(object):
 	type = StringType()
 
 	@staticmethod
