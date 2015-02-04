@@ -176,7 +176,9 @@ class Name(nte('type name')):
 		return self.name
 
 @register_atom
-class Let(nte('name value block type')):
+class Let(nte('name value block')):
+	wraps = 'block'
+
 	@staticmethod
 	def parse(s):
 		if s.consume('.let'):
@@ -184,7 +186,7 @@ class Let(nte('name value block type')):
 			value = s.parse_atom(True)
 			with Bind(s, name, value.type):
 				block = s.parse()
-			return Let(name, value, block, block.type)
+			return Let(name, value, block)
 
 	def __str__(self):
 		return '([&](%s){return %s;})(%s)' % (
