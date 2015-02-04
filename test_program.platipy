@@ -18,7 +18,7 @@
 	.read string cin \n
 	.read number cin \n \n )
 
-## test boolean
+## test bool
 .if true
 	.write cout str( :true \s :is \s :true!\n )
 	.write cout str( :I \s :guess \s :true \s :isn't \s :true?\n )
