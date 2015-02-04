@@ -1,12 +1,17 @@
 import collections, sys
 
 HEADER = '''
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 using namespace std;
 typedef long double number;
+number assert(bool expression, string message) {
+	if (!expression) cerr << "Assertion error " << message, exit(1);
+	return 0;
+}
 '''
 
 def nt(s):
@@ -116,9 +121,14 @@ class Stream(object):
 		try:
 			return self.parse_to_completion()
 		except (SyntaxError, ValueError, AssertionError) as e:
-			raise SyntaxError("Error while parsing on line %s:\n%s\n%s\n%s\n"%(
-					self.line_number, self.line,
-					' ' * (self.column_number-1) + '*', e))
+			raise SyntaxError(
+					"Error while parsing %s%s\n" + self.location_message)
+
+	@property
+	def location_message(self):
+		return "on line %s:\n%s\n%s\n"%(
+				self.line_number, self.line,
+				' ' * (self.column_number-1) + '*')
 
 	def parse_to_completion(self):
 		results = self.parse()
@@ -305,6 +315,21 @@ class Newline(object):
 
 	def __str__(self):
 		return r'"\n"'
+
+@register_atom
+class Assert(nt('expression message')):
+	type = NumberType()
+
+	@staticmethod
+	def parse(s):
+		if s.consume('.assert'):
+			message = s.location_message
+			expression = s.parse_atom(True)
+			assert expression.type == BoolType()
+			return Assert(expression, message)
+
+	def __str__(self):
+		return 'assert(%s,"%s")' % (self.expression, repr(self.message)[1:-1])
 
 @register_atom
 class StringStream(nte('args')):

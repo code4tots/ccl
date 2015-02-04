@@ -19,8 +19,12 @@
 	.read number cin \n \n )
 
 ## test bool
+##! Try turning this true into false to see the other message!
 .if true
 	.write cout str( :true \s :is \s :true!\n )
 	.write cout str( :I \s :guess \s :true \s :isn't \s :true?\n )
 
 .write cout str( .if false :true :false \n )
+
+##! Try turning this true into false to see assertion get triggered!
+.assert true str( :true \s :should \s :be \s :true )
