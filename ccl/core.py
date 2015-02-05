@@ -1,10 +1,11 @@
-class MemoedType(type):
-	def __init__(cls, name, bases, dict_):
-		if 'parse' in dict_:
-			cls.instances.append(cls)
+import collections
+from .corelib import NoOp, Chain
 
-Atom = MemoedType('Atom', (), {'instances': []})
-Type = MemoedType('Type', (), {'instances': []})
+HEADER = '''
+#include <string>
+using namespace std;
+typedef long double number;
+'''
 
 class Parser(object):
 	def __init__(self, string):
@@ -21,6 +22,7 @@ class Parser(object):
 		begin = self.string.rfind('\n', 0, self.begin) + 1
 		end = self.string.find('\n', self.end)
 		end = len(self.string) if end == -1 else end
+		return self.string[begin:end]
 
 	@property
 	def line_number(self):
@@ -31,8 +33,18 @@ class Parser(object):
 		return self.begin - self.string.rfind('\n', 0, self.begin)
 
 	@property
+	def location_message(self):
+		return 'on line %s:\n%s\n%s\n' % (
+				self.line_number, self.line,
+				' ' * (self.column_number - 1) + '*')
+
+	@property
 	def char(self):
 		return self.string[self.end:self.end+1]
+
+	@property
+	def done(self):
+		return self.token == ''
 
 	def __iter__(self):
 		return self
@@ -58,16 +70,34 @@ class Parser(object):
 
 		return last_token
 
-	def parse_ast(self, base_ast_cls, require):
+	def parse_ast(self, base_ast_cls):
 		for cls in base_ast_cls.instances:
 			ast = cls.parse(self)
 			if ast is not None:
 				return ast
-		if require:
-			raise SyntaxError("Expected " + base_ast_cls.__name__)
 
-	def parse_atom(self, require=True):
-		self.parse_ast(Atom, require)
+		raise SyntaxError('Expected %s %s' % (
+				base_ast_cls.__name__, self.location_message))
 
-	def parse_type(self, require=True):
-		self.parse_ast(Type, require)
+	def parse_atom(self):
+		self.parse_ast(Atom)
+
+	def parse_type(self):
+		self.parse_ast(Type)
+
+	def parse_many_atoms(self, to_completion=False):
+		expression = NoOp()
+		try:
+			while True:
+				expression = Chain(expression, self.parse_atom())
+		except SyntaxError:
+			if to_completion and not self.done:
+				raise
+		return atoms
+
+	def parse_all(self):
+		return self.parse_many_atoms(to_completion=True)
+
+	def translate(self):
+		return '%s\nint main(int argc, char** argv){%s;}\n' % (
+				HEADER, self.parse_all())

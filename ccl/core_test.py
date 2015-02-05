@@ -1,4 +1,5 @@
-import unittest, core
+import unittest
+from . import core
 
 class CoreTest(unittest.TestCase):
 	def testParser(self):
