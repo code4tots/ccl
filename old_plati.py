@@ -12,6 +12,7 @@ number assert(bool expression, string message) {
 	if (!expression) cerr << "Assertion error " << message, exit(1);
 	return 0;
 }
+
 '''
 
 def nt(s):
