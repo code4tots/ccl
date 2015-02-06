@@ -1,21 +1,36 @@
-import collections
-from .corelib import NoOp, Chain
+from .corelib import Atom, Type, NoOp, Chain
 
 HEADER = '''
+#include <iostream>
+#include <fstream>
 #include <string>
-using namespace std;
 typedef long double number;
+using namespace std;
 '''
 
+NAME_STACK = []
+
 class Parser(object):
+
+	@staticmethod
+	def valid_name(string):
+		return string and all(c.isalnum() for c in '_' for c in string)
+
 	def __init__(self, string):
 		self.string = string
 		self.token = None
 		self.begin = 0
 		self.end = 0
-		self.name_stack = []
+		self.name_stack = list(NAME_STACK)
+		self.location_stack = []
 
 		self.next()
+
+	def push_location(self):
+		self.location_stack.append((self.begin, self.end))
+
+	def pop_location(self):
+		self.begin, self.end = self.location_stack.pop()
 
 	@property
 	def line(self):
@@ -44,7 +59,7 @@ class Parser(object):
 
 	@property
 	def done(self):
-		return self.token == ''
+		return self.begin >= len(self.string)
 
 	def __iter__(self):
 		return self
@@ -61,14 +76,18 @@ class Parser(object):
 		while self.char and self.char.isspace():
 			self.end += 1
 
-		self.start = self.end
+		self.begin = self.end
 
 		while self.char and not self.char.isspace():
 			self.end += 1
 
-		self.token = self.string[self.start:self.end]
+		self.token = self.string[self.begin:self.end]
 
 		return last_token
+
+	def consume(self, token):
+		if self.token == token:
+			return self.next()
 
 	def parse_ast(self, base_ast_cls):
 		for cls in base_ast_cls.instances:
@@ -79,11 +98,28 @@ class Parser(object):
 		raise SyntaxError('Expected %s %s' % (
 				base_ast_cls.__name__, self.location_message))
 
+	def parse_name_token(self):
+		if self.valid_name(self.token):
+			return self.next()
+
+		raise SyntaxError('Expected name ' + self.location_message)
+
 	def parse_atom(self):
-		self.parse_ast(Atom)
+		return self.parse_ast(Atom)
+
+	def parse_atom_of_type(self, type_):
+		self.push_location()
+		atom = self.parse_atom()
+
+		if atom.type != type_ and atom.type not in type_.supers:
+			self.pop_location()
+			raise SyntaxError(
+					'Expected atom of type %s, but got one of type %s %s' % (
+							type_, atom.type, self.location_message))
+		return atom
 
 	def parse_type(self):
-		self.parse_ast(Type)
+		return self.parse_ast(Type)
 
 	def parse_many_atoms(self, to_completion=False):
 		expression = NoOp()
@@ -93,7 +129,7 @@ class Parser(object):
 		except SyntaxError:
 			if to_completion and not self.done:
 				raise
-		return atoms
+		return expression
 
 	def parse_all(self):
 		return self.parse_many_atoms(to_completion=True)
@@ -101,3 +137,10 @@ class Parser(object):
 	def translate(self):
 		return '%s\nint main(int argc, char** argv){%s;}\n' % (
 				HEADER, self.parse_all())
+
+	def __getitem__(self, key):
+		for name, type_ in reversed(self.name_stack):
+			if name == key:
+				return type_
+		raise SyntaxError('Name %s is not declared in this scope %s' % (
+				key, self.location_message))
