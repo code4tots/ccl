@@ -64,7 +64,7 @@ class Parser(object):
 		return self.next()
 
 	def next(self):
-		if self.token == '':
+		if self.done:
 			raise StopIteration()
 
 		last_token = self.token
@@ -89,6 +89,10 @@ class Parser(object):
 		if self.token == token:
 			return self.next()
 
+	@property
+	def done(self):
+		return self.token == ''
+
 	# parsing.
 
 	def parse_one(self):
@@ -97,22 +101,21 @@ class Parser(object):
 			if ast is not None:
 				return ast
 
-		raise SyntaxError('Invalid syntax ' + self.location_message)
-
 	def __call__(self, type_):
 		self.push_location()
 		ast = self.parse_one()
-		if not ast.is_a(type_):
+		if not ast or not ast.is_a(type_):
 			self.pop_location()
 			raise SyntaxError('Expected %s but got %s %s' % (
-					type_, ast.type, self.location_message))
+					type_, 'eof' if ast is None else ast.type,
+					self.location_message))
 		return ast
 
-	def parse(self, to_completion=False):
+	def parse_chain(self, to_completion=False):
 		ast = NoOp()
 		try:
 			while not self.done:
-				ast = Chain(ast, self.parse_one())
+				ast = Chain(ast, self(ExpressionType()))
 		except SyntaxError:
 			if to_completion:
 				raise
@@ -124,3 +127,6 @@ assert list(Parser(':#')) == [':#']
 
 from .ast import *
 
+assert Parser('').parse_chain() == NoOp()
+assert Parser(':x').parse_chain() == Chain(NoOp(), StringLiteral('x'))
+assert Parser('.list').parse_chain(to_completion=True)
