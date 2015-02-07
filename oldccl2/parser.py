@@ -129,4 +129,4 @@ from .ast import *
 
 assert Parser('').parse_chain() == NoOp()
 assert Parser(':x').parse_chain() == Chain(NoOp(), StringLiteral('x'))
-assert Parser('.list').parse_chain(to_completion=True)
+assert Parser('.list .string').parse_chain(to_completion=True)

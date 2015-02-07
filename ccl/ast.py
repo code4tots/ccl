@@ -1,122 +1,115 @@
-from collections import namedtuple
+import collections, re
+from .lexer import TokenStream
 
-class AstMetaclass(type):
-	def __new__(mcs, name, bases, dict_):
-		cls = super(AstMetaclass, mcs).__new__(mcs, name, bases, dict_)
-		cls.ast_clss.append(cls)
-		return cls
+def parse(string):
+	return Chain.parse(TokenStream(string))
 
-BaseAst = AstMetaclass('BaseAst', (), {
-		'ast_clss': [],
-		'parse': staticmethod(lambda s: None),
-})
+def nt(s): return collections.namedtuple('X', s)
 
-class Ast(BaseAst):
+class Singleton(object):
+	def __new__(cls):
+		if cls._singleton is None:
+			cls._singleton = super(Singleton, cls).__new__(cls)
+		return cls._singleton
+
+	def __eq__(self, other):
+		return type(self) == type(other)
+
+class Ast(object):
+	registered_parsers = []
+
+	same_type_as = None
+
 	def __new__(cls, *args, **kwargs):
 		self = super(Ast, cls).__new__(cls, *args, **kwargs)
-		if hasattr(self, 'same_type_as'):
-			self.type = getattr(self, self.same_type_as).type
+		if cls.same_type_as is not None:
+			self.type = getattr(self, cls.same_type_as).type
 		return self
+
+	@classmethod
+	def register_parser(cls, parser):
+		cls.registered_parsers.append(parser)
+		return parser
+
+	@classmethod
+	def parse_any(cls, s):
+		for parser in cls.registered_parsers:
+			ast = parser.parse(s)
+			if ast is not None:
+				return ast
+
+	@staticmethod
+	def expect_type(ast, expected_type, s):
+		if ast is None:
+			raise SyntaxError('Expected %s but found invalid expression %s' % (
+					expected_type, s.location_message))
+
+		if not ast.is_a(expected_type):
+			raise SyntaxError('Expected %s but got %s %s' % (
+					expected_type, ast.type, s.location_message))
+
+	@classmethod
+	def parse(cls, expected_type, s):
+		ast = cls.parse_any(s)
+		cls.expect_type(ast, expected_type, s)
+		return ast
 
 	def __eq__(self, other):
 		return type(self) == type(other) and super(Ast, self).__eq__(other)
 
 	def is_a(self, type_):
-		return type_ in self.type.supers	
+		return self.type.is_subclass_of(type_)
 
 class Type(Ast):
-	_supers = None
+	def is_subclass_of(self, type_):
+		return self == type_ or any(
+				base.is_subclass_of(type_) for base in self.bases)
 
-	@property
-	def supers(self):
-		if self._supers is None:
-			self._supers = tuple(set([self] + list(
-					sup for base in self.bases for sup in base.supers)))
-		return self._supers
+class ExpressionType(Type, Singleton):
+	_singleton = None
 
-class PrimitiveType(Type):
-	name = ''
+class NumberType(Type, Singleton):
+	bases = (ExpressionType(),)
+	_singleton = None
+
+class StringType(Type, Singleton):
+	bases = (ExpressionType(),)
+	_singleton = None
+
+class NoOp(Ast, Singleton):
+	_singleton = None
+	type = NumberType()
+
+class Chain(Ast, nt('lhs rhs')):
+	same_type_as = 'rhs'
 
 	@classmethod
 	def parse(cls, s):
-		if s.consume('.' + cls.name):
-			return cls()
+		lhs = Ast.parse_any(s)
+		if lhs is None:
+			return NoOp()
+		Ast.expect_type(lhs, ExpressionType(), s)
 
-	def __hash__(self):
-		return hash(type(self))
+		rhs = cls.parse(s)
+		if rhs == NoOp():
+			return lhs
+		Ast.expect_type(rhs, ExpressionType(), s)
 
-	def __eq__(self, other):
-		return type(self) == type(other)
+		return Chain(lhs, rhs)
 
-	def __str__(self):
-		return self.name
-
-class TypeType(PrimitiveType):
-	bases = ()
-	name = 'type'
-
-# It's contentious whether TypeType should be a Type
-Type.type = TypeType()
-
-class ExpressionType(PrimitiveType):
-	bases = ()
-	name = 'expression'
-
-class NumberType(PrimitiveType):
-	bases = (ExpressionType(),)
-	name = 'number'
-
-class StringType(PrimitiveType):
-	bases = (ExpressionType(),)
-	name = 'string'
-
-def TypeTuple(s):
-	class TypeTuple(Type, namedtuple('TypeTuple', s)):
-		pass
-	return TypeTuple
-
-class ListType(TypeTuple('value_type')):
-	type = TypeType
-
-	@staticmethod
-	def parse(s):
-		if s.consume('.list'):
-			return ListType(s(TypeType()))
-
-class DictType(TypeTuple('key_type value_type')):
-	type = TypeType
-
-	@staticmethod
-	def parse(s):
-		if s.consume('.dict'):
-			return DictType(s(TypeType()), s(TypeType()))
-
-class Expression(Ast):
-	pass
-
-def ExpressionTuple(s):
-	class ExpressionTuple(Expression, namedtuple('ExpressionTuple', s)):
-		pass
-	return ExpressionTuple
-
-class Chain(ExpressionTuple('lhs rhs')):
-	same_type_as = 'rhs'
-
-class NoOp(Expression):
+@Ast.register_parser
+class NumberLiteral(Ast, str):
 	type = NumberType()
 
-	def __eq__(self, other):
-		return type(self) == type(other)
+	REGEX = re.compile(r'(?:\+|\-)?(?:\d+\.\d*|\.?\d+)')
 
-class NumberLiteral(Expression, str):
-	type = NumberType()
-
-	@staticmethod
-	def parse(s):
-		if s.token and all(c.isdigit() or c in '+-.' for c in s.token):
+	@classmethod
+	def parse(cls, s):
+		if cls.REGEX.match(s.token):
 			return NumberLiteral(s.next())
 
-class StringLiteral(Expression, str):
+@Ast.register_parser
+class StringLiteral(Ast, str):
 	type = StringType()
 
 	@staticmethod
@@ -124,12 +117,10 @@ class StringLiteral(Expression, str):
 		if s.token.startswith(':'):
 			return StringLiteral(s.next()[1:])
 
-class Name(ExpressionTuple('type name')):
-	@staticmethod
-	def parse(s):
-		if s.token and all(c.isalnum() or c in '_' for c in s.token):
-			return Name(s[s.token], s.next())
+### tests
 
-assert Chain(StringLiteral('x'), NoOp()).type == NoOp().type == NumberType()
-assert NoOp() == NoOp()
-assert Chain(NoOp(), NoOp()) == Chain(NoOp(), NoOp())
+assert parse('') == NoOp()
+assert parse('5') == NumberLiteral('5')
+assert parse('5.') == NumberLiteral('5.')
+assert parse('.5') == NumberLiteral('.5')
+assert parse(':x') == StringLiteral('x')
