@@ -38,18 +38,27 @@ class Ast(object):
 			if ast is not None:
 				return ast
 
+	@classmethod
+	def parse_expression(cls, s):
+		ast = cls.parse_any(s)
+		if ast is not None and not isinstance(ast, Expression):
+			raise SyntaxError('Expected expression but got %s %s' % (
+					'invalid expression' if ast is None else ast.type,
+					s.location_message))
+		return ast
+
 	@staticmethod
 	def expect_type(ast, expected_type, s):
 		if ast is None:
 			raise SyntaxError('Expected %s but found invalid expression %s' % (
 					expected_type, s.location_message))
 
-		if not ast.is_a(expected_type):
+		if ast.type != expected_type:
 			raise SyntaxError('Expected %s but got %s %s' % (
 					expected_type, ast.type, s.location_message))
 
 	@classmethod
-	def parse(cls, expected_type, s):
+	def parse_expression_of_type(cls, expected_type, s):
 		ast = cls.parse_any(s)
 		cls.expect_type(ast, expected_type, s)
 		return ast
@@ -57,48 +66,42 @@ class Ast(object):
 	def __eq__(self, other):
 		return type(self) == type(other) and super(Ast, self).__eq__(other)
 
-	def is_a(self, type_):
-		return self.type.is_subclass_of(type_)
-
 class Type(Ast):
-	def is_subclass_of(self, type_):
-		return self == type_ or any(
-				base.is_subclass_of(type_) for base in self.bases)
+	pass
 
-class ExpressionType(Type, Singleton):
+class VoidType(Type, Singleton):
 	_singleton = None
 
 class NumberType(Type, Singleton):
-	bases = (ExpressionType(),)
 	_singleton = None
 
 class StringType(Type, Singleton):
-	bases = (ExpressionType(),)
 	_singleton = None
 
-class NoOp(Ast, Singleton):
-	_singleton = None
-	type = NumberType()
+class Expression(Ast):
+	pass
 
-class Chain(Ast, nt('lhs rhs')):
+class NoOp(Expression, Singleton):
+	_singleton = None
+	type = VoidType()
+
+class Chain(Expression, nt('lhs rhs')):
 	same_type_as = 'rhs'
 
 	@classmethod
 	def parse(cls, s):
-		lhs = Ast.parse_any(s)
+		lhs = Ast.parse_expression(s)
 		if lhs is None:
 			return NoOp()
-		Ast.expect_type(lhs, ExpressionType(), s)
 
 		rhs = cls.parse(s)
 		if rhs == NoOp():
 			return lhs
-		Ast.expect_type(rhs, ExpressionType(), s)
 
 		return Chain(lhs, rhs)
 
 @Ast.register_parser
-class NumberLiteral(Ast, str):
+class NumberLiteral(Expression, str):
 	type = NumberType()
 
 	REGEX = re.compile(r'(?:\+|\-)?(?:\d+\.\d*|\.?\d+)')
@@ -109,7 +112,7 @@ class NumberLiteral(Ast, str):
 			return NumberLiteral(s.next())
 
 @Ast.register_parser
-class StringLiteral(Ast, str):
+class StringLiteral(Expression, str):
 	type = StringType()
 
 	@staticmethod
@@ -123,4 +126,6 @@ assert parse('') == NoOp()
 assert parse('5') == NumberLiteral('5')
 assert parse('5.') == NumberLiteral('5.')
 assert parse('.5') == NumberLiteral('.5')
+assert parse('5.5') == NumberLiteral('5.5')
+assert parse(':') == StringLiteral('')
 assert parse(':x') == StringLiteral('x')
