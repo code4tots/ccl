@@ -6,14 +6,9 @@ class Eq(object):
 	def __eq__(self, other):
 		return type(self) == type(other) and super(Eq, self).__eq__(other)
 
-def nt(s): return collections.namedtuple('X', s)
-
 # abstract syntax tree nodes.
 
-class Chain(Eq, nt('lhs rhs')):
-	pass
-
-class FunctionCall(Eq, nt('f args')):
+class MacroCall(Eq, collections.namedtuple('MacroCall', 'f args')):
 	pass
 
 class Name(Eq, str):
@@ -25,16 +20,11 @@ class StringLiteral(Eq, str):
 class NumberLiteral(Eq, str):
 	pass
 
-class FunctionLiteral(Eq, nt('args body')):
-	pass
+class ParserMetaclass(type):
+	def __getitem__(cls, string):
+		return cls(string).parse()
 
-class DictLiteral(Eq, tuple):
-	pass
-
-class ListLiteral(Eq, tuple):
-	pass
-
-class Parser(object):
+class Parser(ParserMetaclass('Parser', (object,), {})):
 	NUMBER_REGEX = re.compile(r'(?:\+|\-)?(?:\d+\.\d*|\.?\d+)')
 	NAME_REGEX = re.compile(r'\w+')
 
@@ -134,34 +124,13 @@ class Parser(object):
 
 	# Parse dat LL(1) grammar.
 
-	def maybe_parse_expression(self):
+	def parse_expression(self):
 		if self.consume('('):
 			f = self.parse_expression()
 			args = []
 			while not self.consume(')'):
 				args.append(self.parse_expression())
-			return FunctionCall(f, tuple(args))
-		elif self.consume('['):
-			exprs = []
-			while not self.consume(']'):
-				exprs.append(self.parse_expression())
-			return ListLiteral(tuple(exprs))
-		elif self.consume('{'):
-			exprs = []
-			while not self.consume('}'):
-				exprs.append((self.parse_expression(),self.parse_expression()))
-			return DictLiteral(tuple(exprs))
-		elif self.consume('.'):
-			args = []
-			while not self.consume('{'):
-				if not self.NAME_REGEX.match(self.token):
-					raise SyntaxError('Invalid name %s %s' % (
-							self.token, self.location_message))
-				args.append(self.next())
-			body = self.parse_expressions()
-			if not self.consume('}'):
-				raise SyntaxError('Missing "}" ' + self.location_message)
-			return FunctionLiteral(tuple(args), body)
+			return MacroCall(f, tuple(args))
 		elif self.token.startswith(('"',"'")):
 			return StringLiteral(self.next())
 		elif self.NUMBER_REGEX.match(self.token):
@@ -169,27 +138,13 @@ class Parser(object):
 		elif self.NAME_REGEX.match(self.token):
 			return Name(self.next())
 
-	def parse_expression(self):
-		ast = self.maybe_parse_expression()
-		if ast is None:
-			raise SyntaxError('Invalid expression ' + self.location_message)
-		return ast
+		raise SyntaxError("Invalid token %s %s" % (self.token, self.location_message))
 
-	def parse_expressions(self):
-		lhs = self.maybe_parse_expression()
-		if lhs is None:
-			return NumberLiteral('0')
-		rhs = self.maybe_parse_expression()
-		while rhs is not None:
-			lhs = Chain(lhs, rhs)
-			rhs = self.maybe_parse_expression()
-		return lhs
-
-	def parse_all(self):
-		expressions = self.parse_expressions()
-		if not self.done:
-			raise SyntaxError('Invalid expression ' + self.location_message)
-		return expressions
+	def parse(self):
+		exprs = []
+		while not self.done:
+			exprs.append(self.parse_expression())
+		return exprs
 
 assert list(Parser('a b c')) == ['a', 'b', 'c']
 assert list(Parser('"hi there"')) == ['"hi there"']
@@ -205,17 +160,7 @@ assert ts.location_message == 'on line 1\nabc xyz\n    *'
 ts.pop_location()
 assert ts.location_message == 'on line 1\nabc xyz\n*'
 
-assert Parser('').parse_all() == NumberLiteral('0')
-assert Parser('hi').parse_all() == Name('hi')
-assert Parser('''
-( . x { 2 x } 'hi' [ 4 ] { 1 2 } )
-''').parse_all() == FunctionCall(
-		FunctionLiteral(('x',), Chain(NumberLiteral('2'), Name('x'))),
-		(
-				StringLiteral("'hi'"),
-				ListLiteral((NumberLiteral('4'),)),
-				DictLiteral((
-						(NumberLiteral('1'), NumberLiteral('2')),
-				))
-		)
-)
+assert Parser['a b c'] == [Name('a'), Name('b'), Name('c')]
+assert Parser['"a"'] == [StringLiteral('"a"')]
+assert Parser['5'] == [NumberLiteral('5')]
+assert Parser['( a b c )'] == [MacroCall(Name('a'), (Name('b'), Name('c')))]
