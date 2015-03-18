@@ -9,8 +9,10 @@ import CclLexer
 import CclListener
 import CclParser
 
+
 def NamedTuple(attrs):
   return collections.namedtuple("namedtuple", attrs)
+
 
 class Context(object):
 
