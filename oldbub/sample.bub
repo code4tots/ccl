@@ -1,0 +1,8 @@
+# p (p "Hello world!")
+# p nil
+# a:=55
+# p a
+p (ls path='.')
+# p (get 'http://www.google.com')
+p (x:=3)
+'hi\n' > 'x.txt'
