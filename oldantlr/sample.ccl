@@ -1,8 +1,0 @@
-2 * 3;
-Print(2, 3);
-Print();
-Print(5);
-Print(5.1);
-Print([1, 2, 3]);
-Print(true);
-
