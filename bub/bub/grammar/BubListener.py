@@ -40,6 +40,42 @@ class BubListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by BubParser#block.
+    def enterBlock(self, ctx):
+        pass
+
+    # Exit a parse tree produced by BubParser#block.
+    def exitBlock(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by BubParser#ifElse.
+    def enterIfElse(self, ctx):
+        pass
+
+    # Exit a parse tree produced by BubParser#ifElse.
+    def exitIfElse(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by BubParser#if.
+    def enterIf(self, ctx):
+        pass
+
+    # Exit a parse tree produced by BubParser#if.
+    def exitIf(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by BubParser#while.
+    def enterWhile(self, ctx):
+        pass
+
+    # Exit a parse tree produced by BubParser#while.
+    def exitWhile(self, ctx):
+        pass
+
+
     # Enter a parse tree produced by BubParser#declaration.
     def enterDeclaration(self, ctx):
         pass
@@ -85,39 +121,39 @@ class BubListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by BubParser#lambda.
+    def enterLambda(self, ctx):
+        pass
+
+    # Exit a parse tree produced by BubParser#lambda.
+    def exitLambda(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by BubParser#list.
+    def enterList(self, ctx):
+        pass
+
+    # Exit a parse tree produced by BubParser#list.
+    def exitList(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by BubParser#dict.
+    def enterDict(self, ctx):
+        pass
+
+    # Exit a parse tree produced by BubParser#dict.
+    def exitDict(self, ctx):
+        pass
+
+
     # Enter a parse tree produced by BubParser#cmdExpr.
     def enterCmdExpr(self, ctx):
         pass
 
     # Exit a parse tree produced by BubParser#cmdExpr.
     def exitCmdExpr(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by BubParser#args.
-    def enterArgs(self, ctx):
-        pass
-
-    # Exit a parse tree produced by BubParser#args.
-    def exitArgs(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by BubParser#arg.
-    def enterArg(self, ctx):
-        pass
-
-    # Exit a parse tree produced by BubParser#arg.
-    def exitArg(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by BubParser#kwarg.
-    def enterKwarg(self, ctx):
-        pass
-
-    # Exit a parse tree produced by BubParser#kwarg.
-    def exitKwarg(self, ctx):
         pass
 
 
