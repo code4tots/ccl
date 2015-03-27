@@ -1,5 +1,0 @@
-f := \ name {
-  print 'hi' name
-}
-
-f 'joe'
