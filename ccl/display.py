@@ -18,6 +18,10 @@ class Display(object):
       return type(self).__name__ + str.__repr__(self)
 
 
+class Stmts(Display, tuple):
+  pass
+
+
 class Block(Display, tuple):
   pass
 

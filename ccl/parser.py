@@ -116,7 +116,7 @@ def _Parse(source, fromfile, throw):
 
 def Parse(source, fromfile=False):
     try:
-        return _Parse(source, fromfile, True)
+        return display.Stmts(_Parse(source, fromfile, True))
     except antlr4.error.Errors.ParseCancellationException:
         _Parse(source, fromfile, False)
         return

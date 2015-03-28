@@ -1,5 +1,5 @@
 grammar Ccl;
-start      : stmts
+start      : stmts EOF
            ;
 stmts      : (stmt? DELIM)*
            ;
@@ -18,13 +18,13 @@ expr       : STR                             #str
            | '[' (expr ':' expr)* ']'        #dict
            | '(' stmt ')'                    #cmd
            ;
-DELIM      : ';' | '\n' | EOF
+DELIM      : ';' | '\n'
            ;
-STR        : [a-zA-Z_0-9/\-+~.]+
+STR        : [a-zA-Z_0-9/\-+~.*]+
            | ["] (~["] | '\\' ["]) * ["]
            | ['] (~[']  | '\\' [']) * [']
            ;
-VAR        : '$' [a-zA-Z_0-9$/\-+~.]+
+VAR        : '$' [a-zA-Z_0-9$/\-+~.*]+
            ;
 CMT        : '#' ~'\n'* -> skip
            ;
