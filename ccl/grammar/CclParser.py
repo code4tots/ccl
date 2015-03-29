@@ -10,38 +10,23 @@ else:
     from CclListener import CclListener
 def serializedATN():
     with StringIO() as buf:
-        buf.write("\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\24")
-        buf.write("\\\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\3\2\3\2\3\2\3\3\5\3")
-        buf.write("\17\n\3\3\3\7\3\22\n\3\f\3\16\3\25\13\3\3\4\6\4\30\n\4")
-        buf.write("\r\4\16\4\31\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3")
-        buf.write("\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4")
-        buf.write("\5\4\64\n\4\3\5\3\5\3\5\3\5\7\5:\n\5\f\5\16\5=\13\5\3")
-        buf.write("\5\3\5\3\5\3\5\3\5\3\5\7\5E\n\5\f\5\16\5H\13\5\3\5\3\5")
-        buf.write("\3\5\3\5\3\5\3\5\7\5P\n\5\f\5\16\5S\13\5\3\5\3\5\3\5\3")
-        buf.write("\5\3\5\5\5Z\n\5\3\5\2\2\6\2\4\6\b\2\2h\2\n\3\2\2\2\4\23")
-        buf.write("\3\2\2\2\6\63\3\2\2\2\bY\3\2\2\2\n\13\5\4\3\2\13\f\7\2")
-        buf.write("\2\3\f\3\3\2\2\2\r\17\5\6\4\2\16\r\3\2\2\2\16\17\3\2\2")
-        buf.write("\2\17\20\3\2\2\2\20\22\7\20\2\2\21\16\3\2\2\2\22\25\3")
-        buf.write("\2\2\2\23\21\3\2\2\2\23\24\3\2\2\2\24\5\3\2\2\2\25\23")
-        buf.write("\3\2\2\2\26\30\5\b\5\2\27\26\3\2\2\2\30\31\3\2\2\2\31")
-        buf.write("\27\3\2\2\2\31\32\3\2\2\2\32\64\3\2\2\2\33\34\7\3\2\2")
-        buf.write("\34\35\5\4\3\2\35\36\7\4\2\2\36\64\3\2\2\2\37 \7\5\2\2")
-        buf.write(" !\5\b\5\2!\"\5\6\4\2\"#\7\6\2\2#$\5\6\4\2$\64\3\2\2\2")
-        buf.write("%&\7\5\2\2&\'\5\b\5\2\'(\5\6\4\2(\64\3\2\2\2)*\7\7\2\2")
-        buf.write("*+\5\b\5\2+,\5\6\4\2,\64\3\2\2\2-.\7\21\2\2./\7\b\2\2")
-        buf.write("/\64\5\b\5\2\60\61\7\21\2\2\61\62\7\t\2\2\62\64\5\b\5")
-        buf.write("\2\63\27\3\2\2\2\63\33\3\2\2\2\63\37\3\2\2\2\63%\3\2\2")
-        buf.write("\2\63)\3\2\2\2\63-\3\2\2\2\63\60\3\2\2\2\64\7\3\2\2\2")
-        buf.write("\65Z\7\21\2\2\66Z\7\22\2\2\67;\7\n\2\28:\7\21\2\298\3")
-        buf.write("\2\2\2:=\3\2\2\2;9\3\2\2\2;<\3\2\2\2<>\3\2\2\2=;\3\2\2")
-        buf.write("\2>?\7\3\2\2?@\5\4\3\2@A\7\4\2\2AZ\3\2\2\2BF\7\13\2\2")
-        buf.write("CE\5\b\5\2DC\3\2\2\2EH\3\2\2\2FD\3\2\2\2FG\3\2\2\2GI\3")
-        buf.write("\2\2\2HF\3\2\2\2IZ\7\f\2\2JQ\7\13\2\2KL\5\b\5\2LM\7\r")
-        buf.write("\2\2MN\5\b\5\2NP\3\2\2\2OK\3\2\2\2PS\3\2\2\2QO\3\2\2\2")
-        buf.write("QR\3\2\2\2RT\3\2\2\2SQ\3\2\2\2TZ\7\f\2\2UV\7\16\2\2VW")
-        buf.write("\5\6\4\2WX\7\17\2\2XZ\3\2\2\2Y\65\3\2\2\2Y\66\3\2\2\2")
-        buf.write("Y\67\3\2\2\2YB\3\2\2\2YJ\3\2\2\2YU\3\2\2\2Z\t\3\2\2\2")
-        buf.write("\n\16\23\31\63;FQY")
+        buf.write("\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\f")
+        buf.write("\60\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\3\2\3\2\3\2\3\3\7")
+        buf.write("\3\17\n\3\f\3\16\3\22\13\3\3\4\3\4\3\4\3\5\3\5\3\5\3\5")
+        buf.write("\3\5\5\5\34\n\5\3\5\3\5\3\5\3\5\3\5\7\5#\n\5\f\5\16\5")
+        buf.write("&\13\5\5\5(\n\5\3\5\7\5+\n\5\f\5\16\5.\13\5\3\5\2\3\b")
+        buf.write("\6\2\4\6\b\2\2\62\2\n\3\2\2\2\4\20\3\2\2\2\6\23\3\2\2")
+        buf.write("\2\b\33\3\2\2\2\n\13\5\4\3\2\13\f\7\2\2\3\f\3\3\2\2\2")
+        buf.write("\r\17\5\6\4\2\16\r\3\2\2\2\17\22\3\2\2\2\20\16\3\2\2\2")
+        buf.write("\20\21\3\2\2\2\21\5\3\2\2\2\22\20\3\2\2\2\23\24\5\b\5")
+        buf.write("\2\24\25\7\3\2\2\25\7\3\2\2\2\26\27\b\5\1\2\27\34\7\t")
+        buf.write("\2\2\30\34\7\7\2\2\31\34\7\b\2\2\32\34\7\n\2\2\33\26\3")
+        buf.write("\2\2\2\33\30\3\2\2\2\33\31\3\2\2\2\33\32\3\2\2\2\34,\3")
+        buf.write("\2\2\2\35\36\f\3\2\2\36\'\7\4\2\2\37$\5\b\5\2 !\7\5\2")
+        buf.write("\2!#\5\b\5\2\" \3\2\2\2#&\3\2\2\2$\"\3\2\2\2$%\3\2\2\2")
+        buf.write("%(\3\2\2\2&$\3\2\2\2\'\37\3\2\2\2\'(\3\2\2\2()\3\2\2\2")
+        buf.write(")+\7\6\2\2*\35\3\2\2\2+.\3\2\2\2,*\3\2\2\2,-\3\2\2\2-")
+        buf.write("\t\3\2\2\2.,\3\2\2\2\7\20\33$\',")
         return buf.getvalue()
 
 
@@ -55,42 +40,30 @@ class CclParser ( Parser ):
 
     sharedContextCache = PredictionContextCache()
 
-    literalNames = [ u"<INVALID>", u"'{'", u"'}'", u"'if'", u"'else'", u"'while'", 
-                     u"':='", u"'='", u"'\\'", u"'['", u"']'", u"':'", u"'('", 
-                     u"')'" ]
+    literalNames = [ u"<INVALID>", u"';'", u"'('", u"','", u"')'" ]
 
     symbolicNames = [ u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
-                      u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
-                      u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
-                      u"<INVALID>", u"<INVALID>", u"DELIM", u"STR", u"VAR", 
-                      u"CMT", u"WS" ]
+                      u"<INVALID>", u"FLOAT", u"INT", u"STR", u"NAME", u"CMT", 
+                      u"WS" ]
 
     RULE_start = 0
-    RULE_stmts = 1
-    RULE_stmt = 2
-    RULE_expr = 3
+    RULE_ss = 1
+    RULE_s = 2
+    RULE_e = 3
 
-    ruleNames =  [ "start", "stmts", "stmt", "expr" ]
+    ruleNames =  [ "start", "ss", "s", "e" ]
 
     EOF = Token.EOF
     T__0=1
     T__1=2
     T__2=3
     T__3=4
-    T__4=5
-    T__5=6
-    T__6=7
-    T__7=8
-    T__8=9
-    T__9=10
-    T__10=11
-    T__11=12
-    T__12=13
-    DELIM=14
-    STR=15
-    VAR=16
-    CMT=17
-    WS=18
+    FLOAT=5
+    INT=6
+    STR=7
+    NAME=8
+    CMT=9
+    WS=10
 
     def __init__(self, input:TokenStream):
         super().__init__(input)
@@ -106,8 +79,8 @@ class CclParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def stmts(self):
-            return self.getTypedRuleContext(CclParser.StmtsContext,0)
+        def ss(self):
+            return self.getTypedRuleContext(CclParser.SsContext,0)
 
 
         def EOF(self):
@@ -134,7 +107,7 @@ class CclParser ( Parser ):
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 8
-            self.stmts()
+            self.ss()
             self.state = 9
             self.match(CclParser.EOF)
         except RecognitionException as re:
@@ -145,60 +118,47 @@ class CclParser ( Parser ):
             self.exitRule()
         return localctx
 
-    class StmtsContext(ParserRuleContext):
+    class SsContext(ParserRuleContext):
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def DELIM(self, i:int=None):
+        def s(self, i:int=None):
             if i is None:
-                return self.getTokens(CclParser.DELIM)
+                return self.getTypedRuleContexts(CclParser.SContext)
             else:
-                return self.getToken(CclParser.DELIM, i)
-
-        def stmt(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(CclParser.StmtContext)
-            else:
-                return self.getTypedRuleContext(CclParser.StmtContext,i)
+                return self.getTypedRuleContext(CclParser.SContext,i)
 
 
         def getRuleIndex(self):
-            return CclParser.RULE_stmts
+            return CclParser.RULE_ss
 
         def enterRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.enterStmts(self)
+                listener.enterSs(self)
 
         def exitRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.exitStmts(self)
+                listener.exitSs(self)
 
 
 
 
-    def stmts(self):
+    def ss(self):
 
-        localctx = CclParser.StmtsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 2, self.RULE_stmts)
+        localctx = CclParser.SsContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 2, self.RULE_ss)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 17
+            self.state = 14
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << CclParser.T__0) | (1 << CclParser.T__2) | (1 << CclParser.T__4) | (1 << CclParser.T__7) | (1 << CclParser.T__8) | (1 << CclParser.T__11) | (1 << CclParser.DELIM) | (1 << CclParser.STR) | (1 << CclParser.VAR))) != 0):
-                self.state = 12
-                _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << CclParser.T__0) | (1 << CclParser.T__2) | (1 << CclParser.T__4) | (1 << CclParser.T__7) | (1 << CclParser.T__8) | (1 << CclParser.T__11) | (1 << CclParser.STR) | (1 << CclParser.VAR))) != 0):
-                    self.state = 11
-                    self.stmt()
-
-
-                self.state = 14
-                self.match(CclParser.DELIM)
-                self.state = 19
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << CclParser.FLOAT) | (1 << CclParser.INT) | (1 << CclParser.STR) | (1 << CclParser.NAME))) != 0):
+                self.state = 11
+                self.s()
+                self.state = 16
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -210,7 +170,7 @@ class CclParser ( Parser ):
             self.exitRule()
         return localctx
 
-    class StmtContext(ParserRuleContext):
+    class SContext(ParserRuleContext):
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
@@ -218,7 +178,7 @@ class CclParser ( Parser ):
 
 
         def getRuleIndex(self):
-            return CclParser.RULE_stmt
+            return CclParser.RULE_s
 
      
         def copyFrom(self, ctx:ParserRuleContext):
@@ -226,255 +186,37 @@ class CclParser ( Parser ):
 
 
 
-    class CallContext(StmtContext):
+    class ExpressionContext(SContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.StmtContext)
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.SContext)
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expr(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(CclParser.ExprContext)
-            else:
-                return self.getTypedRuleContext(CclParser.ExprContext,i)
+        def e(self):
+            return self.getTypedRuleContext(CclParser.EContext,0)
 
 
         def enterRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.enterCall(self)
+                listener.enterExpression(self)
 
         def exitRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.exitCall(self)
-
-
-    class DeclContext(StmtContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.StmtContext)
-            super().__init__(parser)
-            self.copyFrom(ctx)
-
-        def STR(self):
-            return self.getToken(CclParser.STR, 0)
-        def expr(self):
-            return self.getTypedRuleContext(CclParser.ExprContext,0)
-
-
-        def enterRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.enterDecl(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.exitDecl(self)
-
-
-    class BlockContext(StmtContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.StmtContext)
-            super().__init__(parser)
-            self.copyFrom(ctx)
-
-        def stmts(self):
-            return self.getTypedRuleContext(CclParser.StmtsContext,0)
-
-
-        def enterRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.enterBlock(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.exitBlock(self)
-
-
-    class WhileContext(StmtContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.StmtContext)
-            super().__init__(parser)
-            self.copyFrom(ctx)
-
-        def expr(self):
-            return self.getTypedRuleContext(CclParser.ExprContext,0)
-
-        def stmt(self):
-            return self.getTypedRuleContext(CclParser.StmtContext,0)
-
-
-        def enterRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.enterWhile(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.exitWhile(self)
-
-
-    class IfElseContext(StmtContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.StmtContext)
-            super().__init__(parser)
-            self.copyFrom(ctx)
-
-        def expr(self):
-            return self.getTypedRuleContext(CclParser.ExprContext,0)
-
-        def stmt(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(CclParser.StmtContext)
-            else:
-                return self.getTypedRuleContext(CclParser.StmtContext,i)
-
-
-        def enterRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.enterIfElse(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.exitIfElse(self)
-
-
-    class IfContext(StmtContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.StmtContext)
-            super().__init__(parser)
-            self.copyFrom(ctx)
-
-        def expr(self):
-            return self.getTypedRuleContext(CclParser.ExprContext,0)
-
-        def stmt(self):
-            return self.getTypedRuleContext(CclParser.StmtContext,0)
-
-
-        def enterRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.enterIf(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.exitIf(self)
-
-
-    class AssignContext(StmtContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.StmtContext)
-            super().__init__(parser)
-            self.copyFrom(ctx)
-
-        def STR(self):
-            return self.getToken(CclParser.STR, 0)
-        def expr(self):
-            return self.getTypedRuleContext(CclParser.ExprContext,0)
-
-
-        def enterRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.enterAssign(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.exitAssign(self)
+                listener.exitExpression(self)
 
 
 
-    def stmt(self):
+    def s(self):
 
-        localctx = CclParser.StmtContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 4, self.RULE_stmt)
-        self._la = 0 # Token type
+        localctx = CclParser.SContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 4, self.RULE_s)
         try:
-            self.state = 49
-            la_ = self._interp.adaptivePredict(self._input,3,self._ctx)
-            if la_ == 1:
-                localctx = CclParser.CallContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
-                self.state = 21 
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                while True:
-                    self.state = 20
-                    self.expr()
-                    self.state = 23 
-                    self._errHandler.sync(self)
-                    _la = self._input.LA(1)
-                    if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << CclParser.T__7) | (1 << CclParser.T__8) | (1 << CclParser.T__11) | (1 << CclParser.STR) | (1 << CclParser.VAR))) != 0)):
-                        break
-
-                pass
-
-            elif la_ == 2:
-                localctx = CclParser.BlockContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
-                self.state = 25
-                self.match(CclParser.T__0)
-                self.state = 26
-                self.stmts()
-                self.state = 27
-                self.match(CclParser.T__1)
-                pass
-
-            elif la_ == 3:
-                localctx = CclParser.IfElseContext(self, localctx)
-                self.enterOuterAlt(localctx, 3)
-                self.state = 29
-                self.match(CclParser.T__2)
-                self.state = 30
-                self.expr()
-                self.state = 31
-                self.stmt()
-                self.state = 32
-                self.match(CclParser.T__3)
-                self.state = 33
-                self.stmt()
-                pass
-
-            elif la_ == 4:
-                localctx = CclParser.IfContext(self, localctx)
-                self.enterOuterAlt(localctx, 4)
-                self.state = 35
-                self.match(CclParser.T__2)
-                self.state = 36
-                self.expr()
-                self.state = 37
-                self.stmt()
-                pass
-
-            elif la_ == 5:
-                localctx = CclParser.WhileContext(self, localctx)
-                self.enterOuterAlt(localctx, 5)
-                self.state = 39
-                self.match(CclParser.T__4)
-                self.state = 40
-                self.expr()
-                self.state = 41
-                self.stmt()
-                pass
-
-            elif la_ == 6:
-                localctx = CclParser.DeclContext(self, localctx)
-                self.enterOuterAlt(localctx, 6)
-                self.state = 43
-                self.match(CclParser.STR)
-                self.state = 44
-                self.match(CclParser.T__5)
-                self.state = 45
-                self.expr()
-                pass
-
-            elif la_ == 7:
-                localctx = CclParser.AssignContext(self, localctx)
-                self.enterOuterAlt(localctx, 7)
-                self.state = 46
-                self.match(CclParser.STR)
-                self.state = 47
-                self.match(CclParser.T__6)
-                self.state = 48
-                self.expr()
-                pass
-
-
+            localctx = CclParser.ExpressionContext(self, localctx)
+            self.enterOuterAlt(localctx, 1)
+            self.state = 17
+            self.e(0)
+            self.state = 18
+            self.match(CclParser.T__0)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -483,7 +225,7 @@ class CclParser ( Parser ):
             self.exitRule()
         return localctx
 
-    class ExprContext(ParserRuleContext):
+    class EContext(ParserRuleContext):
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
@@ -491,17 +233,16 @@ class CclParser ( Parser ):
 
 
         def getRuleIndex(self):
-            return CclParser.RULE_expr
+            return CclParser.RULE_e
 
      
         def copyFrom(self, ctx:ParserRuleContext):
             super().copyFrom(ctx)
 
 
+    class StrContext(EContext):
 
-    class StrContext(ExprContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.ExprContext)
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.EContext)
             super().__init__(parser)
             self.copyFrom(ctx)
 
@@ -517,219 +258,193 @@ class CclParser ( Parser ):
                 listener.exitStr(self)
 
 
-    class LambdaContext(ExprContext):
+    class CallContext(EContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.ExprContext)
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.EContext)
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def stmts(self):
-            return self.getTypedRuleContext(CclParser.StmtsContext,0)
-
-        def STR(self, i:int=None):
+        def e(self, i:int=None):
             if i is None:
-                return self.getTokens(CclParser.STR)
+                return self.getTypedRuleContexts(CclParser.EContext)
             else:
-                return self.getToken(CclParser.STR, i)
+                return self.getTypedRuleContext(CclParser.EContext,i)
+
 
         def enterRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.enterLambda(self)
+                listener.enterCall(self)
 
         def exitRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.exitLambda(self)
+                listener.exitCall(self)
 
 
-    class VarContext(ExprContext):
+    class NameContext(EContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.ExprContext)
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.EContext)
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def VAR(self):
-            return self.getToken(CclParser.VAR, 0)
+        def NAME(self):
+            return self.getToken(CclParser.NAME, 0)
 
         def enterRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.enterVar(self)
+                listener.enterName(self)
 
         def exitRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.exitVar(self)
+                listener.exitName(self)
 
 
-    class DictContext(ExprContext):
+    class FloatContext(EContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.ExprContext)
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.EContext)
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def expr(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(CclParser.ExprContext)
-            else:
-                return self.getTypedRuleContext(CclParser.ExprContext,i)
-
+        def FLOAT(self):
+            return self.getToken(CclParser.FLOAT, 0)
 
         def enterRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.enterDict(self)
+                listener.enterFloat(self)
 
         def exitRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.exitDict(self)
+                listener.exitFloat(self)
 
 
-    class CmdContext(ExprContext):
+    class IntContext(EContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.ExprContext)
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.EContext)
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def stmt(self):
-            return self.getTypedRuleContext(CclParser.StmtContext,0)
-
-
-        def enterRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.enterCmd(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if isinstance( listener, CclListener ):
-                listener.exitCmd(self)
-
-
-    class ListContext(ExprContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a CclParser.ExprContext)
-            super().__init__(parser)
-            self.copyFrom(ctx)
-
-        def expr(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(CclParser.ExprContext)
-            else:
-                return self.getTypedRuleContext(CclParser.ExprContext,i)
-
+        def INT(self):
+            return self.getToken(CclParser.INT, 0)
 
         def enterRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.enterList(self)
+                listener.enterInt(self)
 
         def exitRule(self, listener:ParseTreeListener):
             if isinstance( listener, CclListener ):
-                listener.exitList(self)
+                listener.exitInt(self)
 
 
 
-    def expr(self):
-
-        localctx = CclParser.ExprContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 6, self.RULE_expr)
+    def e(self, _p:int=0):
+        _parentctx = self._ctx
+        _parentState = self.state
+        localctx = CclParser.EContext(self, self._ctx, _parentState)
+        _prevctx = localctx
+        _startState = 6
+        self.enterRecursionRule(localctx, 6, self.RULE_e, _p)
         self._la = 0 # Token type
         try:
-            self.state = 87
-            la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
-            if la_ == 1:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 25
+            token = self._input.LA(1)
+            if token in [CclParser.STR]:
                 localctx = CclParser.StrContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
-                self.state = 51
+                self._ctx = localctx
+                _prevctx = localctx
+
+                self.state = 21
                 self.match(CclParser.STR)
-                pass
 
-            elif la_ == 2:
-                localctx = CclParser.VarContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
-                self.state = 52
-                self.match(CclParser.VAR)
-                pass
+            elif token in [CclParser.FLOAT]:
+                localctx = CclParser.FloatContext(self, localctx)
+                self._ctx = localctx
+                _prevctx = localctx
+                self.state = 22
+                self.match(CclParser.FLOAT)
 
-            elif la_ == 3:
-                localctx = CclParser.LambdaContext(self, localctx)
-                self.enterOuterAlt(localctx, 3)
-                self.state = 53
-                self.match(CclParser.T__7)
-                self.state = 57
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                while _la==CclParser.STR:
-                    self.state = 54
-                    self.match(CclParser.STR)
-                    self.state = 59
-                    self._errHandler.sync(self)
+            elif token in [CclParser.INT]:
+                localctx = CclParser.IntContext(self, localctx)
+                self._ctx = localctx
+                _prevctx = localctx
+                self.state = 23
+                self.match(CclParser.INT)
+
+            elif token in [CclParser.NAME]:
+                localctx = CclParser.NameContext(self, localctx)
+                self._ctx = localctx
+                _prevctx = localctx
+                self.state = 24
+                self.match(CclParser.NAME)
+
+            else:
+                raise NoViableAltException(self)
+
+            self._ctx.stop = self._input.LT(-1)
+            self.state = 42
+            self._errHandler.sync(self)
+            _alt = self._interp.adaptivePredict(self._input,4,self._ctx)
+            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
+                if _alt==1:
+                    if self._parseListeners is not None:
+                        self.triggerExitRuleEvent()
+                    _prevctx = localctx
+                    localctx = CclParser.CallContext(self, CclParser.EContext(self, _parentctx, _parentState))
+                    self.pushNewRecursionContext(localctx, _startState, self.RULE_e)
+                    self.state = 27
+                    if not self.precpred(self._ctx, 1):
+                        from antlr4.error.Errors import FailedPredicateException
+                        raise FailedPredicateException(self, "self.precpred(self._ctx, 1)")
+                    self.state = 28
+                    self.match(CclParser.T__1)
+                    self.state = 37
                     _la = self._input.LA(1)
+                    if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << CclParser.FLOAT) | (1 << CclParser.INT) | (1 << CclParser.STR) | (1 << CclParser.NAME))) != 0):
+                        self.state = 29
+                        self.e(0)
+                        self.state = 34
+                        self._errHandler.sync(self)
+                        _la = self._input.LA(1)
+                        while _la==CclParser.T__2:
+                            self.state = 30
+                            self.match(CclParser.T__2)
+                            self.state = 31
+                            self.e(0)
+                            self.state = 36
+                            self._errHandler.sync(self)
+                            _la = self._input.LA(1)
 
-                self.state = 60
-                self.match(CclParser.T__0)
-                self.state = 61
-                self.stmts()
-                self.state = 62
-                self.match(CclParser.T__1)
-                pass
 
-            elif la_ == 4:
-                localctx = CclParser.ListContext(self, localctx)
-                self.enterOuterAlt(localctx, 4)
-                self.state = 64
-                self.match(CclParser.T__8)
-                self.state = 68
+
+                    self.state = 39
+                    self.match(CclParser.T__3) 
+                self.state = 44
                 self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << CclParser.T__7) | (1 << CclParser.T__8) | (1 << CclParser.T__11) | (1 << CclParser.STR) | (1 << CclParser.VAR))) != 0):
-                    self.state = 65
-                    self.expr()
-                    self.state = 70
-                    self._errHandler.sync(self)
-                    _la = self._input.LA(1)
-
-                self.state = 71
-                self.match(CclParser.T__9)
-                pass
-
-            elif la_ == 5:
-                localctx = CclParser.DictContext(self, localctx)
-                self.enterOuterAlt(localctx, 5)
-                self.state = 72
-                self.match(CclParser.T__8)
-                self.state = 79
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << CclParser.T__7) | (1 << CclParser.T__8) | (1 << CclParser.T__11) | (1 << CclParser.STR) | (1 << CclParser.VAR))) != 0):
-                    self.state = 73
-                    self.expr()
-                    self.state = 74
-                    self.match(CclParser.T__10)
-                    self.state = 75
-                    self.expr()
-                    self.state = 81
-                    self._errHandler.sync(self)
-                    _la = self._input.LA(1)
-
-                self.state = 82
-                self.match(CclParser.T__9)
-                pass
-
-            elif la_ == 6:
-                localctx = CclParser.CmdContext(self, localctx)
-                self.enterOuterAlt(localctx, 6)
-                self.state = 83
-                self.match(CclParser.T__11)
-                self.state = 84
-                self.stmt()
-                self.state = 85
-                self.match(CclParser.T__12)
-                pass
-
+                _alt = self._interp.adaptivePredict(self._input,4,self._ctx)
 
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
-            self.exitRule()
+            self.unrollRecursionContexts(_parentctx)
         return localctx
 
+
+
+    def sempred(self, localctx:RuleContext, ruleIndex:int, predIndex:int):
+        if self._predicates == None:
+            self._predicates = dict()
+        self._predicates[3] = self.e_sempred
+        pred = self._predicates.get(ruleIndex, None)
+        if pred is None:
+            raise Exception("No predicate with index:" + str(ruleIndex))
+        else:
+            return pred(localctx, predIndex)
+
+    def e_sempred(self, localctx:EContext, predIndex:int):
+            if predIndex == 0:
+                return self.precpred(self._ctx, 1)
+         
 
 
 

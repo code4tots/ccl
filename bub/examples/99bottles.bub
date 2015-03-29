@@ -1,5 +1,0 @@
-n := 99
-while (lt 0 n) {
-	print n 'bottles of beer'
-	n := (add n 1)
-}

@@ -13,75 +13,21 @@ class CclListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by CclParser#stmts.
-    def enterStmts(self, ctx):
+    # Enter a parse tree produced by CclParser#ss.
+    def enterSs(self, ctx):
         pass
 
-    # Exit a parse tree produced by CclParser#stmts.
-    def exitStmts(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by CclParser#call.
-    def enterCall(self, ctx):
-        pass
-
-    # Exit a parse tree produced by CclParser#call.
-    def exitCall(self, ctx):
+    # Exit a parse tree produced by CclParser#ss.
+    def exitSs(self, ctx):
         pass
 
 
-    # Enter a parse tree produced by CclParser#block.
-    def enterBlock(self, ctx):
+    # Enter a parse tree produced by CclParser#expression.
+    def enterExpression(self, ctx):
         pass
 
-    # Exit a parse tree produced by CclParser#block.
-    def exitBlock(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by CclParser#ifElse.
-    def enterIfElse(self, ctx):
-        pass
-
-    # Exit a parse tree produced by CclParser#ifElse.
-    def exitIfElse(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by CclParser#if.
-    def enterIf(self, ctx):
-        pass
-
-    # Exit a parse tree produced by CclParser#if.
-    def exitIf(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by CclParser#while.
-    def enterWhile(self, ctx):
-        pass
-
-    # Exit a parse tree produced by CclParser#while.
-    def exitWhile(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by CclParser#decl.
-    def enterDecl(self, ctx):
-        pass
-
-    # Exit a parse tree produced by CclParser#decl.
-    def exitDecl(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by CclParser#assign.
-    def enterAssign(self, ctx):
-        pass
-
-    # Exit a parse tree produced by CclParser#assign.
-    def exitAssign(self, ctx):
+    # Exit a parse tree produced by CclParser#expression.
+    def exitExpression(self, ctx):
         pass
 
 
@@ -94,48 +40,39 @@ class CclListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by CclParser#var.
-    def enterVar(self, ctx):
+    # Enter a parse tree produced by CclParser#call.
+    def enterCall(self, ctx):
         pass
 
-    # Exit a parse tree produced by CclParser#var.
-    def exitVar(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by CclParser#lambda.
-    def enterLambda(self, ctx):
-        pass
-
-    # Exit a parse tree produced by CclParser#lambda.
-    def exitLambda(self, ctx):
+    # Exit a parse tree produced by CclParser#call.
+    def exitCall(self, ctx):
         pass
 
 
-    # Enter a parse tree produced by CclParser#list.
-    def enterList(self, ctx):
+    # Enter a parse tree produced by CclParser#name.
+    def enterName(self, ctx):
         pass
 
-    # Exit a parse tree produced by CclParser#list.
-    def exitList(self, ctx):
-        pass
-
-
-    # Enter a parse tree produced by CclParser#dict.
-    def enterDict(self, ctx):
-        pass
-
-    # Exit a parse tree produced by CclParser#dict.
-    def exitDict(self, ctx):
+    # Exit a parse tree produced by CclParser#name.
+    def exitName(self, ctx):
         pass
 
 
-    # Enter a parse tree produced by CclParser#cmd.
-    def enterCmd(self, ctx):
+    # Enter a parse tree produced by CclParser#float.
+    def enterFloat(self, ctx):
         pass
 
-    # Exit a parse tree produced by CclParser#cmd.
-    def exitCmd(self, ctx):
+    # Exit a parse tree produced by CclParser#float.
+    def exitFloat(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by CclParser#int.
+    def enterInt(self, ctx):
+        pass
+
+    # Exit a parse tree produced by CclParser#int.
+    def exitInt(self, ctx):
         pass
 
 

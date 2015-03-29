@@ -1,32 +1,29 @@
 grammar Ccl;
-start      : stmts EOF
+start      : ss EOF
            ;
-stmts      : (stmt? DELIM)*
+ss         : s*
            ;
-stmt       : expr+                           #call
-           | '{' stmts '}'                   #block
-           | 'if' expr stmt 'else' stmt      #ifElse
-           | 'if' expr stmt                  #if
-           | 'while' expr stmt               #while
-           | STR ':=' expr                   #decl
-           | STR '=' expr                    #assign
+s          : e ';'                        #expression
            ;
-expr       : STR                             #str
-           | VAR                             #var
-           | '\\' STR* '{' stmts '}'         #lambda
-           | '[' expr* ']'                   #list
-           | '[' (expr ':' expr)* ']'        #dict
-           | '(' stmt ')'                    #cmd
+e          : STR                          #str
+           | FLOAT                        #float
+           | INT                          #int
+           | NAME                         #name
+           | e '(' (e (',' e)*)? ')'      #call
            ;
-DELIM      : ';' | '\n'
+FLOAT      : [0-9]+ '.' [0-9]*
+           |        '.' [0-9]+
            ;
-STR        : [a-zA-Z_0-9/\-+~.*]+
-           | ["] (~["] | '\\' ["]) * ["]
-           | ['] (~[']  | '\\' [']) * [']
+INT        : [0-9]+
            ;
-VAR        : '$' [a-zA-Z_0-9$/\-+~.*]+
+STR        :     ["] (~["] | '\\' ["]) * ["]
+           |     ['] (~['] | '\\' [']) * [']
+           | 'r' ["] (~["] | '\\' ["]) * ["]
+           | 'r' ['] (~['] | '\\' [']) * [']
+           ;
+NAME       : [a-zA-Z0-9_$]+
            ;
 CMT        : '#' ~'\n'* -> skip
            ;
-WS         : [ \t\r]+ -> skip
+WS         : [ \t\r\n]+ -> skip
            ;
