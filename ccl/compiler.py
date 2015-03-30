@@ -7,6 +7,37 @@ from .grammar import CclListener
 from .grammar import CclLexer
 from .grammar import CclParser
 
+SPECIALOPS = {'__setitem__', '__getitem__'}
+
+BINOP_TABLE = {
+  '*': '__mul__',
+  '/': '__truediv__',
+  '//': '__floordiv__',
+  '%': '__mod__',
+  '+': '__add__',
+  '-': '__sub__',
+
+  '<': '__lt__',
+  '<=': '__le__',
+  '>': '__gt__',
+  '>=': '__ge__',
+}
+
+### Statement/Expression hybrids
+
+def Block(statements, scope):
+  return {'type': 'block', 'statements': statements, 'scope':int(scope)}
+
+### Statements
+
+def If(cond, a, b):
+  return {'type': 'if', 'cond': cond, 'a': a, 'b': b}
+
+def While(cond, body):
+  return {'type': 'while', 'cond': cond, 'body': body}
+
+### Expressions
+
 def Str(s):
   return {'type': 'str', 'value': s}
 
@@ -22,8 +53,14 @@ def Name(s):
 def Call(f, args):
   return {'type': 'call', 'f': f, 'args': args}
 
-def Block(statements, scope=True):
-  return {'type': 'block', 'statements': statements, 'scope':int(scope)}
+def Decl(name, value):
+  return {'type': 'decl', 'name': name, 'value': value}
+
+def Assign(name, value):
+  return {'type': 'assign', 'name': name, 'value': value}
+
+def Lambda(names, varargs, body):
+  return {'type': 'lambda', 'names': names, 'varargs': varargs or '', 'body': body}
 
 class Listener(CclListener.CclListener):
 
@@ -41,7 +78,6 @@ class Listener(CclListener.CclListener):
 
   def enterStart(self, ctx):
     self.stack = [[]]
-
   def exitStart(self, ctx):
     assert len(self.stack) == 1, self.stack
     assert len(self.stack[0]) == 1, self.stack[0]
@@ -49,31 +85,97 @@ class Listener(CclListener.CclListener):
 
   def enterSs(self, ctx):
     self.PushStack()
-
   def exitSs(self, ctx):
-    self.Push(Block(self.PopStack(), scope=False))
+    self.Push(Block(self.PopStack(), False))
+
+  ### Statement/Expression hybrids
+
+  def enterB(self, ctx):
+    self.PushStack()
+  def exitB(self, ctx):
+    self.Push(Block(self.PopStack(), True))
+
+  ### Statements
+
+  def enterIfElse(self, ctx):
+    self.PushStack()
+  def exitIfElse(self, ctx):
+    self.Push(If(*self.PopStack()))
+
+  def enterIf(self, ctx):
+    self.PushStack()
+  def exitIf(self, ctx):
+    self.Push(If(*(self.PopStack() + [Int(0)])))
+
+  def enterWhile(self, ctx):
+    self.PushStack()
+  def exitWhile(self, ctx):
+    self.Push(While(*self.PopStack()))
 
   ### Expressions
 
   def exitStr(self, ctx):
-    self.Push(Str(ctx.STR().getText()))
+    self.Push(Str(eval(ctx.STR().getText())))
 
   def exitFloat(self, ctx):
-    self.Push(Float(ctx.FLOAT().getText()))
+    self.Push(Float(float(ctx.FLOAT().getText())))
 
   def exitInt(self, ctx):
-    self.Push(Int(ctx.INT().getText()))
+    self.Push(Int(int(ctx.INT().getText())))
 
   def exitName(self, ctx):
     self.Push(Name(ctx.NAME().getText()))
 
+  def enterList(self, ctx):
+    self.PushStack()
+  def exitList(self, ctx):
+    self.Push(Call(Name('__list__'), self.PopStack()))
+
+  def enterDict(self, ctx):
+    self.PushStack()
+  def exitDict(self, ctx):
+    self.Push(Call(Name('__dict__'), self.PopStack()))
+
+  def exitAttr(self, ctx):
+    self.Push(Call(Name('__getitem__'), [self.Pop(), Str(ctx.NAME().getText())]))
+
   def enterCall(self, ctx):
     self.PushStack()
-
   def exitCall(self, ctx):
     f, *args = self.PopStack()
     self.Push(Call(f, args))
 
+  def enterGetItem(self, ctx):
+    self.PushStack()
+  def exitGetItem(self, ctx):
+    self.Push(Call(Name('__getitem__'), self.PopStack()))
+
+  def enterBinop(self, ctx):
+    self.PushStack()
+  def exitBinop(self, ctx):
+    self.Push(Call(Name(BINOP_TABLE[ctx.op.text]), self.PopStack()))
+
+  def exitDecl(self, ctx):
+    self.Push(Decl(ctx.NAME().getText(), self.Pop()))
+
+  def exitAssign(self, ctx):
+    self.Push(Assign(ctx.NAME().getText(), self.Pop()))
+
+  def enterAttrAssign(self, ctx):
+    self.PushStack()
+
+  def exitAttrAssign(self, ctx):
+    e, value = self.PopStack()
+    self.Push(Call(Name('__setitem__'), [e, Str(ctx.NAME().getText()), value]))
+
+  def enterSetItem(self, ctx):
+    self.PushStack()
+  def exitSetItem(self, ctx):
+    self.Push(Call(Name('__setitem__'), self.PopStack()))
+
+  def exitLambda(self, ctx):
+    v = ctx.var.getText() if ctx.var is not None else None
+    self.Push(Lambda([n.getText() for n in ctx.NAME()], v, self.Pop()))
 
 def _Parse(source, fromfile, throw):
     inpcls = antlr4.FileStream if fromfile else antlr4.InputStream.InputStream
