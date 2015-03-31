@@ -4,6 +4,34 @@ import json
 import operator
 import sys
 
+def ImportKivy():
+  import kivy
+  import kivy.app
+  import kivy.clock
+  import kivy.properties
+  import kivy.uix.label
+  import kivy.uix.widget
+  import kivy.vector
+
+  def MakeApp():
+    class KivyApp(kivy.app.App):
+      def build(self):
+        return app['build']()
+    raw_app = KivyApp()
+    app = dict()
+    app.update({
+        'run': raw_app.run,
+    })
+    return app
+
+  return {
+      'rawKivyModule': kivy,
+      'app': MakeApp,
+      'uix': {
+          'label': lambda text: kivy.uix.label.Label(text=text),
+      }
+  }
+
 class Context(object):
 
   def __init__(self, parent=None, table=None):
@@ -81,9 +109,15 @@ def _SetItem(x, i, v):
   x[i] = v
   return v
 
+def Print(*args):
+  # Python2 and Python3 have 'print' that is different enough to be
+  # annoying.
+  sys.stdout.write(' '.join(str(arg) + ' ' for arg in args) + '\n')
+
 GLOBAL = Context(None, {k:v for d in (
   {
-    'print': print,
+    'Print': Print,
+    'ImportKivy': ImportKivy,
     '__list__': lambda *args: list(args),
     '__dict__': lambda *args: dict(zip(args[::2], args[1::2])),
   },

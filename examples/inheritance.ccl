@@ -14,4 +14,4 @@ Car := \ {
     self;
 };
 
-print(Car());
+Print(Car());

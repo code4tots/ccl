@@ -2,6 +2,6 @@ i := 99;
 
 while i > 0 {
     i = i - 1;
-    print(i, "bottles of beer on the wall");
+    Print(i, "bottles of beer on the wall");
 }
 

@@ -1,0 +1,11 @@
+kivy := ImportKivy();
+
+app := {
+    self := kivy.app();
+    self.build = \ {
+        kivy.uix.label('hello world!');
+    };
+    self;
+};
+
+app.run();

@@ -1,3 +1,12 @@
+"""Compiler that compiles ccl to json.
+
+Originally I wanted to use just Python3, but kivy needs Python2.
+
+Now I could write compiler.py in Python3 and then write vm.py
+in Python2, but then I wouldn't be able to import constants from
+compiler.py into vm.py.
+"""
+
 import json
 import sys
 
@@ -142,7 +151,10 @@ class Listener(CclListener.CclListener):
   def enterCall(self, ctx):
     self.PushStack()
   def exitCall(self, ctx):
-    f, *args = self.PopStack()
+    # f, *args = self.PopStack() # Unfortunately doesn't work in Python2
+    stack = self.PopStack()
+    f = stack[0]
+    args = stack[1:]
     self.Push(Call(f, args))
 
   def enterGetItem(self, ctx):
