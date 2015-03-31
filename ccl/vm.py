@@ -11,24 +11,91 @@ def ImportKivy():
   import kivy.properties
   import kivy.uix.label
   import kivy.uix.widget
+  import kivy.uix.stacklayout
+  import kivy.uix.boxlayout
   import kivy.vector
 
   def MakeApp():
-    class KivyApp(kivy.app.App):
-      def build(self):
-        return app['build']()
-    raw_app = KivyApp()
-    app = dict()
-    app.update({
-        'run': raw_app.run,
+    d = dict()
+    app = kivy.app.App()
+    app.build = lambda: d['build']()['rawPython']
+
+    def SetTitle(title):
+      app.title = title
+
+    d.update({
+        'setTitle': SetTitle,
+        'run': app.run,
+        'rawPython': app,
     })
-    return app
+    return d
+
+  def BindWidgetMethods(d, widget):
+
+    def AddWidget(child):
+      widget.add_widget(child['rawPython'])
+    d['addWidget'] = AddWidget
+
+  def MakeWidget(dd=None):
+    dd = dd or dict()
+    widget = kivy.uix.widget.Widget()
+    d = dict()
+    BindWidgetMethods(d, widget)
+    d.update({
+        'rawPython': widget,
+    })
+    return d
+
+  def MakeLabel(dd):
+    if isinstance(dd, str):
+      dd = {'text': dd}
+
+    label = kivy.uix.label.Label()
+    d = dict()
+
+    def SetText(text):
+      label.text = text
+
+    def GetText():
+      return label.text
+
+    d.update({
+        'getText': GetText,
+        'setText': SetText,
+        'rawPython': label,
+    })
+    label.text = dd['text']
+    return d
+
+  # TODO: StackLayout doesn't work as expected...
+  def MakeStackLayout(dd=None):
+    dd = dd or dict()
+    stackLayout = kivy.uix.stacklayout.StackLayout()
+    d = dict()
+    BindWidgetMethods(d, stackLayout)
+    d.update({
+        'rawPython': stackLayout,
+    })
+    return d
+
+  def MakeBoxLayout(dd=None):
+    dd = dd or dict()
+    boxLayout = kivy.uix.boxlayout.BoxLayout()
+    d = dict()
+    BindWidgetMethods(d, boxLayout)
+    d.update({
+        'rawPython': boxLayout,
+    })
+    return d
 
   return {
       'rawKivyModule': kivy,
       'app': MakeApp,
       'uix': {
-          'label': lambda text: kivy.uix.label.Label(text=text),
+          'widget': MakeWidget,
+          'label': MakeLabel,
+          'stackLayout': MakeStackLayout,
+          'boxLayout': MakeBoxLayout,
       }
   }
 
@@ -57,10 +124,10 @@ class Context(object):
   def Declare(self, name, value):
     self.table[name] = value
 
-def EvalStr(ctx, string):
-  return Eval(ctx, json.loads(string))
+def EvalStr(string, ctx=None):
+  return Eval(json.loads(string), ctx or Context(GLOBAL))
 
-def Eval(ctx, data):
+def Eval(data, ctx):
   if data['type'] == 'str':
     return str(data['value'])
   elif data['type'] == 'float':
@@ -70,18 +137,18 @@ def Eval(ctx, data):
   elif data['type'] == 'name':
     return ctx[data['value']]
   elif data['type'] == 'call':
-    f = Eval(ctx, data['f'])
-    args = [Eval(ctx, arg) for arg in data['args']]
+    f = Eval(data['f'], ctx)
+    args = [Eval(arg, ctx) for arg in data['args']]
     return f(*args)
   elif data['type'] == 'block':
     if data['scope']:
       ctx = Context(ctx)
     last = 0
     for statement in data['statements']:
-      last = Eval(ctx, statement)
+      last = Eval(statement, ctx)
     return last
   elif data['type'] in ('decl', 'assign'):
-    value = Eval(ctx, data['value'])
+    value = Eval(data['value'], ctx)
     if data['type'] == 'decl':
       ctx.Declare(data['name'], value)
     elif data['type'] == 'assign':
@@ -94,14 +161,14 @@ def Eval(ctx, data):
         ctx.Declare(name, arg)
       if data['varargs']:
         ctx.Declare(data['varargs'], args[len(data['names']):])
-      return Eval(ctx, data['body'])
+      return Eval(data['body'], ctx)
     return Lambda
   elif data['type'] == 'if':
-    return Eval(ctx, data['a' if Eval(ctx, data['cond']) else 'b'])
+    return Eval(data['a' if Eval(data['cond'], ctx) else 'b'], ctx)
   elif data['type'] == 'while':
     last = 0
-    while Eval(ctx, data['cond']):
-      last = Eval(ctx, data['body'])
+    while Eval(data['cond'], ctx):
+      last = Eval(data['body'], ctx)
     return last
   raise ValueError(data)
 
@@ -126,4 +193,4 @@ GLOBAL = Context(None, {k:v for d in (
 ) for k, v in d.items()})
 
 if __name__ == '__main__':
-  EvalStr(Context(GLOBAL), sys.stdin.read())
+  EvalStr(sys.stdin.read())
