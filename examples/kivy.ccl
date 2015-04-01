@@ -1,4 +1,4 @@
-kivy := ImportKivy();
+kivy := Import('kv');
 
 app := {
     self := kivy.app();

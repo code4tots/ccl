@@ -1,103 +1,9 @@
 from . import compiler
 
+import importlib
 import json
 import operator
 import sys
-
-def ImportKivy():
-  import kivy
-  import kivy.app
-  import kivy.clock
-  import kivy.properties
-  import kivy.uix.label
-  import kivy.uix.widget
-  import kivy.uix.stacklayout
-  import kivy.uix.boxlayout
-  import kivy.vector
-
-  def MakeApp():
-    d = dict()
-    app = kivy.app.App()
-    app.build = lambda: d['build']()['rawPython']
-
-    def SetTitle(title):
-      app.title = title
-
-    d.update({
-        'setTitle': SetTitle,
-        'run': app.run,
-        'rawPython': app,
-    })
-    return d
-
-  def BindWidgetMethods(d, widget):
-
-    def AddWidget(child):
-      widget.add_widget(child['rawPython'])
-    d['addWidget'] = AddWidget
-
-  def MakeWidget(dd=None):
-    dd = dd or dict()
-    widget = kivy.uix.widget.Widget()
-    d = dict()
-    BindWidgetMethods(d, widget)
-    d.update({
-        'rawPython': widget,
-    })
-    return d
-
-  def MakeLabel(dd):
-    if isinstance(dd, str):
-      dd = {'text': dd}
-
-    label = kivy.uix.label.Label()
-    d = dict()
-
-    def SetText(text):
-      label.text = text
-
-    def GetText():
-      return label.text
-
-    d.update({
-        'getText': GetText,
-        'setText': SetText,
-        'rawPython': label,
-    })
-    label.text = dd['text']
-    return d
-
-  # TODO: StackLayout doesn't work as expected...
-  def MakeStackLayout(dd=None):
-    dd = dd or dict()
-    stackLayout = kivy.uix.stacklayout.StackLayout()
-    d = dict()
-    BindWidgetMethods(d, stackLayout)
-    d.update({
-        'rawPython': stackLayout,
-    })
-    return d
-
-  def MakeBoxLayout(dd=None):
-    dd = dd or dict()
-    boxLayout = kivy.uix.boxlayout.BoxLayout()
-    d = dict()
-    BindWidgetMethods(d, boxLayout)
-    d.update({
-        'rawPython': boxLayout,
-    })
-    return d
-
-  return {
-      'rawKivyModule': kivy,
-      'app': MakeApp,
-      'uix': {
-          'widget': MakeWidget,
-          'label': MakeLabel,
-          'stackLayout': MakeStackLayout,
-          'boxLayout': MakeBoxLayout,
-      }
-  }
 
 class Context(object):
 
@@ -172,7 +78,7 @@ def Eval(data, ctx):
     return last
   raise ValueError(data)
 
-def _SetItem(x, i, v):
+def SetItem(x, i, v):
   x[i] = v
   return v
 
@@ -181,15 +87,20 @@ def Print(*args):
   # annoying.
   sys.stdout.write(' '.join(str(arg) + ' ' for arg in args) + '\n')
 
+def Import(module_name):
+  # Currently only importing from the standard library is supported.
+  return importlib.import_module('ccl.lib.' + module_name).Load()
+
 GLOBAL = Context(None, {k:v for d in (
-  {
-    'Print': Print,
-    'ImportKivy': ImportKivy,
-    '__list__': lambda *args: list(args),
-    '__dict__': lambda *args: dict(zip(args[::2], args[1::2])),
-  },
   {v: getattr(operator, v) for v in compiler.BINOP_TABLE.values()},
   {v: getattr(operator, v) for v in compiler.SPECIALOPS},
+  {
+    '__list__': lambda *args: list(args),
+    '__dict__': lambda *args: dict(zip(args[::2], args[1::2])),
+    '__setitem__': SetItem,
+    'Print': Print,
+    'Import': Import,
+  },
 ) for k, v in d.items()})
 
 if __name__ == '__main__':
