@@ -1,0 +1,13 @@
+gui := Import('gui');
+
+n := 0;
+
+app := gui.app(gui.layouty([
+    label := gui.label('hi'),
+    gui.button('press me!', \ {
+        n = n + 1;
+        label.setText('button pressed %s times' % n);
+    })
+]));
+
+app.run();

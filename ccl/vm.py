@@ -100,6 +100,7 @@ GLOBAL = Context(None, {k:v for d in (
     '__setitem__': SetItem,
     'Print': Print,
     'Import': Import,
+    'Str': str,
   },
 ) for k, v in d.items()})
 

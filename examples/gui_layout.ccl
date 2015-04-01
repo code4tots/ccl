@@ -1,0 +1,12 @@
+gui := Import('gui');
+
+app := gui.app(gui.layouty([
+        gui.layoutx([
+                gui.label('hello'),
+                gui.label('world!')]),
+        gui.layoutx([
+                gui.label('hello'),
+                gui.label('again')])
+]));
+
+app.run();

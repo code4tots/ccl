@@ -11,7 +11,7 @@ import kivy.vector
 def MakeApp():
   d = dict()
   app = kivy.app.App()
-  app.build = lambda: d['build']()['rawPython']
+  app.build = lambda: d['build']()['__rawPython__']
 
   def SetTitle(title):
     app.title = title
@@ -19,14 +19,14 @@ def MakeApp():
   d.update({
       'setTitle': SetTitle,
       'run': app.run,
-      'rawPython': app,
+      '__rawPython__': app,
   })
   return d
 
 def BindWidgetMethods(d, widget):
 
   def AddWidget(child):
-    widget.add_widget(child['rawPython'])
+    widget.add_widget(child['__rawPython__'])
   d['addWidget'] = AddWidget
 
 def MakeWidget(dd=None):
@@ -35,7 +35,7 @@ def MakeWidget(dd=None):
   d = dict()
   BindWidgetMethods(d, widget)
   d.update({
-      'rawPython': widget,
+      '__rawPython__': widget,
   })
   return d
 
@@ -55,7 +55,7 @@ def MakeLabel(dd):
   d.update({
       'getText': GetText,
       'setText': SetText,
-      'rawPython': label,
+      '__rawPython__': label,
   })
   label.text = dd['text']
   return d
@@ -67,7 +67,7 @@ def MakeStackLayout(dd=None):
   d = dict()
   BindWidgetMethods(d, stackLayout)
   d.update({
-      'rawPython': stackLayout,
+      '__rawPython__': stackLayout,
   })
   return d
 
@@ -77,10 +77,9 @@ def MakeBoxLayout(dd=None):
   d = dict()
   BindWidgetMethods(d, boxLayout)
   d.update({
-      'rawPython': boxLayout,
+      '__rawPython__': boxLayout,
   })
   return d
-
 
 def Load():
   return {
