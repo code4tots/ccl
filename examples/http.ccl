@@ -1,0 +1,4 @@
+h := Import('http');
+Print(h.post('http://httpbin.org/post', {'a': 'b', "c": 'd'}));
+Print(h.get('http://httpbin.org/ip'));
+Print(h.get('http://httpbin.org/deny'));
