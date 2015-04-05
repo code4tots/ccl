@@ -12,11 +12,11 @@ import sys
 
 import antlr4
 
-from .grammar import CclListener
-from .grammar import CclLexer
-from .grammar import CclParser
+from .grammar import KyuminListener
+from .grammar import KyuminLexer
+from .grammar import KyuminParser
 
-SPECIALOPS = {'__setitem__', '__getitem__'}
+SPECIALOPS = {'__setitem__', '__getitem__', '__list__', '__dict__'}
 
 BINOP_TABLE = {
   '*': '__mul__',
@@ -34,8 +34,8 @@ BINOP_TABLE = {
 
 ### Statement/Expression hybrids
 
-def Block(statements, scope):
-  return {'type': 'block', 'statements': statements, 'scope':int(scope)}
+def Block(stmts, scope):
+  return {'type': 'block', 'stmts': stmts, 'scope':int(scope)}
 
 ### Statements
 
@@ -69,9 +69,9 @@ def Assign(name, value):
   return {'type': 'assign', 'name': name, 'value': value}
 
 def Lambda(names, varargs, body):
-  return {'type': 'lambda', 'names': names, 'varargs': varargs or '', 'body': body}
+  return {'type': 'lambda', 'names': names, 'varargs': varargs, 'body': body}
 
-class Listener(CclListener.CclListener):
+class Listener(KyuminListener.KyuminListener):
 
   def Push(self, value):
     self.stack[-1].append(value)
@@ -186,15 +186,15 @@ class Listener(CclListener.CclListener):
     self.Push(Call(Name('__setitem__'), self.PopStack()))
 
   def exitLambda(self, ctx):
-    v = ctx.var.getText() if ctx.var is not None else None
+    v = ctx.var.getText() if ctx.var is not None else '_'
     self.Push(Lambda([n.getText() for n in ctx.NAME()], v, self.Pop()))
 
 def _Parse(source, fromfile, throw):
     inpcls = antlr4.FileStream if fromfile else antlr4.InputStream.InputStream
     inp = inpcls(source)
-    lexer = CclLexer.CclLexer(inp)
+    lexer = KyuminLexer.KyuminLexer(inp)
     stream = antlr4.CommonTokenStream(lexer)
-    parser = CclParser.CclParser(stream)
+    parser = KyuminParser.KyuminParser(stream)
     if throw:
         parser._errHandler = antlr4.BailErrorStrategy()
     tree = parser.start()
