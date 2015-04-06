@@ -10,7 +10,7 @@ else:
     from KyuminListener import KyuminListener
 def serializedATN():
     with StringIO() as buf:
-        buf.write("\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\"")
+        buf.write("\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3#")
         buf.write("\u009e\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\3\2\3\2")
         buf.write("\3\2\3\3\7\3\21\n\3\f\3\16\3\24\13\3\3\4\3\4\7\4\30\n")
         buf.write("\4\f\4\16\4\33\13\4\3\4\3\4\3\5\3\5\3\5\3\5\3\5\3\5\3")
@@ -25,7 +25,7 @@ def serializedATN():
         buf.write("\6\7\6\u008c\n\6\f\6\16\6\u008f\13\6\5\6\u0091\n\6\3\6")
         buf.write("\3\6\3\6\3\6\3\6\3\6\7\6\u0099\n\6\f\6\16\6\u009c\13\6")
         buf.write("\3\6\2\3\n\7\2\4\6\b\n\2\5\3\2\20\23\3\2\24\25\3\2\26")
-        buf.write("\31\u00b9\2\f\3\2\2\2\4\22\3\2\2\2\6\25\3\2\2\2\b\61\3")
+        buf.write("\32\u00b9\2\f\3\2\2\2\4\22\3\2\2\2\6\25\3\2\2\2\b\61\3")
         buf.write("\2\2\2\nl\3\2\2\2\f\r\5\4\3\2\r\16\7\2\2\3\16\3\3\2\2")
         buf.write("\2\17\21\5\b\5\2\20\17\3\2\2\2\21\24\3\2\2\2\22\20\3\2")
         buf.write("\2\2\22\23\3\2\2\2\23\5\3\2\2\2\24\22\3\2\2\2\25\31\7")
@@ -37,27 +37,27 @@ def serializedATN():
         buf.write("\n\6\2+,\5\6\4\2,\62\3\2\2\2-.\5\n\6\2./\7\b\2\2/\62\3")
         buf.write("\2\2\2\60\62\7\b\2\2\61\36\3\2\2\2\61\37\3\2\2\2\61%\3")
         buf.write("\2\2\2\61)\3\2\2\2\61-\3\2\2\2\61\60\3\2\2\2\62\t\3\2")
-        buf.write("\2\2\63\64\b\6\1\2\64\65\7 \2\2\65\66\7\32\2\2\66m\5\n")
-        buf.write("\6\7\678\7 \2\289\7\33\2\29m\5\n\6\6:m\7\37\2\2;m\7\35")
-        buf.write("\2\2<m\7\36\2\2=m\7 \2\2>?\7\t\2\2?@\5\n\6\2@A\7\n\2\2")
-        buf.write("Am\3\2\2\2Bm\5\6\4\2CL\7\13\2\2DI\5\n\6\2EF\7\f\2\2FH")
-        buf.write("\5\n\6\2GE\3\2\2\2HK\3\2\2\2IG\3\2\2\2IJ\3\2\2\2JM\3\2")
-        buf.write("\2\2KI\3\2\2\2LD\3\2\2\2LM\3\2\2\2MN\3\2\2\2Nm\7\r\2\2")
-        buf.write("O]\7\3\2\2PQ\5\n\6\2QR\7\16\2\2RZ\5\n\6\2ST\7\f\2\2TU")
-        buf.write("\5\n\6\2UV\7\16\2\2VW\5\n\6\2WY\3\2\2\2XS\3\2\2\2Y\\\3")
-        buf.write("\2\2\2ZX\3\2\2\2Z[\3\2\2\2[^\3\2\2\2\\Z\3\2\2\2]P\3\2")
-        buf.write("\2\2]^\3\2\2\2^_\3\2\2\2_m\7\4\2\2`d\7\34\2\2ac\7 \2\2")
-        buf.write("ba\3\2\2\2cf\3\2\2\2db\3\2\2\2de\3\2\2\2ei\3\2\2\2fd\3")
-        buf.write("\2\2\2gh\7\20\2\2hj\7 \2\2ig\3\2\2\2ij\3\2\2\2jk\3\2\2")
+        buf.write("\2\2\63\64\b\6\1\2\64\65\7!\2\2\65\66\7\33\2\2\66m\5\n")
+        buf.write("\6\7\678\7!\2\289\7\34\2\29m\5\n\6\6:m\7 \2\2;m\7\36\2")
+        buf.write("\2<m\7\37\2\2=m\7!\2\2>?\7\t\2\2?@\5\n\6\2@A\7\n\2\2A")
+        buf.write("m\3\2\2\2Bm\5\6\4\2CL\7\13\2\2DI\5\n\6\2EF\7\f\2\2FH\5")
+        buf.write("\n\6\2GE\3\2\2\2HK\3\2\2\2IG\3\2\2\2IJ\3\2\2\2JM\3\2\2")
+        buf.write("\2KI\3\2\2\2LD\3\2\2\2LM\3\2\2\2MN\3\2\2\2Nm\7\r\2\2O")
+        buf.write("]\7\3\2\2PQ\5\n\6\2QR\7\16\2\2RZ\5\n\6\2ST\7\f\2\2TU\5")
+        buf.write("\n\6\2UV\7\16\2\2VW\5\n\6\2WY\3\2\2\2XS\3\2\2\2Y\\\3\2")
+        buf.write("\2\2ZX\3\2\2\2Z[\3\2\2\2[^\3\2\2\2\\Z\3\2\2\2]P\3\2\2")
+        buf.write("\2]^\3\2\2\2^_\3\2\2\2_m\7\4\2\2`d\7\35\2\2ac\7!\2\2b")
+        buf.write("a\3\2\2\2cf\3\2\2\2db\3\2\2\2de\3\2\2\2ei\3\2\2\2fd\3")
+        buf.write("\2\2\2gh\7\20\2\2hj\7!\2\2ig\3\2\2\2ij\3\2\2\2jk\3\2\2")
         buf.write("\2km\5\6\4\2l\63\3\2\2\2l\67\3\2\2\2l:\3\2\2\2l;\3\2\2")
         buf.write("\2l<\3\2\2\2l=\3\2\2\2l>\3\2\2\2lB\3\2\2\2lC\3\2\2\2l")
         buf.write("O\3\2\2\2l`\3\2\2\2m\u009a\3\2\2\2no\f\n\2\2op\t\2\2\2")
         buf.write("p\u0099\5\n\6\13qr\f\t\2\2rs\t\3\2\2s\u0099\5\n\6\ntu")
         buf.write("\f\b\2\2uv\t\4\2\2v\u0099\5\n\6\twx\f\5\2\2xy\7\17\2\2")
-        buf.write("yz\7 \2\2z{\7\33\2\2{\u0099\5\n\6\6|}\f\4\2\2}~\7\13\2")
-        buf.write("\2~\177\5\n\6\2\177\u0080\7\r\2\2\u0080\u0081\7\33\2\2")
+        buf.write("yz\7!\2\2z{\7\34\2\2{\u0099\5\n\6\6|}\f\4\2\2}~\7\13\2")
+        buf.write("\2~\177\5\n\6\2\177\u0080\7\r\2\2\u0080\u0081\7\34\2\2")
         buf.write("\u0081\u0082\5\n\6\5\u0082\u0099\3\2\2\2\u0083\u0084\f")
-        buf.write("\r\2\2\u0084\u0085\7\17\2\2\u0085\u0099\7 \2\2\u0086\u0087")
+        buf.write("\r\2\2\u0084\u0085\7\17\2\2\u0085\u0099\7!\2\2\u0086\u0087")
         buf.write("\f\f\2\2\u0087\u0090\7\t\2\2\u0088\u008d\5\n\6\2\u0089")
         buf.write("\u008a\7\f\2\2\u008a\u008c\5\n\6\2\u008b\u0089\3\2\2\2")
         buf.write("\u008c\u008f\3\2\2\2\u008d\u008b\3\2\2\2\u008d\u008e\3")
@@ -87,8 +87,8 @@ class KyuminParser ( Parser ):
     literalNames = [ u"<INVALID>", u"'{'", u"'}'", u"'if'", u"'else'", u"'while'", 
                      u"';'", u"'('", u"')'", u"'['", u"','", u"']'", u"':'", 
                      u"'.'", u"'*'", u"'/'", u"'//'", u"'%'", u"'+'", u"'-'", 
-                     u"'<'", u"'<='", u"'>'", u"'>='", u"':='", u"'='", 
-                     u"'\\'" ]
+                     u"'=='", u"'<'", u"'<='", u"'>'", u"'>='", u"':='", 
+                     u"'='", u"'\\'" ]
 
     symbolicNames = [ u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
                       u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
@@ -96,8 +96,8 @@ class KyuminParser ( Parser ):
                       u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
                       u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
                       u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
-                      u"<INVALID>", u"<INVALID>", u"<INVALID>", u"FLOAT", 
-                      u"INT", u"STR", u"NAME", u"CMT", u"WS" ]
+                      u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>", 
+                      u"FLOAT", u"INT", u"STR", u"NAME", u"CMT", u"WS" ]
 
     RULE_start = 0
     RULE_ss = 1
@@ -134,12 +134,13 @@ class KyuminParser ( Parser ):
     T__23=24
     T__24=25
     T__25=26
-    FLOAT=27
-    INT=28
-    STR=29
-    NAME=30
-    CMT=31
-    WS=32
+    T__26=27
+    FLOAT=28
+    INT=29
+    STR=30
+    NAME=31
+    CMT=32
+    WS=33
 
     def __init__(self, input:TokenStream):
         super().__init__(input)
@@ -231,7 +232,7 @@ class KyuminParser ( Parser ):
             self.state = 16
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__2) | (1 << KyuminParser.T__4) | (1 << KyuminParser.T__5) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__25) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__2) | (1 << KyuminParser.T__4) | (1 << KyuminParser.T__5) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__26) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
                 self.state = 13
                 self.s()
                 self.state = 18
@@ -285,7 +286,7 @@ class KyuminParser ( Parser ):
             self.state = 23
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__2) | (1 << KyuminParser.T__4) | (1 << KyuminParser.T__5) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__25) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__2) | (1 << KyuminParser.T__4) | (1 << KyuminParser.T__5) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__26) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
                 self.state = 20
                 self.s()
                 self.state = 25
@@ -909,7 +910,7 @@ class KyuminParser ( Parser ):
                 self.state = 50
                 self.match(KyuminParser.NAME)
                 self.state = 51
-                self.match(KyuminParser.T__23)
+                self.match(KyuminParser.T__24)
                 self.state = 52
                 self.e(5)
                 pass
@@ -921,7 +922,7 @@ class KyuminParser ( Parser ):
                 self.state = 53
                 self.match(KyuminParser.NAME)
                 self.state = 54
-                self.match(KyuminParser.T__24)
+                self.match(KyuminParser.T__25)
                 self.state = 55
                 self.e(4)
                 pass
@@ -986,7 +987,7 @@ class KyuminParser ( Parser ):
                 self.match(KyuminParser.T__8)
                 self.state = 74
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__25) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
+                if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__26) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
                     self.state = 66
                     self.e(0)
                     self.state = 71
@@ -1015,7 +1016,7 @@ class KyuminParser ( Parser ):
                 self.match(KyuminParser.T__0)
                 self.state = 91
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__25) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
+                if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__26) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
                     self.state = 78
                     self.e(0)
                     self.state = 79
@@ -1049,7 +1050,7 @@ class KyuminParser ( Parser ):
                 self._ctx = localctx
                 _prevctx = localctx
                 self.state = 94
-                self.match(KyuminParser.T__25)
+                self.match(KyuminParser.T__26)
                 self.state = 98
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
@@ -1131,7 +1132,7 @@ class KyuminParser ( Parser ):
                         self.state = 115
                         localctx.op = self._input.LT(1)
                         _la = self._input.LA(1)
-                        if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__19) | (1 << KyuminParser.T__20) | (1 << KyuminParser.T__21) | (1 << KyuminParser.T__22))) != 0)):
+                        if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__19) | (1 << KyuminParser.T__20) | (1 << KyuminParser.T__21) | (1 << KyuminParser.T__22) | (1 << KyuminParser.T__23))) != 0)):
                             localctx.op = self._errHandler.recoverInline(self)
                         else:
                             self.consume()
@@ -1151,7 +1152,7 @@ class KyuminParser ( Parser ):
                         self.state = 119
                         self.match(KyuminParser.NAME)
                         self.state = 120
-                        self.match(KyuminParser.T__24)
+                        self.match(KyuminParser.T__25)
                         self.state = 121
                         self.e(4)
                         pass
@@ -1170,7 +1171,7 @@ class KyuminParser ( Parser ):
                         self.state = 125
                         self.match(KyuminParser.T__10)
                         self.state = 126
-                        self.match(KyuminParser.T__24)
+                        self.match(KyuminParser.T__25)
                         self.state = 127
                         self.e(3)
                         pass
@@ -1199,7 +1200,7 @@ class KyuminParser ( Parser ):
                         self.match(KyuminParser.T__6)
                         self.state = 142
                         _la = self._input.LA(1)
-                        if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__25) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
+                        if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << KyuminParser.T__0) | (1 << KyuminParser.T__6) | (1 << KyuminParser.T__8) | (1 << KyuminParser.T__26) | (1 << KyuminParser.FLOAT) | (1 << KyuminParser.INT) | (1 << KyuminParser.STR) | (1 << KyuminParser.NAME))) != 0):
                             self.state = 134
                             self.e(0)
                             self.state = 139

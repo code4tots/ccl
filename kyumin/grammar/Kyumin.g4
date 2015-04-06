@@ -25,7 +25,8 @@ e             : STR                          #str
               | e '[' e ']'                  #getItem
               | e op=('*'|'/'|'//'|'%') e    #binop
               | e op=('+'|'-') e             #binop
-              | e op=( '<'
+              | e op=( '=='
+                     | '<'
                      | '<='
                      | '>'
                      | '>='
