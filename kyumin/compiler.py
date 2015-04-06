@@ -16,7 +16,7 @@ from .grammar import KyuminListener
 from .grammar import KyuminLexer
 from .grammar import KyuminParser
 
-SPECIALOPS = {'__setitem__', '__getitem__', '__list__', '__dict__'}
+SPECIALOPS = {'__list__', '__dict__', '__setitem__', '__getitem__'}
 
 BINOP_TABLE = {
   '*': '__mul__',

@@ -16,6 +16,7 @@ e             : STR                          #str
               | FLOAT                        #float
               | INT                          #int
               | NAME                         #name
+              | '(' e ')'                    #paren
               | b                            #blockExpr
               | '[' (e(','e)*)? ']'          #list
               | '{' (e':'e(','e':'e)*)? '}'  #dict

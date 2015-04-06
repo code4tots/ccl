@@ -148,6 +148,15 @@ class KyuminListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by KyuminParser#paren.
+    def enterParen(self, ctx):
+        pass
+
+    # Exit a parse tree produced by KyuminParser#paren.
+    def exitParen(self, ctx):
+        pass
+
+
     # Enter a parse tree produced by KyuminParser#lambda.
     def enterLambda(self, ctx):
         pass
