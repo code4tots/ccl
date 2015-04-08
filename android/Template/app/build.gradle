@@ -5,7 +5,7 @@ android {
     buildToolsVersion "21.1.2"
 
     defaultConfig {
-        applicationId "com.example.math4tots.example"
+        applicationId "com.math4tots.template.template"
         minSdkVersion 19
         targetSdkVersion 21
         versionCode 1

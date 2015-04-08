@@ -1,4 +1,4 @@
-package com.example.math4tots.example;
+package com.math4tots.template.template;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
