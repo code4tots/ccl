@@ -1,7 +1,0 @@
-i := 99;
-
-while 0 < i {
-    i = i - 1;
-    Print(i, "bottles of beer on the wall");
-}
-
