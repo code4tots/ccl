@@ -69,9 +69,6 @@ class BaseListener(AaListener.AaListener):
   def exitFloat(self, ctx):
     self.Push(self.Float(float(ctx.FLOAT().getText())))
 
-  def exitInt(self, ctx):
-    self.Push(self.Int(int(ctx.INT().getText())))
-
   def exitName(self, ctx):
     self.Push(self.Name(ctx.NAME().getText()))
 
@@ -144,9 +141,6 @@ class ToTreeListener(BaseListener):
   def Float(self, s):
     return {'type': 'float', 'value': s}
 
-  def Int(self, s):
-    return {'type': 'int', 'value': s}
-
   def Name(self, s):
     return {'type': 'name', 'value': s}
 
@@ -161,6 +155,10 @@ class ToTreeListener(BaseListener):
 
   def Lambda(self, names, varargs, body):
     return {'type': 'lambda', 'names': names, 'varargs': varargs, 'body': body}
+
+class ToJsonListener(ToTreeListener):
+  def Result(self, x):
+    return json.dumps(x)
 
 class ToJavaListener(BaseListener):
   """
@@ -184,7 +182,7 @@ class ToJavaListener(BaseListener):
   def Result(self, x):
     return """
 class %s extends %s {
-    public static Object run(Context ctx) {
+    public static Object run(final Context ctx) {
         Context outside;
         return %s;
     }
@@ -212,9 +210,6 @@ class %s extends %s {
   def Float(self, s):
     return str(s)
 
-  def Int(self, s):
-    return str(s)
-
   def Name(self, s):
     return 'ctx.get(%s)' % self.Str(s)
 
@@ -229,8 +224,7 @@ class %s extends %s {
 
   def Lambda(self, names, varargs, body):
     return JAVA_CALL_TEMPLATE % ''.join((
-        'Scope save = ctx.peek();'
-        ))
+        'Scope save = ctx.peek();'))
     return JAVA_FUNC_TEMPLATE % ''.join((
         'ctx.push();',
         ''.join('ctx.declare(%s,args[%d]);' % (n,i) for i, n in enumerate(names)),
@@ -255,15 +249,14 @@ def Main():
   cmd = sys.argv[1] if len(sys.argv) > 1 else 'json'
   string = sys.stdin.read()
   if cmd == 'json':
-    print(json.dumps(Parse(string)))
+    listener = ToJsonListener()
+  elif cmd == 'java':
+    name = sys.argv[2] if len(sys.argv) > 2 else 'AaProgram'
+    base = sys.argv[3] if len(sys.argv) > 3 else 'BaseAaProgram'
+    listener = ToJavaListener(name, base)
   else:
-    if cmd == 'java':
-      name = sys.argv[2] if len(sys.argv) > 2 else 'AaProgram'
-      base = sys.argv[3] if len(sys.argv) > 3 else 'BaseAaProgram'
-      listener = ToJavaListener(name, base)
-    else:
-      raise ValueError(cmd + " is not a command")
-    print(Parse(string, listener))
+    raise ValueError(cmd + " is not a command")
+  print(Parse(string, listener))
 
 if __name__ == '__main__':
   Main()

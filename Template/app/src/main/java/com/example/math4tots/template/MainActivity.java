@@ -4,6 +4,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -13,6 +14,16 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         BaseAaProgram.Context ctx = new BaseAaProgram.Context();
+        ctx.declare("gui", new BaseAaProgram.Dict(
+                "test", new BaseAaProgram.Function() {
+            public Object call(Object... args) {
+                TextView t = new TextView(getApplicationContext());
+                t.setText("Hello there!");
+                setContentView(t);
+                return 0.0;
+            }
+        }
+        ));
         new AndroidAaProgram().run(ctx);
     }
 

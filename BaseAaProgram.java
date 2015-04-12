@@ -42,53 +42,82 @@ public class BaseAaProgram {
     /// Context
 
     public static class Context {
-    	ArrayList<Scope> stack = new ArrayList<Scope>();
+        public ArrayList<Scope> stack = new ArrayList<Scope>();
 
-    	public Context() {
-    		GlobalScope globalScope = new GlobalScope();
-    		globalScope.declare("Print", new Function() {
-	            public Object call(Object... args) {
-	                if (args.length > 0) {
-	                    System.out.print(args[0]);
-	                    for (int i = 1; i < args.length; i++) {
-	                        System.out.print(" ");
-	                        System.out.print(args[i]);
-	                    }
-	                }
-	                System.out.println();
-	                return args[args.length - 1];
-	            }
-	        });
-    		stack.add(globalScope);
-    	}
+        public Context() {
+            GlobalScope globalScope = new GlobalScope();
+            globalScope.declare("__list__", new Function() {
+                public Object call(Object... args) {
+                    return new List(args);
+                }
+            });
+            globalScope.declare("__dict__", new Function() {
+                public Object call(Object... args) {
+                    return new Dict(args);
+                }
+            });
+            globalScope.declare("__getitem__", new Function() {
+                public Object call(Object... args) {
+                    if (args.length != 2) throw new Error();
+                    Object x = args[0], i = args[1];
+                    if (x instanceof String) return ((String)x).charAt(((Double)i).intValue());
+                    if (x instanceof List) return ((List)x).get(((Double)i).intValue());
+                    if (x instanceof Dict) return ((Dict)x).get(i);
+                    throw new Error("__getitem__ for " + x.getClass().toString() + " not supproted.");
+                }
+            });
+            globalScope.declare("__setitem__", new Function() {
+                public Object call(Object... args) {
+                    if (args.length != 3) throw new Error();
+                    Object x = args[0], i = args[1], v = args[2];
+                    if      (x instanceof List) return ((List)x).set(((Double)i).intValue(), v);
+                    else if (x instanceof Dict) return ((Dict)x).put(i, v);
+                    throw new Error("__setitem__ for " + x.getClass().toString() + " not supproted.");
+                }
+            });
+            globalScope.declare("print", new Function() {
+                public Object call(Object... args) {
+                    if (args.length > 0) {
+                        System.out.print(args[0]);
+                        for (int i = 1; i < args.length; i++) {
+                            System.out.print(" ");
+                            System.out.print(args[i]);
+                        }
+                    }
+                    System.out.println();
+                    return args[args.length - 1];
+                }
+            });
+            stack.add(globalScope);
+        }
 
-    	public void push() {
-    		push(stack.get(stack.size()-1));
-    	}
+        public void push() {
+            push(stack.get(stack.size()-1));
+        }
 
-    	public void push(Scope scope) {
-    		stack.add(scope);
-    	}
+        public void push(Scope scope) {
+            stack.add(scope);
+        }
 
-    	public Scope pop() {
-    		return stack.remove(stack.size() - 1);
-    	}
+        public Scope pop() {
+            return stack.remove(stack.size() - 1);
+        }
 
-    	public Scope peek() {
-    		return stack.get(stack.size() - 1);
-    	}
+        public Scope peek() {
+            return stack.get(stack.size() - 1);
+        }
 
-    	public Object get(String key) {
-    		return peek().get(key);
-    	}
+        public Object get(String key) {
+            return peek().get(key);
+        }
 
-    	public Object declare(String key, Object val) {
-    		return peek().declare(key, val);
-    	}
+        public Object declare(String key, Object val) {
+            return peek().declare(key, val);
+        }
 
-    	public Object assign(String key, Object val) {
-    		return peek().assign(key, val);
-    	}
+        public Object assign(String key, Object val) {
+            return peek().assign(key, val);
+        }
     }
 
     abstract public static class Scope {
