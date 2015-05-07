@@ -48,6 +48,11 @@ class Listener(AListener.AListener):
   def exitIfElse(self, ctx):
     self.Push(['if'] + self.PopStack())
 
+  def enterIf_(self, ctx):
+    self.PushStack()
+  def exitIf_(self, ctx):
+    self.Push(['if'] + self.PopStack() + [0])
+
   def enterWhile(self, ctx):
     self.PushStack()
   def exitWhile(self, ctx):
@@ -59,12 +64,10 @@ class Listener(AListener.AListener):
   def exitName(self, ctx):
     self.Push(ctx.NAME().getText())
 
-  def enterCall(self, ctx):
+  def enterC(self, ctx):
     self.PushStack()
-  def exitCall(self, ctx):
-    fargs = self.PopStack()
-    f, args = fargs[0], fargs[1:]
-    self.Push([f] + args)
+  def exitC(self, ctx):
+    self.Push(self.PopStack())
 
   def enterList(self, ctx):
     self.PushStack()

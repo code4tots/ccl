@@ -1,18 +1,17 @@
 grammar A     ;
 start         : s* ;
 m             : ('\n' | ';') ;
-r             : m? c m ;
+r             : m? c (m | EOF) ;
 s             : m | r ;
 b             : '{' s* '}' ;
-c             : 'if' r r 'else' r #ifElse
-              | e+ #call ;
+c             : e+ ;
 e             : STR+ #str
               | NAME #name
               | b #block
               | '(' c ')' #callExpr
-              | '['(e(','e)*)?']' #list
-              | '{'(e':'e(','e':' e)*)?'}' #dict
-              | '\\' NAME* b #lambda ;
+              | 'if' e r 'else' r #ifElse
+              | 'if' e r #if_
+              ;
 FLOAT         : [0-9]+ '.' [0-9]* 
               |        '.' [0-9]+ ;
 INT           : [0-9]+ ;
@@ -22,4 +21,4 @@ STR           :     ["] (~["] | '\\' ["]) * ["]
               | 'r' ['] (~['] | '\\' [']) * ['] ;
 NAME          : [a-zA-Z0-9_$]+ ;
 CMT           : '#' ~'\n'* -> skip ;
-WS            : [ \t\r\n]+ -> skip ;
+WS            : [ \t\r]+ -> skip ;
