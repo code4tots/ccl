@@ -23,6 +23,10 @@ class Ast(object):
 	def evl(self, ctx):
 		raise NotImplemented('%s does not implemented evaluation' % type(self))
 
+	@property
+	def swift(self):
+		return '\npushvalue(%s)' % self.swiftvalue
+
 class Token(Ast, object):
 	def __new__(cls, start, end, value):
 		self = super(Token, cls).__new__(cls, value)
@@ -32,6 +36,10 @@ class Token(Ast, object):
 
 	def evl(self, ctx):
 		return self
+
+	@property
+	def swiftvalue(self):
+		return repr(self)
 
 class Int(Token, int):
 	pass
@@ -43,11 +51,19 @@ class Id(Token, str):
 	def evl(self, ctx):
 		return ctx[str(self)]
 
+	@property
+	def swift(self):
+		return '\nsummonid("%s")' % self
+
 class QuoteFunc(Id):
-	pass
+	@property
+	def swiftvalue(self):
+		return 'ctx[%s]' % self
 
 class Str(Token, str):
-	pass
+	@property
+	def swiftvalue(self):
+		return repr(self)
 
 class Block(Ast, tuple):
 	def __new__(cls, start, end, items):
@@ -67,6 +83,9 @@ class Block(Ast, tuple):
 			else:
 				value(ctx)
 
+	@property
+	def swiftvalue(self):
+		return '{' + ''.join(x.swift.replace('\n', '\n\t') for x in self) + '\n}'
 
 class List(Block):
 	def evl(self, ctx):
@@ -114,8 +133,12 @@ def parse(s):
 		return s.startswith(ss, i())
 
 	def skip_spaces():
-		while ch().isspace():
-			inc()
+		while ch().isspace() or ch() == '#':
+			if ch() == '#':
+				while ch() and ch() != '\n':
+					inc()
+			else:
+				inc()
 
 	def next_token():
 		skip_spaces()
@@ -236,15 +259,7 @@ def _(ctx):
 
 d = parse('''
 
-
-i 0 
-( i 2 neq ) (
-
-	5 print
-
-) while
-
-(x y z) print
+# (x y z) print
 ( false ) ( 'a' ) ( 'b' ) if print
 
 ''')
@@ -252,3 +267,5 @@ i 0
 ctx = Context(CCL_GLOBALS)
 ctx['__stack__'] = []
 d.exc(ctx)
+
+print d.swift
