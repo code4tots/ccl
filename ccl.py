@@ -1,13 +1,36 @@
+class Context(object):
+	def __init__(self, parent):
+		self.table = dict()
+		self.parent = parent
+
+	def __contains__(self, key):
+		return key in self.table or key in self.parent
+
+	def __getitem__(self, key):
+		return self.table[key] if key in self.table else self.parent[key]
+
+	def __setitem__(self, key, value):
+		if key in self.table:
+			self.table[key] = value
+		else:
+			self.parent[key] = value
+
+	def declare(self, key, value=None):
+		self.table[key] = value
+
 class Ast(object):
 
-	def exc(self, ctx):
-		raise NotImplemented('%s does not yet implement execution' % type(self))
+	def evl(self, ctx):
+		raise NotImplemented('%s does not implemented evaluation' % type(self))
 
 class Token(Ast, object):
 	def __new__(cls, start, end, value):
 		self = super(Token, cls).__new__(cls, value)
 		self.start = start
 		self.end = end
+		return self
+
+	def evl(self, ctx):
 		return self
 
 class Int(Token, int):
@@ -17,6 +40,10 @@ class Float(Token, float):
 	pass
 
 class Id(Token, str):
+	def evl(self, ctx):
+		return ctx[str(self)]
+
+class QuoteFunc(Id):
 	pass
 
 class Str(Token, str):
@@ -28,6 +55,29 @@ class Block(Ast, tuple):
 		self.start = start
 		self.end = end
 		return self
+
+	def evl(self, ctx):
+		return self
+
+	def exc(self, ctx):
+		for item in self:
+			value = item.evl(ctx)
+			if not isinstance(value, Func) or isinstance(item, QuoteFunc):
+				ctx['__stack__'].append(value)
+			else:
+				value(ctx)
+
+
+class List(Block):
+	def evl(self, ctx):
+		return [item.evl(ctx) for item in self]
+
+class Func(object):
+	def __init__(self, cb):
+		self.callback = cb
+
+	def __call__(self, ctx):
+		return self.callback(ctx)
 
 EOF = 'EOF'
 
@@ -61,7 +111,7 @@ def parse(s):
 		return s[i():i()+di]
 
 	def startswith(ss):
-		s.startswith(ss, i())
+		return s.startswith(ss, i())
 
 	def skip_spaces():
 		while ch().isspace():
@@ -75,8 +125,12 @@ def parse(s):
 		if not ch():
 			d[1] = d[2] = EOF
 
-		elif ch() in '[];':
+		elif ch() in '[]()':
 			d[1] = d[2] = ch()
+			inc()
+
+		elif ch() == ';':
+			d[1] = d[2] = Invoke
 			inc()
 
 		elif startswith(('r"', "r'", '"', "'")):
@@ -86,28 +140,27 @@ def parse(s):
 			if ch() == 'r':
 				inc()
 
-			if startswith('"""', "'''"):
-				inc(3)
+			if startswith(('"""', "'''")):
 				q = ch(3)
-
+				inc(3)
 			else:
-				inc()
 				q = ch()
+				inc()
 
 			while not startswith(q):
 				inc()
 
 			inc(len(q))
 
-			d[2] = eval(s[d[3]:i()])
+			d[2] = eval(s[ts():i()])
 
 		else:
-			while ch() and ch() not in ('"', "'", '[', ']', ';') and not ch().isspace():
+			while ch() and ch() not in "'" '"[]();' and not ch().isspace():
 				inc()
 
 			x = s[d[3]:i()]
 
-			assert x
+			assert x, s[i():]
 
 			try:
 				d[1] = Int
@@ -117,8 +170,12 @@ def parse(s):
 					d[1] = Float
 					d[2] = float(x)
 				except ValueError:
-					d[1] = Id
-					d[2] = x
+					if x.startswith('.'):
+						d[1] = QuoteFunc
+						d[2] = x[1:]
+					else:
+						d[1] = Id
+						d[2] = x
 
 	stack = [[]]
 
@@ -128,21 +185,57 @@ def parse(s):
 
 	next_token()
 	while tt() != EOF:
-		if tt() == '[':
+		if tt() in ('[', '('):
 			stack.append([])
 			start_stack.append(ts())
-		elif tt() == ']':
-			stack[-2].append(Block(start_stack.pop(), i(), stack.pop()))
+		elif tt() in (']', ')'):
+			stack[-2].append((List if tt() == ']' else Block)(start_stack.pop(), i(), stack.pop()))
 		else:
 			stack[-1].append(tt()(ts(), i(), tv()))
 		next_token()
 
 	assert len(stack) == 1, stack
 
-	return Block(0, len(s.rstrip()), stack.pop())
+	return Block(start_stack.pop(), len(s.rstrip()), stack.pop())
 
-print(parse('''
+CCL_GLOBALS = {'true': True, 'false': False}
 
-a b c [ 1 2 3.5 ]
+def GLOBAL_FUNC(name):
+	def GLOBAL_FUNC_inside(func):
+		CCL_GLOBALS[name] = Func(func)
+	return GLOBAL_FUNC_inside
 
-'''))
+@GLOBAL_FUNC('if')
+def _(ctx):
+	stack = ctx['__stack__']
+	cond, a, b = stack[-3:]
+	del stack[-3:]
+
+	cond.exc(ctx)
+	if stack.pop():
+		a.exc(ctx)
+	else:
+		b.exc(ctx)
+
+@GLOBAL_FUNC('print')
+def _(ctx):
+	print(ctx['__stack__'].pop())
+
+d = parse('''
+
+(
+	( x y eq ) (
+
+		5 print
+
+	) while
+)
+
+(x y z) print
+( false ) ( 'a' ) ( 'b' ) if print
+
+''')
+
+ctx = Context(CCL_GLOBALS)
+ctx['__stack__'] = []
+d.exc(ctx)
