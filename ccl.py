@@ -217,19 +217,32 @@ def _(ctx):
 	else:
 		b.exc(ctx)
 
+@GLOBAL_FUNC('while')
+def _(ctx):
+	stack = ctx['__stack__']
+	cond, body = stack[-2:]
+	del stack[-2:]
+
+	while True:
+		cond.exc(ctx)
+		if not stack.pop():
+			break
+
+		body.exc(ctx)
+
 @GLOBAL_FUNC('print')
 def _(ctx):
 	print(ctx['__stack__'].pop())
 
 d = parse('''
 
-(
-	( x y eq ) (
 
-		5 print
+i 0 
+( i 2 neq ) (
 
-	) while
-)
+	5 print
+
+) while
 
 (x y z) print
 ( false ) ( 'a' ) ( 'b' ) if print
