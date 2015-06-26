@@ -25,7 +25,7 @@ class Ast(object):
 
 	@property
 	def swift(self):
-		return '\npushvalue(%s)' % self.swiftvalue
+		return '\npushvalue(ctx, %s)' % self.swiftvalue
 
 class Token(Ast, object):
 	def __new__(cls, start, end, value):
@@ -53,7 +53,7 @@ class Id(Token, str):
 
 	@property
 	def swift(self):
-		return '\nsummonid("%s")' % self
+		return '\nsummonid(ctx, "%s")' % self
 
 class QuoteFunc(Id):
 	@property
@@ -63,7 +63,7 @@ class QuoteFunc(Id):
 class Str(Token, str):
 	@property
 	def swiftvalue(self):
-		return repr(self)
+		return '"%s"' % ''.join('\\u{%x}' % ord(c) for c in self)
 
 class Block(Ast, tuple):
 	def __new__(cls, start, end, items):
@@ -85,7 +85,12 @@ class Block(Ast, tuple):
 
 	@property
 	def swiftvalue(self):
-		return '{' + ''.join(x.swift.replace('\n', '\n\t') for x in self) + '\n}'
+		return 'Block {(ctx: Context) in' + ''.join(x.swift.replace('\n', '\n\t') for x in self) + '\n}'
+
+class Top(Block):
+	@property
+	def swift(self):
+		return super(Top, self).swift + '\npopandrun(ctx)'
 
 class List(Block):
 	def evl(self, ctx):
@@ -219,7 +224,7 @@ def parse(s):
 
 	assert len(stack) == 1, stack
 
-	return Block(start_stack.pop(), len(s.rstrip()), stack.pop())
+	return Top(start_stack.pop(), len(s.rstrip()), stack.pop())
 
 CCL_GLOBALS = {'true': True, 'false': False}
 
@@ -261,6 +266,12 @@ d = parse('''
 
 # (x y z) print
 ( false ) ( 'a' ) ( 'b' ) if print
+( true ) ( 1 ) ( 2 ) if print
+( 0 ) ('x') ('y') if print
+( "" ) ( 0.0 ) ( 1.0 ) if print
+
+"""Hello world!
+again""" print
 
 ''')
 
