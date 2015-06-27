@@ -1,27 +1,4 @@
-class Context(object):
-	def __init__(self, parent):
-		self.table = dict()
-		self.parent = parent
-
-	def __contains__(self, key):
-		return key in self.table or key in self.parent
-
-	def __getitem__(self, key):
-		return self.table[key] if key in self.table else self.parent[key]
-
-	def __setitem__(self, key, value):
-		if key in self.table:
-			self.table[key] = value
-		else:
-			self.parent[key] = value
-
-	def declare(self, key, value=None):
-		self.table[key] = value
-
 class Ast(object):
-
-	def evl(self, ctx):
-		raise NotImplemented('%s does not implemented evaluation' % type(self))
 
 	@property
 	def swift(self):
@@ -32,9 +9,6 @@ class Token(Ast, object):
 		self = super(Token, cls).__new__(cls, value)
 		self.start = start
 		self.end = end
-		return self
-
-	def evl(self, ctx):
 		return self
 
 	@property
@@ -48,9 +22,6 @@ class Float(Token, float):
 	pass
 
 class Id(Token, str):
-	def evl(self, ctx):
-		return ctx[str(self)]
-
 	@property
 	def swift(self):
 		return '\nsummonid(ctx, "%s")' % self
@@ -58,7 +29,12 @@ class Id(Token, str):
 class QuoteFunc(Id):
 	@property
 	def swiftvalue(self):
-		return 'ctx[%s]' % self
+		return 'ctx["%s"]' % self
+
+class Assign(Id):
+	@property
+	def swift(self):
+		return '\nctx["%s"] = ctx.pop()' % self
 
 class Str(Token, str):
 	@property
@@ -72,36 +48,25 @@ class Block(Ast, tuple):
 		self.end = end
 		return self
 
-	def evl(self, ctx):
-		return self
-
-	def exc(self, ctx):
-		for item in self:
-			value = item.evl(ctx)
-			if not isinstance(value, Func) or isinstance(item, QuoteFunc):
-				ctx['__stack__'].append(value)
-			else:
-				value(ctx)
-
 	@property
 	def swiftvalue(self):
-		return 'Block {(ctx: Context) in' + ''.join(x.swift.replace('\n', '\n\t') for x in self) + '\n}'
+		return 'Verb {(ctx: Context) in' + ''.join(x.swift.replace('\n', '\n\t') for x in self) + '\n}'
 
 class Top(Block):
 	@property
 	def swift(self):
-		return super(Top, self).swift + '\npopandrun(ctx)'
+		return ''.join((
+			'\nfunc runccl() {',
+			(super(Top, self).swift + '\npopandrun(ctx)').replace('\n', '\n\t'),
+			'\n}'))
 
 class List(Block):
-	def evl(self, ctx):
-		return [item.evl(ctx) for item in self]
-
-class Func(object):
-	def __init__(self, cb):
-		self.callback = cb
-
-	def __call__(self, ctx):
-		return self.callback(ctx)
+	@property
+	def swift(self):
+		return ''.join((
+			'\npushstack(ctx)',
+			''.join(x.swift for x in self),
+			'\npopstack(ctx)'))
 
 EOF = 'EOF'
 
@@ -198,19 +163,18 @@ def parse(s):
 					d[1] = Float
 					d[2] = float(x)
 				except ValueError:
-					if x.startswith('.'):
-						d[1] = QuoteFunc
+					if x.startswith(('.', '=')):
+						d[1] = {
+							'.': QuoteFunc,
+							'=': Assign,
+						}[x[0]]
 						d[2] = x[1:]
 					else:
 						d[1] = Id
 						d[2] = x
-
 	stack = [[]]
-
 	skip_spaces()
-
 	start_stack = [i()]
-
 	next_token()
 	while tt() != EOF:
 		if tt() in ('[', '('):
@@ -221,62 +185,33 @@ def parse(s):
 		else:
 			stack[-1].append(tt()(ts(), i(), tv()))
 		next_token()
-
 	assert len(stack) == 1, stack
-
 	return Top(start_stack.pop(), len(s.rstrip()), stack.pop())
-
-CCL_GLOBALS = {'true': True, 'false': False}
-
-def GLOBAL_FUNC(name):
-	def GLOBAL_FUNC_inside(func):
-		CCL_GLOBALS[name] = Func(func)
-	return GLOBAL_FUNC_inside
-
-@GLOBAL_FUNC('if')
-def _(ctx):
-	stack = ctx['__stack__']
-	cond, a, b = stack[-3:]
-	del stack[-3:]
-
-	cond.exc(ctx)
-	if stack.pop():
-		a.exc(ctx)
-	else:
-		b.exc(ctx)
-
-@GLOBAL_FUNC('while')
-def _(ctx):
-	stack = ctx['__stack__']
-	cond, body = stack[-2:]
-	del stack[-2:]
-
-	while True:
-		cond.exc(ctx)
-		if not stack.pop():
-			break
-
-		body.exc(ctx)
-
-@GLOBAL_FUNC('print')
-def _(ctx):
-	print(ctx['__stack__'].pop())
 
 d = parse('''
 
 # (x y z) print
-( false ) ( 'a' ) ( 'b' ) if print
-( true ) ( 1 ) ( 2 ) if print
-( 0 ) ('x') ('y') if print
-( "" ) ( 0.0 ) ( 1.0 ) if print
+# ( false ) ( 'a' ) ( 'b' ) if print
+# ( true ) ( 1 ) ( 2 ) if print
+# ( 0 ) ('x') ('y') if print
+# ( "" ) ( 'left' ) ( 'right' ) if print
 
-"""Hello world!
-again""" print
+"outside" =x
+
+"x is: " print
+x print
+
+(
+	"inside" =x
+	x print
+) =f
+
+f
+
+# """Hello world!
+# again""" print
 
 ''')
 
-ctx = Context(CCL_GLOBALS)
-ctx['__stack__'] = []
-d.exc(ctx)
-
-print d.swift
+with open('/Users/math4tots/Documents/XcodeProjects/An App A Day/Scan Books/Scan Books/cclcode.swift', 'w') as f:
+	f.write(d.swift)

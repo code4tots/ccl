@@ -10,6 +10,48 @@ class Context {
     
     init(_ parent: Context?) {
         self.parent = parent
+        
+        if parent == nil {
+            table["__stack__"] = NSMutableArray()
+            
+            table["print"] = Verb { (ctx) in
+                print(ctx.pop())
+            }
+            
+            table["println"] = Verb { (ctx) in
+                println(ctx.pop())
+            }
+            
+            table["true"] = true
+            table["false"] = false
+            
+            table["if"] = Verb { (ctx) in
+                ctx.stack
+                let rhs = ctx.pop() as! Verb
+                let lhs = ctx.pop() as! Verb
+                let cond = ctx.pop() as! Verb
+                
+                var choice = lhs
+                
+                cond.x(ctx)
+                
+                let v: AnyObject = ctx.pop()
+                
+                if let b = v as? Bool {
+                    choice = b ? lhs : rhs
+                } else if let i = v as? Int {
+                    choice = i != 0 ? lhs : rhs
+                } else if let f = v as? Float {
+                    choice = f != 0 ? lhs : rhs
+                } else if let s = v as? String {
+                    choice = s != "" ? lhs : rhs
+                } else {
+                    // Assume all other values are true for now
+                    choice = lhs
+                }
+                choice.x(ctx)
+            }
+        }
     }
     
     subscript(key: String) -> AnyObject? {
@@ -46,15 +88,13 @@ class Context {
     }
 }
 
-class Block {
+class Verb {
     let x : (Context) -> Void
     init(x : (Context) -> Void) { self.x = x }
     var description : String {
         return "xx\(x)"
     }
 }
-
-class Verb : Block {}
 
 func pushvalue(ctx: Context, value: AnyObject) {
     ctx.push(value)
@@ -74,40 +114,9 @@ func summonid(ctx: Context, name: String) {
 }
 
 func popandrun(ctx: Context) {
-    let cmd = (ctx["__stack__"] as! NSMutableArray).lastObject as! Block
+    let cmd = (ctx["__stack__"] as! NSMutableArray).lastObject as! Verb
     (ctx["__stack__"] as! NSMutableArray).removeLastObject()
     cmd.x(ctx)
 }
 
 var ctx = Context(nil)
-ctx.table["__stack__"] = NSMutableArray()
-
-ctx.table["print"] = Verb { (ctx) in
-    println(ctx.pop())
-}
-
-ctx.table["false"] = false
-ctx.table["true"] = true
-
-ctx.table["if"] = Verb { (ctx) in
-    ctx.stack
-    let rhs = ctx.pop() as! Block
-    let lhs = ctx.pop() as! Block
-    let cond = ctx.pop() as! Block
-    
-    var choice = lhs
-    
-    cond.x(ctx)
-    
-    if let b = ctx.pop() as? Bool {
-        if b {
-            choice = lhs
-        } else {
-            choice = rhs
-        }
-    } else {
-        // Assume all other values are true for now
-        choice = lhs
-    }
-    choice.x(ctx)
-}
