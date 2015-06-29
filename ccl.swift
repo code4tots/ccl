@@ -601,4 +601,4 @@ internal func ccltest() {
     parse("1 2 +").exec(cc)
     assert(cc.pop() == Num(3))
 }
-ccltest()
+// ccltest()
