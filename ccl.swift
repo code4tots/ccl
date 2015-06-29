@@ -1,3 +1,9 @@
+/*
+Swift 1.2
+
+A lot of ugliness is because I don't know swift too well.
+Some of ugliness is because Swift is new and doesn't support a lot of things it should.c
+*/
 import Foundation
 
 class Parser {
@@ -38,7 +44,7 @@ class Parser {
 	}
 
 	func starts_with(x: [Character]) -> Bool {
-		return Array(chs[b..<(b+x.count)]) == x
+		return Array(chs[b..<min(chs.count, b+x.count)]) == x
 	}
 
 	func next_token() {
@@ -128,7 +134,7 @@ class Parser {
 			next_token()
 		}
 		assert(stack.count == 1, toString(stack))
-		return Block(start_stack.removeLast(), b, stack[0])
+		return Top(start_stack.removeLast(), b, stack[0])
 	}
 }
 
@@ -136,7 +142,7 @@ func parse(s: String) -> Ast {
 	return Parser(s).parse()
 }
 
-class Ast : Printable, Equatable {
+class Ast : Thing {
 	var a : Int // ast start position
 	var b : Int // ast end position
 
@@ -145,12 +151,15 @@ class Ast : Printable, Equatable {
 		self.b = b
 	}
 
-	convenience init() {
+	override convenience init() {
 		self.init(0, 0)
 	}
 
-	var description: String {
-		return "ast"
+	override func eq(rhs: Thing) -> Bool {
+		if let r = rhs as? Ast {
+			return eq(r)
+		}
+		return false
 	}
 
 	func eq(rhs: Ast) -> Bool {
@@ -180,7 +189,7 @@ class Block : Ast {
 	}
 
 	override var description: String {
-		return toString(xs)
+		return "Block(\(xs))"
 	}
 
 	override func eq(rhs: Ast) -> Bool {
@@ -188,6 +197,22 @@ class Block : Ast {
 			return xs == r.xs
 		}
 		return false
+	}
+
+	override func exec(c: Context) {
+		c.stack.x.append(self)
+	}
+}
+
+class Top : Block {
+	override func exec(c: Context) {
+		for x in xs {
+			x.exec(c)
+		}
+	}
+
+	override var description: String {
+		return "Top(\(xs))"
 	}
 }
 
@@ -204,7 +229,7 @@ class NumAst : Ast {
 	}
 
 	override var description: String {
-		return toString(x)
+		return "NumAst(\(x))"
 	}
 
 	override func eq(rhs: Ast) -> Bool {
@@ -212,6 +237,10 @@ class NumAst : Ast {
 			return x == r.x
 		}
 		return false
+	}
+
+	override func exec(c: Context) {
+		c.stack.x.append(Num(x))
 	}
 }
 
@@ -228,7 +257,7 @@ class StrAst : Ast {
 	}
 
 	override var description: String {
-		return toString(x)
+		return "Str(\(x))"
 	}
 
 	override func eq(rhs: Ast) -> Bool {
@@ -236,6 +265,10 @@ class StrAst : Ast {
 			return x == r.x
 		}
 		return false
+	}
+
+	override func exec(c: Context) {
+		c.stack.x.append(Str(x))
 	}
 }
 
@@ -252,7 +285,7 @@ class Id : Ast {
 	}
 
 	override var description: String {
-		return toString(x)
+		return "Id(\(x))"
 	}
 
 	override func eq(rhs: Ast) -> Bool {
@@ -261,35 +294,72 @@ class Id : Ast {
 		}
 		return false
 	}
+
+	override func exec(c: Context) {
+		let val = c[x]
+		if let v = val as? Verb {
+			v.exec(c)
+		} else {
+			c.stack.x.append(val)
+		}
+	}
 }
 
 class Context {
-	var table : [String: Any] = ["__stack__": [] as [Any]]
+	var table : Dict
+
+	init(_ t: Dict) {
+		table = t
+	}
+
+	convenience init() {
+		self.init(Dict([:]))
+		add_builtins()
+	}
+
+	func add_builtins() {
+		self["__stack__"] = List([])
+		self["__stack_stack__"] = List([])
+		self["["] = Verb { (c: Context) in
+			(self["__stack_stack__"] as! List).x.append(self["__stack__"])
+			self["__stack__"] = List([])
+		}
+		self["]"] = Verb { (c: Context) in
+			var old_stack = self["__stack__"]
+			self["__stack__"] = (self["__stack_stack__"] as! List).x.removeLast()
+			self.stack.x.append(old_stack)
+		}
+	}
+
 	var root : Context {
 		return self
 	}
 
-	var stack : [Any] {
+	var stack : List {
 		get {
-			return root["__stack__"] as! [Any]
+			return root["__stack__"] as! List
 		}
 		set(v) {
 			root["__stack__"] = v
 		}
 	}
 
-	subscript(i: String) -> Any? {
+	func contains(i: String) -> Bool {
+		return table.x[Str(i)] != nil
+	}
+
+	subscript(i: String) -> Thing {
 		get {
-			return table[i]
+			return table.x[Str(i)]!
 		}
 		set(v) {
-			table[i] =  v
+			table.x[Str(i)] =  v
 		}
 	}
 }
 
 class ChildContext : Context {
-	let parent : Context
+	var parent : Context
 
 	override var root : Context {
 		get {
@@ -299,20 +369,25 @@ class ChildContext : Context {
 
 	init(_ parent: Context) {
 		self.parent = parent
-		super.init()
+		super.init(Dict([:]))
 	}
 
-	override subscript(i: String) -> Any? {
+	override func contains(i: String) -> Bool {
+		// WTF: error: binary operator '||' cannot be applied to two Bool operands
+		return table.x[Str(i)] != nil || parent.contains(i)
+	}
+
+	override subscript(i: String) -> Thing {
 		get {
-			return (table[i] != nil) ? table[i] : parent[i]
+			return (table.x[Str(i)] != nil) ? table.x[Str(i)]! : parent[i]
 		}
 		set(v) {
-			if table[i] != nil {
-				table[i] = v
-			} else if parent[i] != nil {
+			if table.x[Str(i)] != nil {
+				table.x[Str(i)] = v
+			} else if parent.contains(i) {
 				parent[i] = v
 			} else {
-				table[i] = v
+				table.x[Str(i)] = v
 			}
 		}
 	}
@@ -323,7 +398,7 @@ class Thing : Hashable, Printable, Equatable {
 		return 0
 	}
 	var description : String {
-		return "thing"
+		assert(false, "not implemented")
 	}
 	func eq(rhs: Thing) -> Bool {
 		assert(false, "not implemented")
@@ -338,14 +413,24 @@ func ==(lhs: Thing, rhs: Thing) -> Bool {
 // error: classes derived from generic classes must also be generic
 // So Ugh. A lot of boilerplate to follow.
 
+/*
+I've also thought about using the literal convertible protocols to
+make things more convenient. But then, I don't know if it's going
+to be that helpful -- I feel like there will still be a lot to
+trip over.
+*/
 class Num : Thing {
 	var x : Double
 	init(_ xx: Double) { x = xx }
+
 	override func eq(rhs: Thing) -> Bool {
 		if let r = rhs as? Num {
 			return x == r.x
 		}
 		return false
+	}
+	override var description : String {
+		return toString(x)
 	}
 }
 
@@ -358,6 +443,9 @@ class Str : Thing {
 		}
 		return false
 	}
+	override var description : String {
+		return toString(x)
+	}
 }
 
 class List : Thing {
@@ -369,6 +457,9 @@ class List : Thing {
 		}
 		return false
 	}
+	override var description : String {
+		return toString(x)
+	}
 }
 
 class Dict : Thing {
@@ -379,6 +470,20 @@ class Dict : Thing {
 			return x == r.x
 		}
 		return false
+	}
+	override var description : String {
+		return toString(x)
+	}
+}
+
+class Verb : Thing {
+	var exec : (Context) -> Void
+
+	init(e: (Context) -> Void) {
+		exec = e
+	}
+	override var description : String {
+		return toString(exec)
 	}
 }
 
@@ -397,7 +502,7 @@ assert(p.tv == "hi", p.tv)
 p.next_token()
 assert(p.tt == "id")
 assert(p.tv == "78", p.tv)
-let r = parse("a ( b c 'hi' r'\\n' ) 44")
+var r = parse("a ( b c 'hi' r'\\n' ) 44")
 assert(r == Block([
 	Id("a"),
 	Block([
@@ -410,4 +515,14 @@ assert(r == Block([
 	]), "xxx")
 var rc = Context()
 var cc = ChildContext(rc)
-
+rc["Hi"] = Str("There")
+assert(cc["Hi"] == Str("There"))
+cc.stack.x.append(Num(6))
+assert(rc.stack == List([Num(6)]))
+rc.stack.x.append(Str("woa"))
+assert(cc.stack == List([Num(6), Str("woa")]))
+// --
+rc = Context()
+cc = ChildContext(rc)
+parse("[ 1 2 3 'hi' ]").exec(cc)
+assert(cc.stack == List([List([Num(1), Num(2), Num(3), Str("hi")])]))
