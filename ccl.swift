@@ -2,7 +2,8 @@
 Swift 1.2
 
 A lot of ugliness is because I don't know swift too well.
-Some of ugliness is because Swift is new and doesn't support a lot of things it should.c
+Some of ugliness is because Swift is new and doesn't support a lot
+of things it should.
 */
 import Foundation
 
