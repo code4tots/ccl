@@ -6,6 +6,8 @@ Some of ugliness is because Swift is new and doesn't support a lot of things it 
 */
 import Foundation
 
+// MARK: parser
+
 class Parser {
 	let whitespaces = Set(" \n\t")
 
@@ -142,6 +144,8 @@ func parse(s: String) -> Ast {
 	return Parser(s).parse()
 }
 
+// MARK: Ast
+
 class Ast : Thing {
 	var a : Int // ast start position
 	var b : Int // ast end position
@@ -169,6 +173,10 @@ class Ast : Thing {
 
 	func exec(c: Context) {
 		assert(false, "Not implemented")
+	}
+
+	override var truthy : Bool {
+		return true
 	}
 }
 
@@ -305,31 +313,10 @@ class Id : Ast {
 	}
 }
 
+// MARK: Context
+
 class Context {
-	var table : Dict
-
-	init(_ t: Dict) {
-		table = t
-	}
-
-	convenience init() {
-		self.init(Dict([:]))
-		add_builtins()
-	}
-
-	func add_builtins() {
-		self["__stack__"] = List([])
-		self["__stack_stack__"] = List([])
-		self["["] = Verb { (c: Context) in
-			(self["__stack_stack__"] as! List).x.append(self["__stack__"])
-			self["__stack__"] = List([])
-		}
-		self["]"] = Verb { (c: Context) in
-			var old_stack = self["__stack__"]
-			self["__stack__"] = (self["__stack_stack__"] as! List).x.removeLast()
-			self.stack.x.append(old_stack)
-		}
-	}
+	var table : Dict = Dict([:])
 
 	var root : Context {
 		return self
@@ -358,6 +345,34 @@ class Context {
 	}
 }
 
+class RootContext : Context {
+	override init() {
+		super.init()
+		self["__stack__"] = List([])
+		self["__stack_stack__"] = List([])
+		self["["] = Verb { (c: Context) in
+			(self["__stack_stack__"] as! List).x.append(self["__stack__"])
+			self["__stack__"] = List([])
+		}
+		self["]"] = Verb { (c: Context) in
+			var old_stack = self["__stack__"]
+			self["__stack__"] = (self["__stack_stack__"] as! List).x.removeLast()
+			self.stack.x.append(old_stack)
+		}
+		self["p"] = Verb {(c: Context) in
+			println(c.stack.x.removeLast())
+		}
+		self["assert"] = Verb {(c: Context) in
+			let message = (c.stack.x.removeLast() as! Str).x
+			let result = c.stack.x.removeLast()
+			if !result.truthy {
+				println("Assert fail: " + message)
+				exit(1)
+			}
+		}
+	}
+}
+
 class ChildContext : Context {
 	var parent : Context
 
@@ -369,7 +384,7 @@ class ChildContext : Context {
 
 	init(_ parent: Context) {
 		self.parent = parent
-		super.init(Dict([:]))
+		super.init()
 	}
 
 	override func contains(i: String) -> Bool {
@@ -393,6 +408,8 @@ class ChildContext : Context {
 	}
 }
 
+// MARK: Thing
+
 class Thing : Hashable, Printable, Equatable {
 	var hashValue : Int {
 		return 0
@@ -401,6 +418,10 @@ class Thing : Hashable, Printable, Equatable {
 		assert(false, "not implemented")
 	}
 	func eq(rhs: Thing) -> Bool {
+		assert(false, "not implemented")
+		return false
+	}
+	var truthy : Bool {
 		assert(false, "not implemented")
 		return false
 	}
@@ -432,6 +453,9 @@ class Num : Thing {
 	override var description : String {
 		return toString(x)
 	}
+	override var truthy : Bool {
+		return x != 0
+	}
 }
 
 class Str : Thing {
@@ -445,6 +469,9 @@ class Str : Thing {
 	}
 	override var description : String {
 		return toString(x)
+	}
+	override var truthy : Bool {
+		return x != ""
 	}
 }
 
@@ -460,6 +487,9 @@ class List : Thing {
 	override var description : String {
 		return toString(x)
 	}
+	override var truthy : Bool {
+		return x.count > 0
+	}
 }
 
 class Dict : Thing {
@@ -474,6 +504,9 @@ class Dict : Thing {
 	override var description : String {
 		return toString(x)
 	}
+	override var truthy : Bool {
+		return x.count > 0
+	}
 }
 
 class Verb : Thing {
@@ -485,9 +518,14 @@ class Verb : Thing {
 	override var description : String {
 		return toString(exec)
 	}
+	override var truthy : Bool {
+		return true
+	}
 }
 
+// MARK: - Tests
 // poor man's tests
+// MARK: lexer tests
 var p = Parser("abc\n'hi' 78")
 assert(p.starts_with("a"))
 assert(!p.starts_with("b"))
@@ -502,6 +540,7 @@ assert(p.tv == "hi", p.tv)
 p.next_token()
 assert(p.tt == "id")
 assert(p.tv == "78", p.tv)
+// MARK: parser tests
 var r = parse("a ( b c 'hi' r'\\n' ) 44")
 assert(r == Block([
 	Id("a"),
@@ -513,7 +552,8 @@ assert(r == Block([
 	]),
 	NumAst(44),
 	]), "xxx")
-var rc = Context()
+// MARK: context tests
+var rc = RootContext()
 var cc = ChildContext(rc)
 rc["Hi"] = Str("There")
 assert(cc["Hi"] == Str("There"))
@@ -521,8 +561,10 @@ cc.stack.x.append(Num(6))
 assert(rc.stack == List([Num(6)]))
 rc.stack.x.append(Str("woa"))
 assert(cc.stack == List([Num(6), Str("woa")]))
-// --
-rc = Context()
+// MARK: exec tests
+rc = RootContext()
 cc = ChildContext(rc)
 parse("[ 1 2 3 'hi' ]").exec(cc)
 assert(cc.stack == List([List([Num(1), Num(2), Num(3), Str("hi")])]))
+parse("1 '' assert").exec(cc)
+// parse("0 '0 is false' assert").exec(cc)
