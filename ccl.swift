@@ -678,4 +678,4 @@ private func ccltest() {
     // message indicating success
     println("All tests passed successfully!")
 }
-ccltest() // need to comment this out when file is linked to iOS project.
+// ccltest() // need to comment this out when file is linked to iOS project.
