@@ -19,12 +19,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var context: Context?
     
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+        // just for debugging
+        ccltest()
+        
         // Override point for customization after application launch.
         let path = NSBundle.mainBundle().pathForResource("code", ofType: "ccl")!
         let code = NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding, error: nil)! as String
         
         self.context = IosContext()
         
+        
+
         parse(code).exec(self.context!)
 
         self.window = UIWindow(frame: UIScreen.mainScreen().bounds)
@@ -69,6 +74,18 @@ class ViewController: UIViewController {
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+}
+
+class ViewControllerThing : Thing {
+    var appDelegate : AppDelegate {
+        return UIApplication.sharedApplication().delegate as! AppDelegate
+    }
+    var viewController : ViewController = ViewController()
+    override init() {
+    }
+    override var description : String {
+        return viewController.description
     }
 }
 
