@@ -366,8 +366,12 @@ class RootContext : Context {
         self["__stack__"] = List([])
         self["__stack_stack__"] = List([])
         self["["] = Verb { (c: Context) in
-            (self["__stack_stack__"] as! List).x.append(self["__stack__"])
-            self["__stack__"] = List([])
+            if let stackstack = self["__stack_stack__"] as? List {
+                stackstack.x.append(self["__stack__"])
+                self["__stack__"] = List([])
+            } else {
+                assert(false, "__stack_stack__ not found or invalid")
+            }
         }
         self["]"] = Verb { (c: Context) in
             var old_stack = self["__stack__"]
