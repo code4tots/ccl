@@ -325,7 +325,10 @@ class Context {
 
     var stack : List {
         get {
-            return root["__stack__"] as! List
+            if let ret = root["__stack__"] as? List {
+                return ret
+            }
+            assert(false, "__stack__ could not be found...")
         }
         set(v) {
             root["__stack__"] = v
@@ -346,7 +349,10 @@ class Context {
 
     subscript(i: String) -> Thing {
         get {
-            return table.x[Str(i)]!
+            if let ret = table.x[Str(i)] {
+                return ret
+            }
+            assert(false, "Could not find: " + i)
         }
         set(v) {
             table.x[Str(i)] =  v
@@ -391,6 +397,61 @@ class RootContext : Context {
             } else if let r = rhs as? Str {
                 let l = c.pop() as! Str
                 c.push(Str(r.x + l.x))
+                return
+            }
+            let lhs = c.pop()
+            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
+        }
+        self["-"] = Verb { (c: Context) in
+            let rhs = c.pop()
+
+            if let r = rhs as? Num {
+                let l = c.pop() as! Num
+                c.push(Num(l.x - r.x))
+                return
+            }
+            let lhs = c.pop()
+            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
+        }
+        self["*"] = Verb { (c: Context) in
+            let rhs = c.pop()
+
+            if let r = rhs as? Num {
+                let l = c.pop() as! Num
+                c.push(Num(r.x * l.x))
+                return
+            }
+            let lhs = c.pop()
+            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
+        }
+        self["/"] = Verb { (c: Context) in
+            let rhs = c.pop()
+
+            if let r = rhs as? Num {
+                let l = c.pop() as! Num
+                c.push(Num(l.x / r.x))
+                return
+            }
+            let lhs = c.pop()
+            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
+        }
+        self["//"] = Verb { (c: Context) in
+            let rhs = c.pop()
+
+            if let r = rhs as? Num {
+                let l = c.pop() as! Num
+                c.push(Num(Double(Int(l.x) / Int(r.x))))
+                return
+            }
+            let lhs = c.pop()
+            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
+        }
+        self["%"] = Verb { (c: Context) in
+            let rhs = c.pop()
+
+            if let r = rhs as? Num {
+                let l = c.pop() as! Num
+                c.push(Num(l.x % r.x))
                 return
             }
             let lhs = c.pop()
@@ -549,7 +610,7 @@ class Verb : Thing {
     }
 }
 
-internal func ccltest() {
+private func ccltest() {
     // MARK: - Tests
     // poor man's tests
     // MARK: lexer tests
@@ -600,5 +661,17 @@ internal func ccltest() {
     cc = ChildContext(rc)
     parse("1 2 +").exec(cc)
     assert(cc.pop() == Num(3))
+    parse("1 2 -").exec(cc)
+    assert(cc.pop() == Num(-1))
+    parse("2 3 *").exec(cc)
+    assert(cc.pop() == Num(6))
+    parse("5 3 /").exec(cc)
+    assert(cc.pop() == Num(5.0/3.0))
+    parse("5 3 //").exec(cc)
+    assert(cc.pop() == Num(1))
+    parse("5 3 %").exec(cc)
+    assert(cc.pop() == Num(2))
+    // message indicating success
+    println("All tests passed successfully!")
 }
-// ccltest()
+ccltest()
