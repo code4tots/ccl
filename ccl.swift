@@ -97,12 +97,18 @@ class Parser {
             }
             b += Array(quote).count
         } else {
+            var c = a
+            tt = "id"
+            if (ch() == ".") {
+                c++
+                b++
+                tt = "attr"
+            }
             while !fin() && !whitespaces.contains(ch()) && !Set("()\"'").contains(ch()) {
                 b++
             }
-            assert(b > a, "invalid char: " + String(ch()))
-            tt = "id"
-            tv = String(chs[a..<b])
+            assert(b > c, "invalid char: " + String(ch()))
+            tv = String(chs[c..<b])
         }
     }
 
@@ -127,6 +133,8 @@ class Parser {
                     } else {
                         ast = Id(a, b, tv)
                     }
+                case "attr":
+                    ast = Attr(a, b, tv)
                 case "str":
                     ast = StrAst(a, b, tv)
                 default:
@@ -304,13 +312,33 @@ class Id : Ast {
         return false
     }
 
-    override func exec(c: Context) {
-        let val = c[x]
+    func process(c: Context, _ val: Thing) {
         if let v = val as? Verb {
             v.exec(c)
         } else {
-            c.stack.x.append(val)
+            c.push(val)
         }
+    }
+    
+    override func exec(c: Context) {
+        process(c, c[x])
+    }
+}
+
+class Attr : Id {
+    override var description: String {
+        return "Attr(\(x))"
+    }
+    
+    override func eq(rhs: Ast) -> Bool {
+        if let r = rhs as? Attr {
+            return x == r.x
+        }
+        return false
+    }
+    
+    override func exec(c: Context) {
+        process(c, c.pop().getattr(x))
     }
 }
 
@@ -389,7 +417,22 @@ class RootContext : Context {
                 exit(1)
             }
         }
-
+        self["="] = Verb { (c: Context) in
+            let nameThing = c.pop()
+            if let name = nameThing as? Str {
+                c[name.x] = c.pop()
+            } else {
+                assert(false, "Name for '=' must be Str: \(nameThing)")
+            }
+        }
+        self["dict"] = Verb { (c: Context) in
+            let thing = c.pop()
+            if let list = thing as? List {
+                c.push(Dict(list))
+            } else {
+                assert(false, "\(thing) is not convertible to a Dict")
+            }
+        }
         // arithmetic
         self["+"] = Verb { (c: Context) in
             let rhs = c.pop()
@@ -501,6 +544,13 @@ class ChildContext : Context {
 
 // MARK: Thing
 
+/*
+methods/members that should be overriden:
+    hashValue
+    description
+    eq
+    truthy
+*/
 class Thing : Hashable, Printable, Equatable {
     var hashValue : Int {
         return 0
@@ -515,6 +565,10 @@ class Thing : Hashable, Printable, Equatable {
     var truthy : Bool {
         assert(false, "not implemented")
         return false
+    }
+    func getattr(attr: String) -> Thing {
+        assert(false, "not implemented")
+        return Num(0)
     }
 }
 
@@ -534,7 +588,9 @@ trip over.
 class Num : Thing {
     var x : Double
     init(_ xx: Double) { x = xx }
-
+    override var hashValue : Int {
+        return x.hashValue
+    }
     override func eq(rhs: Thing) -> Bool {
         if let r = rhs as? Num {
             return x == r.x
@@ -552,6 +608,9 @@ class Num : Thing {
 class Str : Thing {
     var x : String
     init(_ xx: String) { x = xx }
+    override var hashValue : Int {
+        return x.hashValue
+    }
     override func eq(rhs: Thing) -> Bool {
         if let r = rhs as? Str {
             return x == r.x
@@ -569,6 +628,9 @@ class Str : Thing {
 class List : Thing {
     var x : [Thing]
     init(_ xx: [Thing]) { x = xx }
+    override var hashValue : Int {
+        return x.count
+    }
     override func eq(rhs: Thing) -> Bool {
         if let r = rhs as? List {
             return x == r.x
@@ -581,11 +643,44 @@ class List : Thing {
     override var truthy : Bool {
         return x.count > 0
     }
+    override func getattr(attr: String) -> Thing {
+        switch attr {
+        case "size":
+            return Num(Double(x.count))
+        case "get":
+            return Verb { (c: Context) in
+                let index = c.pop()
+                if let i = index as? Num {
+                    c.push(self.x[Int(i.x)])
+                } else {
+                    assert(false, "List index must be a Num but got \(index)")
+                }
+            }
+        default:
+            assert(false, "List does not support attr: " + attr)
+        } 
+    }
 }
 
 class Dict : Thing {
     var x : [Thing:Thing]
     init(_ xx: [Thing:Thing]) { x = xx }
+    convenience init(_ xx: List) {
+        self.init([:])
+        for entry in xx.x {
+            if let pair = entry as? List {
+                assert(pair.x.count == 2, "Each entry must contain exactly 2 elements, but \(pair) doesn't")
+                let k = pair.x[0]
+                let v = pair.x[1]
+                x[k] = v
+            } else {
+                assert(false, "\(entry) is not a pair")
+            }
+        }
+    }
+    override var hashValue : Int {
+        return x.count
+    }
     override func eq(rhs: Thing) -> Bool {
         if let r = rhs as? Dict {
             return x == r.x
@@ -598,13 +693,33 @@ class Dict : Thing {
     override var truthy : Bool {
         return x.count > 0
     }
+    override func getattr(attr: String) -> Thing {
+        switch attr {
+        case "size":
+            return Num(Double(x.count))
+        case "get":
+            return Verb { (c: Context) in
+                let key = c.pop()
+                if let val = self.x[key] {
+                    c.push(val)
+                } else {
+                    assert(false, "Key \(key) not found in \(self)")
+                }
+            }
+        default:
+            assert(false, "Dict does not support attr: " + attr)
+        } 
+    }
 }
 
 class Verb : Thing {
     var exec : (Context) -> Void
-
-    init(e: (Context) -> Void) {
-        exec = e
+    init(e: (Context) -> Void) { exec = e }
+    override var hashValue : Int {
+        return ObjectIdentifier(self).hashValue
+    }
+    override func eq(rhs: Thing) -> Bool {
+        return ObjectIdentifier(self) == ObjectIdentifier(rhs)
     }
     override var description : String {
         return toString(exec)
@@ -614,24 +729,27 @@ class Verb : Thing {
     }
 }
 
-private func ccltest() {
+func ccltest() {
     // MARK: - Tests
     // poor man's tests
     // MARK: lexer tests
-    var p = Parser("abc\n'hi' 78")
+    var p = Parser("abc\n'hi' 78 .hey")
     assert(p.starts_with("a"))
     assert(!p.starts_with("b"))
     assert(p.starts_with(["a", "b"]))
     assert(p.starts_with(["b", "a"]))
     p.next_token()
-    assert(p.tt == "id")
+    assert(p.tt == "id", p.tt)
     assert(p.tv == "abc", p.tv)
     p.next_token()
-    assert(p.tt == "str")
+    assert(p.tt == "str", p.tt)
     assert(p.tv == "hi", p.tv)
     p.next_token()
-    assert(p.tt == "id")
+    assert(p.tt == "id", p.tt)
     assert(p.tv == "78", p.tv)
+    p.next_token()
+    assert(p.tt == "attr", p.tt)
+    assert(p.tv == "hey", p.tv)
     // MARK: parser tests
     var r = parse("a ( b c 'hi' r'\\n' ) 44")
     assert(r == Block([
@@ -675,7 +793,19 @@ private func ccltest() {
     assert(cc.pop() == Num(1))
     parse("5 3 %").exec(cc)
     assert(cc.pop() == Num(2))
+    // MARK: List methods
+    parse("[ 1 2 3 ] .size").exec(cc)
+    assert(cc.pop() == Num(3))
+    parse("1 [ 1 2 3 ] .get").exec(cc)
+    assert(cc.pop() == Num(2))
+    // MARK: Dict methods
+    parse("[ [ 1 2 ] [ 3 4 ] ] dict .size").exec(cc)
+    assert(cc.pop() == Num(2))
+    parse("3 [ [ 1 2 ] [ 3 4 ] ] dict .get").exec(cc)
+    assert(cc.pop() == Num(4))
+    // MARK: Are we still clean?
+    assert(cc.stack == List([]), toString(cc.stack))
     // message indicating success
-    println("All tests passed successfully!")
+    println("All core ccl tests passed successfully!")
 }
 // ccltest() // need to comment this out when file is linked to iOS project.
