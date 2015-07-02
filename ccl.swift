@@ -35,6 +35,18 @@ class Parser {
             b++
         }
     }
+    
+    func skip_empty() {
+        while !fin() && (ch() == "#" || whitespaces.contains(ch())) {
+            if ch() == "#" {
+                while !fin() && ch() != "\n" {
+                    b++
+                }
+            } else {
+                skip_spaces()
+            }
+        }
+    }
 
     func starts_with(xs: [String]) -> Bool {
         return xs.reduce(false) { (t: Bool, x: String) in
@@ -51,14 +63,14 @@ class Parser {
     }
 
     func next_token() {
-        skip_spaces()
+        skip_empty()
         a = b
         if fin() {
             tt = "eof"
-        } else if Set("()").contains(ch()) {
+        } else if Set("()").contains(ch()) { // '(' and ')' are special operators
             tt = String(ch())
             b++
-        } else if starts_with(["r\"", "r'", "'", "\""]) {
+        } else if starts_with(["r\"", "r'", "'", "\""]) { // quotes
             tt = "str"
             var raw = false
             if ch() == "r" {
@@ -808,4 +820,4 @@ func ccltest() {
     // message indicating success
     println("All core ccl tests passed successfully!")
 }
-ccltest() // need to comment this out when file is linked to iOS project.
+// ccltest() // need to comment this out when file is linked to iOS project.
