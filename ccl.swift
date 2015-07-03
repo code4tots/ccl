@@ -1,41 +1,302 @@
 /*
-Swift 1.2
+At least as of Swift 1.2, swift errors messages are not as good as they could be.
 
-A lot of ugliness is because I don't know swift too well.
-Some of ugliness is because Swift is new and doesn't support a lot
-of things it should.
+Stack traces of assertion failures only show the line number of the assertion,
+and not the rest of the stack.
+
+If there is a nil unwrapping error, it doesn't any line numbers.
+
+As a consequence, I have all of these boilerplate assertions to help with debugging.
+
+-----
+
+Testing frameworks need to fight access controls, need time to be set up etc.
+
+Especially with a budding language like Swift it might not be so smooth.
+
+So just using assertions at end as a makeshift testing setup.
 */
 import Foundation
 
-// MARK: Parser
+class Thing : NSObject,
+        NSCopying,
+        SequenceType,
+        NilLiteralConvertible,
+        BooleanLiteralConvertible,
+        IntegerLiteralConvertible,
+        FloatLiteralConvertible,
+        StringLiteralConvertible,
+        ArrayLiteralConvertible,
+        DictionaryLiteralConvertible {
+    /*
+    Wrap around existing NSObject.
+    Should be one of:
+        nil
+        NSNumber (double)
+        NSString
+        NSMutableArray
+        NSMutableDictionary
+    Subclasses may use different values here if they want to.
+    */
+    var x : NSObject?
+    var n : NSNumber { get { if let y = x as? NSNumber { return y } else { assert(false, "\(x) is not a number")}} set(v) { x = v } }
+    var s : NSString { get { if let y = x as? NSString { return y } else { assert(false, "\(x) is not a string")}} set(v) { x = v } }
+    var a : NSMutableArray { get { if let y = x as? NSMutableArray { return y } else { assert(false, "\(x) is not a list")}} set(v) { x = v } }
+    var d : NSMutableDictionary { get { if let y = x as? NSMutableDictionary { return y } else { assert(false, "\(x) is not a dict")}} set(v) { x = v } }
 
+    init(fromAnyObject x: NSObject?) { // DANGER DANGER! If you use this, you better know what you're doing.
+        super.init()
+        self.x = x
+    }
+    init(fromObject x: NSObject?) {
+        super.init()
+        if x == nil { self.x = nil }
+        else if let y = x as? NSNumber { self.x = y }
+        else if let y = x as? NSString { self.x = y }
+        else if let y = x as? NSMutableArray { self.x = y }
+        else if let y = x as? NSMutableDictionary { self.x = y }
+        else { assert(false, "\(x.dynamicType) is not supported") }
+    }
+    convenience init(_ t: Thing) { self.init(fromObject: t.x) }
+    convenience required init(booleanLiteral value: BooleanLiteralType) {
+        self.init(fromObject: NSNumber(double: Double(value)))
+    }
+    convenience required init(integerLiteral value: IntegerLiteralType) {
+        self.init(fromObject: NSNumber(double: Double(value)))
+    }
+    convenience required init(floatLiteral value: FloatLiteralType) {
+        self.init(fromObject: NSNumber(double: value))
+    }
+    convenience required init(nilLiteral: ()) {
+        self.init(fromObject: nil)
+    }
+    convenience required init(stringLiteral value: StringLiteralType) {
+        self.init(fromObject: NSString(UTF8String: "\(value)"))
+    }
+    convenience required init(unicodeScalarLiteral value: StringLiteralType) {
+        self.init(fromObject: NSString(UTF8String: "\(value)"))
+    }
+    convenience required init(extendedGraphemeClusterLiteral value: StringLiteralType) {
+        self.init(fromObject: NSString(UTF8String: "\(value)"))
+    }
+    convenience required init(arrayLiteral elements: Thing...) {
+        var array = NSMutableArray()
+        for element in elements {
+            array.addObject(element)
+        }
+        self.init(fromObject: array)
+    }
+    convenience required init(dictionaryLiteral elements: (Thing, Thing)...) {
+        var dict = NSMutableDictionary()
+        for (key, value) in elements {
+            dict.setObject(value, forKey: key)
+        }
+        self.init(fromObject: dict)
+    }
+    func copyWithZone(zone: NSZone) -> AnyObject {
+        return Thing(self)
+    }
+    func generate() -> GeneratorOf<Thing> {
+        if let a = x as? NSMutableArray {
+            var gen = a.generate()
+            var next = gen.next() as? Thing
+            return GeneratorOf<Thing> {
+                let ret = next
+                if next != nil { next = gen.next() as? Thing }
+                return ret
+            }
+        } else if let d = x as? NSMutableDictionary {
+            var gen = d.generate()
+            var next = gen.next()
+            return GeneratorOf<Thing> {
+                let ret = next
+                if next != nil { next = gen.next() }
+                return ret?.0 as? Thing
+            }
+        } else {
+            assert(false, "You can only iterate over List or Dict types, not \(self)")
+        }
+    }
+    func contains(key: Thing) -> Bool {
+        if let d = x as? NSMutableDictionary {
+            return d[key] != nil
+        } else {
+            assert(false, "contains only supported for dictionaries")
+        }
+    }
+    subscript(key: Thing) -> Thing {
+        get {
+            if let a = x as? NSMutableArray {
+                if let k = key.x as? NSNumber {
+                    return a[Int(k.doubleValue)] as! Thing
+                } else {
+                    assert(false, "Key \(key) not supported for List")
+                }
+            } else if let d = x as? NSMutableDictionary {
+                if let v = d[key] as? Thing {
+                    return v
+                } else {
+                    assert(false, "\(d[key]) is not a Thing (key \(key))")
+                }
+            } else {
+                assert(false, "Thing \(self) is not subscriptable (key \(key))")
+            }
+        }
+        set(v) {
+            if let a = x as? NSMutableArray {
+                if let k = key.x as? NSNumber {
+                    a[Int(k.doubleValue)] = v
+                } else {
+                    assert(false, "Key \(key) not supported for List (val \(v)")
+                }
+            } else if let d = x as? NSMutableDictionary {
+                d[key] = v
+            } else {
+                assert(false, "Thing \(self) is not subscriptable (key \(key) val \(v))")
+            }
+        }
+    }
+    func push(t: Thing) {
+        if let a = x as? NSMutableArray {
+            a.addObject(t)
+        } else {
+            assert(false, "push is only supported for List types (\(t))")
+        }
+    }
+    func pop() -> Thing {
+        if let a = x as? NSMutableArray {
+            var ret = a.lastObject as! Thing
+            a.removeLastObject()
+            return ret
+        } else {
+            assert(false, "pop is only supported for List types")
+        }
+    }
+    override var hash : Int { return x == nil ? 0 : x!.hash }
+    override var description : String {
+        if x == nil {
+            return "nil"
+        } else if let y = x as? NSNumber {
+            return "Num(\(y))"
+        } else if let y = x as? NSString {
+            return "Str(\(y))"
+        } else if let y = x as? NSMutableArray {
+            var s = "List("
+            for i in y {
+                s += "\(i.description)"
+            }
+            s += ")"
+            return s
+        } else if let y = x as? NSMutableDictionary {
+            var s = "Dict("
+            for (k, v) in y {
+                s += "\(k.description):\(v.description)"
+            }
+            s += ")"
+            return s
+        } else {
+            return "<!!! \(x.dynamicType) has not overriden description>"
+        }
+    }
+    override func isEqual(y: AnyObject?) -> Bool {
+        if x == nil && y == nil { return true }
+        if x == nil || y == nil { return false }
+        if let z = y as? Thing { return x!.isEqual(z.x) }
+        return false
+    }
+    func getattr(attr: String) -> Thing {
+        switch attr {
+        case "eq": return NF { (c: Context) in c.push(Thing(booleanLiteral: self == c.pop())) }
+        default:
+            if let n = x as? NSNumber {
+                switch attr {
+                case "+":
+                    return NF { (c: Context) in
+                        c.push(Thing(floatLiteral: Double(n) + Double(c.pop().n)))
+                    }
+                default: break
+                }
+            } else if let a = x as? NSMutableArray {
+                switch attr {
+                case "+":
+                    return NF { (c: Context) in
+                        var ret : Thing = []
+                        for item in self { ret.push(item) }
+                        for item in c.pop() { ret.push(item) }
+                        c.push(ret)
+                    }
+                case "size":
+                    return NF { (c: Context) in
+                        c.push(Thing(integerLiteral: a.count))
+                    }
+                default: break
+                }
+            } else if let d = x as? NSMutableDictionary {
+                switch attr {
+                case "size":
+                    return NF { (c: Context) in
+                        c.push(Thing(integerLiteral: d.count))
+                    }
+                case "+":
+                    return NF { (c: Context) in
+                        var ret : Thing = [:]
+                        for key in self { ret[key] = self[key] }
+                        var rhs = c.pop()
+                        for key in rhs { ret[key] = rhs[key] }
+                        c.push(ret)
+                    }
+                default: break
+                }
+            }
+        }
+        assert(false, "\(self) does not have attribute \(attr)")
+        return 0
+    }
+}
+func ==(lhs: Thing, rhs: Thing) -> Bool { return lhs.isEqual(rhs) }
+func T(t: Thing) -> Thing { return t } // convenient for literal convertibles.
+class Verb : Thing {} // Verb is a marker class.
+class Native : Verb { // Subclass this to your specific usecase.
+    func exec(c: Context) {}
+}
+class NativeFunc : Native {
+    var f : (Context) -> Void = {(c:Context) in}
+    override func isEqual(y: AnyObject?) -> Bool { return y != nil && ObjectIdentifier(self) == ObjectIdentifier(y!) }
+    override func exec(c: Context) { f(c) }
+}
+func NF(f: (Context) -> Void) -> NativeFunc {
+    var nf = NativeFunc(0)
+    nf.f = f
+    return nf
+}
+class Block : Verb {
+    var native : Scope = nil
+    override var description : String {
+        return "<Block at position \(n)>"
+    }
+    override func isEqual(y: AnyObject?) -> Bool {
+        if let b = y as? Block {
+            return x!.isEqual(b.x)
+        }
+        return false
+    }
+}
+func B(i: Int, c: Scope) -> Block {
+    var b = Block(integerLiteral: i)
+    b.native = c
+    return b
+}
 class Parser {
     let whitespaces = Set(" \n\t")
-
     let chs : [Character]
     var a : Int = 0 // token start position
     var b : Int = 0 // token end position
     var tv : String = "" // token value
     var tt : String = "" // token type
-
-    init(_ str: String) {
-        chs = Array(str)
-    }
-
-    func fin() -> Bool {
-        return b >= chs.count
-    }
-
-    func ch() -> Character {
-        return chs[b]
-    }
-
-    func skip_spaces() {
-        while !fin() && whitespaces.contains(ch()) {
-            b++
-        }
-    }
-    
+    init(_ str: String) {chs = Array(str)}
+    func fin() -> Bool {return b >= chs.count}
+    func ch() -> Character {return chs[b]}
+    func skip_spaces() {while !fin() && whitespaces.contains(ch()) {b++}}
     func skip_empty() {
         while !fin() && (ch() == "#" || whitespaces.contains(ch())) {
             if ch() == "#" {
@@ -47,28 +308,22 @@ class Parser {
             }
         }
     }
-
     func starts_with(xs: [String]) -> Bool {
         return xs.reduce(false) { (t: Bool, x: String) in
             return t || self.starts_with(x)
         }
     }
-
-    func starts_with(x: String) -> Bool {
-        return starts_with(Array(x))
-    }
-
-    func starts_with(x: [Character]) -> Bool {
-        return Array(chs[b..<min(chs.count, b+x.count)]) == x
-    }
-
+    func starts_with(x: String) -> Bool {return starts_with(Array(x))}
+    func starts_with(x: [Character]) -> Bool {return Array(chs[b..<min(chs.count, b+x.count)]) == x}
     func next_token() {
         skip_empty()
         a = b
         if fin() {
             tt = "eof"
+            tv = tt
         } else if Set("()").contains(ch()) { // '(' and ')' are special operators
             tt = String(ch())
+            tv = tt
             b++
         } else if starts_with(["r\"", "r'", "'", "\""]) { // quotes
             tt = "str"
@@ -82,23 +337,18 @@ class Parser {
                 quote = String(chs[b...b+3])
             }
             b += Array(quote).count
-
             tv = ""
-
             while !starts_with(quote) {
                 if fin() {
                     assert(false, "found EOF before end of quote")
                 }
                 if !raw && ch() == "\\" {
                     b++
-                    if fin() {
-                        assert(false, "expected string escape but found EOF")
-                    }
-                    if ch() == "\\" {
-                        tv += "\\"
-                    } else if ch() == "n" {
-                        tv += "\n"
-                    } else {
+                    if fin() { assert(false, "expected string escape but found EOF") }
+                    switch ch() {
+                    case "\\": tv += "\\"
+                    case "n": tv += "\n"
+                    default:
                         assert(false, "invalid string escape: \\" + String(ch()))
                     }
                     b++
@@ -111,10 +361,15 @@ class Parser {
         } else {
             var c = a
             tt = "id"
-            if (ch() == ".") {
+            if Set(".=,").contains(ch()) {
+                switch ch() {
+                case ".": tt = "attr"
+                case "=": tt = "assign"
+                case ",": tt = "lookup"
+                default: assert(false, "logic error")
+                }
                 c++
                 b++
-                tt = "attr"
             }
             while !fin() && !whitespaces.contains(ch()) && !Set("()\"'").contains(ch()) {
                 b++
@@ -123,701 +378,296 @@ class Parser {
             tv = String(chs[c..<b])
         }
     }
-
-    func parse() -> Ast {
-        var stack : [[Ast]] = [[]]
-        skip_spaces()
-        var start_stack = [b]
+    func parse() -> Thing {
+        var ret : Thing = []
+        var i : Int = 0
+        var stack : [Int] = []
         next_token()
         while tt != "eof" {
-            if tt == "(" {
-                stack.append([])
-                start_stack.append(a)
-            } else if tt == ")" {
-                let start = start_stack.removeLast()
-                stack[stack.count-2].append(Block(start, b, stack.removeLast()))
-            } else {
-                var ast : Ast = Ast(0, 0)
-                switch tt {
-                case "id":
-                    if let d = NSNumberFormatter().numberFromString(tv)?.doubleValue {
-                        ast = NumAst(a, b, d)
-                    } else {
-                        ast = Id(a, b, tv)
-                    }
-                case "attr":
-                    ast = Attr(a, b, tv)
-                case "str":
-                    ast = StrAst(a, b, tv)
-                default:
-                    assert(false, "invalid token type: " + tt)
+            var d : Thing = [
+                "type": Thing(stringLiteral: tt),
+                "index": Thing(integerLiteral: i),
+                "value": Thing(stringLiteral: tv),
+                "string start index": Thing(integerLiteral: a),
+                "string end index": Thing(integerLiteral: b),
+            ]
+            switch tt {
+            case "(": stack.append(i)
+            case ")":
+                let j = Thing(integerLiteral: stack.removeLast())
+                d["matching parenthesis index"] = j
+                ret[j]["matching parenthesis index"] = Thing(integerLiteral: i)
+            case "id":
+                if let n = NSNumberFormatter().numberFromString(tv)?.doubleValue {
+                    d["type"] = "num"
+                    d["value"] = Thing(floatLiteral: n)
                 }
-                stack[stack.count - 1].append(ast)
+            case "attr": break
+            case "assign": break
+            case "str": break
+            case "lookup": break
+            default: assert(false, "Unexpected token type \(tt)")
             }
+            ret.push(d)
+            i++
             next_token()
         }
-        assert(stack.count == 1, toString(stack))
-        return Top(start_stack.removeLast(), b, stack[0])
+        return ret
     }
 }
-
-func parse(s: String) -> Ast {
-    return Parser(s).parse()
-}
-
-// MARK: Ast
-
-class Ast : Thing {
-    var a : Int // ast start position
-    var b : Int // ast end position
-
-    init(_ a: Int, _ b: Int) {
-        self.a = a
-        self.b = b
-    }
-
-    override convenience init() {
-        self.init(0, 0)
-    }
-
-    override func eq(rhs: Thing) -> Bool {
-        if let r = rhs as? Ast {
-            return eq(r)
-        }
-        return false
-    }
-
-    func eq(rhs: Ast) -> Bool {
-        assert(false, "Not implemented")
-        return false
-    }
-
-    func exec(c: Context) {
-        assert(false, "Not implemented")
-    }
-
-    override var truthy : Bool {
-        return true
-    }
-}
-
-func ==(lhs: Ast, rhs: Ast) -> Bool {
-    return lhs.eq(rhs)
-}
-
-class Block : Ast {
-    var xs : [Ast]
-
-    init(_ a: Int, _ b: Int, _ xs: [Ast]) {
-        self.xs = xs
-        super.init(a, b)
-    }
-
-    convenience init(_ xs: [Ast]) {
-        self.init(0, 0, xs)
-    }
-
-    override var description: String {
-        return "Block(\(xs))"
-    }
-
-    override func eq(rhs: Ast) -> Bool {
-        if let r = rhs as? Block {
-            return xs == r.xs
-        }
-        return false
-    }
-
-    override func exec(c: Context) {
-        c.stack.x.append(self)
-    }
-}
-
-class Top : Block {
-    override func exec(c: Context) {
-        for x in xs {
-            x.exec(c)
-        }
-    }
-
-    override var description: String {
-        return "Top(\(xs))"
-    }
-}
-
-class NumAst : Ast {
-    var x : Double
-
-    init(_ a: Int, _ b: Int, _ x: Double) {
-        self.x = x
-        super.init(a, b)
-    }
-
-    convenience init(_ x: Double) {
-        self.init(0, 0, x)
-    }
-
-    override var description: String {
-        return "NumAst(\(x))"
-    }
-
-    override func eq(rhs: Ast) -> Bool {
-        if let r = rhs as? NumAst {
-            return x == r.x
-        }
-        return false
-    }
-
-    override func exec(c: Context) {
-        c.stack.x.append(Num(x))
-    }
-}
-
-class StrAst : Ast {
-    var x : String
-
-    init(_ a: Int, _ b: Int, _ x: String) {
-        self.x = x
-        super.init(a, b)
-    }
-
-    convenience init(_ x: String) {
-        self.init(0, 0, x)
-    }
-
-    override var description: String {
-        return "Str(\(x))"
-    }
-
-    override func eq(rhs: Ast) -> Bool {
-        if let r = rhs as? StrAst {
-            return x == r.x
-        }
-        return false
-    }
-
-    override func exec(c: Context) {
-        c.stack.x.append(Str(x))
-    }
-}
-
-class Id : Ast {
-    var x : String = ""
-
-    init(_ a: Int, _ b: Int, _ x: String) {
-        self.x = x
-        super.init(a, b)
-    }
-
-    convenience init(_ x: String) {
-        self.init(0, 0, x)
-    }
-
-    override var description: String {
-        return "Id(\(x))"
-    }
-
-    override func eq(rhs: Ast) -> Bool {
-        if let r = rhs as? Id {
-            return x == r.x
-        }
-        return false
-    }
-
-    func process(c: Context, _ val: Thing) {
-        if let v = val as? Verb {
-            v.exec(c)
+func parse(s: String) -> Thing { return Parser(s).parse() }
+// Scope is just a Dictionary with a few extra convenience methods.
+class Scope : Thing {
+    var root : Scope {
+        if contains("__parent__") {
+            return (self["__parent__"] as! Scope).root
         } else {
-            c.push(val)
+            return self
         }
     }
-    
-    override func exec(c: Context) {
-        process(c, c[x])
-    }
-}
-
-class Attr : Id {
-    override var description: String {
-        return "Attr(\(x))"
-    }
-    
-    override func eq(rhs: Ast) -> Bool {
-        if let r = rhs as? Attr {
-            return x == r.x
-        }
-        return false
-    }
-    
-    override func exec(c: Context) {
-        process(c, c.pop().getattr(x))
-    }
-}
-
-// MARK: Context
-
-class Context {
-    var table : Dict = Dict([:])
-
-    var root : Context {
-        return self
-    }
-
-    var stack : List {
+    var stack : Thing {
         get {
-            if let ret = root["__stack__"] as? List {
-                return ret
-            }
-            assert(false, "__stack__ could not be found...")
+            return root["__stack__"]
         }
         set(v) {
             root["__stack__"] = v
         }
     }
-
-    func push(x: Thing) {
-        stack.x.append(x)
+    override func push(t: Thing) {
+        stack.a.addObject(t)
     }
-
-    func pop() -> Thing {
-        return stack.x.removeLast()
+    override func pop() -> Thing {
+        return stack.pop()
     }
-
-    func contains(i: String) -> Bool {
-        return table.x[Str(i)] != nil
-    }
-
-    subscript(i: String) -> Thing {
-        get {
-            if let ret = table.x[Str(i)] {
-                return ret
-            }
-            assert(false, "Could not find: " + i)
-        }
-        set(v) {
-            table.x[Str(i)] =  v
+    func lookup(key: Thing) -> Thing {
+        if self.contains(key) {
+            return self[key]
+        } else if self.contains("__parent__") {
+            return (self["__parent__"] as! Scope).lookup(key)
+        } else {
+            assert(false, "\(key) is not in scope")
         }
     }
-}
-
-class RootContext : Context {
-    override init() {
-        super.init()
-        self["__stack__"] = List([])
-        self["__stack_stack__"] = List([])
-        self["["] = Verb { (c: Context) in
-            if let stackstack = self["__stack_stack__"] as? List {
-                stackstack.x.append(self["__stack__"])
-                self["__stack__"] = List([])
-            } else {
-                assert(false, "__stack_stack__ not found or invalid")
-            }
-        }
-        self["]"] = Verb { (c: Context) in
-            var old_stack = self["__stack__"]
-            self["__stack__"] = (self["__stack_stack__"] as! List).x.removeLast()
-            self.stack.x.append(old_stack)
-        }
-        self["p"] = Verb { (c: Context) in
-            println(c.stack.x.removeLast())
-        }
-        self["assert"] = Verb { (c: Context) in
-            let message = (c.stack.x.removeLast() as! Str).x
-            let result = c.stack.x.removeLast()
-            if !result.truthy {
-                println("Assert fail: " + message)
-                exit(1)
-            }
-        }
-        self["="] = Verb { (c: Context) in
-            let nameThing = c.pop()
-            if let name = nameThing as? Str {
-                c[name.x] = c.pop()
-            } else {
-                assert(false, "Name for '=' must be Str: \(nameThing)")
-            }
-        }
-        self["dict"] = Verb { (c: Context) in
-            let thing = c.pop()
-            if let list = thing as? List {
-                c.push(Dict(list))
-            } else {
-                assert(false, "\(thing) is not convertible to a Dict")
-            }
-        }
-        // arithmetic
-        self["+"] = Verb { (c: Context) in
-            let rhs = c.pop()
-
-            if let r = rhs as? Num {
-                let l = c.pop() as! Num
-                c.push(Num(r.x + l.x))
-                return
-            } else if let r = rhs as? Str {
-                let l = c.pop() as! Str
-                c.push(Str(r.x + l.x))
-                return
-            }
-            let lhs = c.pop()
-            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
-        }
-        self["-"] = Verb { (c: Context) in
-            let rhs = c.pop()
-
-            if let r = rhs as? Num {
-                let l = c.pop() as! Num
-                c.push(Num(l.x - r.x))
-                return
-            }
-            let lhs = c.pop()
-            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
-        }
-        self["*"] = Verb { (c: Context) in
-            let rhs = c.pop()
-
-            if let r = rhs as? Num {
-                let l = c.pop() as! Num
-                c.push(Num(r.x * l.x))
-                return
-            }
-            let lhs = c.pop()
-            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
-        }
-        self["/"] = Verb { (c: Context) in
-            let rhs = c.pop()
-
-            if let r = rhs as? Num {
-                let l = c.pop() as! Num
-                c.push(Num(l.x / r.x))
-                return
-            }
-            let lhs = c.pop()
-            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
-        }
-        self["//"] = Verb { (c: Context) in
-            let rhs = c.pop()
-
-            if let r = rhs as? Num {
-                let l = c.pop() as! Num
-                c.push(Num(Double(Int(l.x) / Int(r.x))))
-                return
-            }
-            let lhs = c.pop()
-            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
-        }
-        self["%"] = Verb { (c: Context) in
-            let rhs = c.pop()
-
-            if let r = rhs as? Num {
-                let l = c.pop() as! Num
-                c.push(Num(l.x % r.x))
-                return
-            }
-            let lhs = c.pop()
-            assert(false, "Cannot + \(lhs.dynamicType) and \(rhs.dynamicType)")
+    func assign(key: Thing, _ value: Thing) {
+        if self.contains(key) {
+            self[key] = value
+        } else if self.contains("__parent__") {
+            (self["__parent__"] as! Scope).assign(key, value)
+        } else {
+            self[key] = value
+            // assert(false, "\(key) is not in scope")
         }
     }
 }
+func RootScope(code: String) -> Scope {
+    return [
+        "__stack__" : [], // stack for calculations
+        "__stackstack__" : [], // stack of __stack__; used for creating lists.
+        "__callstack__" : [], // call stack keeps track of where to return after calls.
+        "__code__": Thing(stringLiteral: code), // raw code string (for error messages)
+        "__bytecode__": parse(code), // parsed code (surprise, it's flat!)
+        "__pc__": 0, // program counter
 
-class ChildContext : Context {
-    var parent : Context
+        // list builder
+        "[" : NF { (c: Context) in
+            c.root["__stackstack__"].push(c.stack)
+            c.stack = []
+        },
+        "]" : NF { (c: Context) in
+            let stack = c.stack
+            c.stack = c.root["__stackstack__"].pop()
+            c.stack.push(stack)
+        },
 
-    override var root : Context {
-        get {
-            return parent.root
-        }
-    }
-
-    init(_ parent: Context) {
-        self.parent = parent
-        super.init()
-    }
-
-    override func contains(i: String) -> Bool {
-        // WTF: error: binary operator '||' cannot be applied to two Bool operands
-        return table.x[Str(i)] != nil || parent.contains(i)
-    }
-
-    override subscript(i: String) -> Thing {
-        get {
-            return (table.x[Str(i)] != nil) ? table.x[Str(i)]! : parent[i]
-        }
-        set(v) {
-            if table.x[Str(i)] != nil {
-                table.x[Str(i)] = v
-            } else if parent.contains(i) {
-                parent[i] = v
-            } else {
-                table.x[Str(i)] = v
-            }
-        }
-    }
-}
-
-// MARK: Thing
-
-/*
-methods/members that should be overriden:
-    hashValue
-    description
-    eq
-    truthy
-*/
-class Thing : Hashable, Printable, Equatable {
-    var hashValue : Int {
-        return 0
-    }
-    var description : String {
-        assert(false, "not implemented")
-    }
-    func eq(rhs: Thing) -> Bool {
-        assert(false, "not implemented")
-        return false
-    }
-    var truthy : Bool {
-        assert(false, "not implemented")
-        return false
-    }
-    func getattr(attr: String) -> Thing {
-        assert(false, "not implemented")
-        return Num(0)
-    }
-}
-
-func ==(lhs: Thing, rhs: Thing) -> Bool {
-    return lhs.eq(rhs)
-}
-
-// error: classes derived from generic classes must also be generic
-// So Ugh. A lot of boilerplate to follow.
-
-/*
-I've also thought about using the literal convertible protocols to
-make things more convenient. But then, I don't know if it's going
-to be that helpful -- I feel like there will still be a lot to
-trip over.
-*/
-class Num : Thing {
-    var x : Double
-    init(_ xx: Double) { x = xx }
-    override var hashValue : Int {
-        return x.hashValue
-    }
-    override func eq(rhs: Thing) -> Bool {
-        if let r = rhs as? Num {
-            return x == r.x
-        }
-        return false
-    }
-    override var description : String {
-        return toString(x)
-    }
-    override var truthy : Bool {
-        return x != 0
-    }
-}
-
-class Str : Thing {
-    var x : String
-    init(_ xx: String) { x = xx }
-    override var hashValue : Int {
-        return x.hashValue
-    }
-    override func eq(rhs: Thing) -> Bool {
-        if let r = rhs as? Str {
-            return x == r.x
-        }
-        return false
-    }
-    override var description : String {
-        return toString(x)
-    }
-    override var truthy : Bool {
-        return x != ""
-    }
-}
-
-class List : Thing {
-    var x : [Thing]
-    init(_ xx: [Thing]) { x = xx }
-    override var hashValue : Int {
-        return x.count
-    }
-    override func eq(rhs: Thing) -> Bool {
-        if let r = rhs as? List {
-            return x == r.x
-        }
-        return false
-    }
-    override var description : String {
-        return toString(x)
-    }
-    override var truthy : Bool {
-        return x.count > 0
-    }
-    override func getattr(attr: String) -> Thing {
-        switch attr {
-        case "size":
-            return Num(Double(x.count))
-        case "get":
-            return Verb { (c: Context) in
-                let index = c.pop()
-                if let i = index as? Num {
-                    c.push(self.x[Int(i.x)])
+        // dict from list
+        "dict" : NF { (c: Context) in
+            var d : Thing = [:]
+            var key : Thing? = nil
+            for item in c.pop() {
+                if let k = key {
+                    d[k] = item
+                    key = nil
                 } else {
-                    assert(false, "List index must be a Num but got \(index)")
+                    key = item
                 }
             }
-        default:
-            assert(false, "List does not support attr: " + attr)
-        } 
-    }
+            c.push(d)
+        }
+    ]
 }
-
-class Dict : Thing {
-    var x : [Thing:Thing]
-    init(_ xx: [Thing:Thing]) { x = xx }
-    convenience init(_ xx: List) {
-        self.init([:])
-        for entry in xx.x {
-            if let pair = entry as? List {
-                assert(pair.x.count == 2, "Each entry must contain exactly 2 elements, but \(pair) doesn't")
-                let k = pair.x[0]
-                let v = pair.x[1]
-                x[k] = v
-            } else {
-                assert(false, "\(entry) is not a pair")
+func ChildScope(parent: Scope) -> Scope {
+    return ["__parent__": parent]
+}
+// Context is what we use to run things.
+class Context {
+    var scope : Scope
+    var root : Scope { return scope.root }
+    var stack : Thing {
+        get { return scope.stack }
+        set(s) { scope.stack = s }
+    }
+    init(_ scope : Scope) { self.scope = scope }
+    func push(t: Thing) { scope.push(t) }
+    func pop() -> Thing { return scope.pop() }
+    func summon(value: Thing) {
+        if let verb = value as? Verb {
+            if let block = verb as? Block {
+                // Save to callstack
+                root["__callstack__"].push([
+                    "return index": Thing(integerLiteral: Int(root["__pc__"].n) + 1),
+                    "return scope": scope,
+                ])
+                var newscope = ChildScope(block.native)
+                newscope["__foreignscope__"] = scope
+                scope = newscope
+                root["__pc__"] = Thing(integerLiteral: Int(block.n) + 1) // move to the start of the block.
+            } else if let native = verb as? Native {
+                // Execute native swift code.
+                native.exec(self)
+                // WARNING: to native funcs that modify program counter: once your function finishes,
+                // counter will be incremented by 1.
+                root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
             }
+        } else {
+            push(value)
+            root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
         }
     }
-    override var hashValue : Int {
-        return x.count
-    }
-    override func eq(rhs: Thing) -> Bool {
-        if let r = rhs as? Dict {
-            return x == r.x
-        }
-        return false
-    }
-    override var description : String {
-        return toString(x)
-    }
-    override var truthy : Bool {
-        return x.count > 0
-    }
-    override func getattr(attr: String) -> Thing {
-        switch attr {
-        case "size":
-            return Num(Double(x.count))
-        case "get":
-            return Verb { (c: Context) in
-                let key = c.pop()
-                if let val = self.x[key] {
-                    c.push(val)
-                } else {
-                    assert(false, "Key \(key) not found in \(self)")
-                }
-            }
+    func step() {
+        var instruction = root["__bytecode__"][root["__pc__"]] // fetch
+        // println(instruction) // debugging
+        switch instruction["type"] {
+        case "str", "num":
+            push(instruction["value"])
+            root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
+        case "assign":
+            scope.assign(instruction["value"], pop())
+            root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
+        case "lookup":
+            push(scope.lookup(instruction["value"]))
+            root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
+        case "id":
+            summon(scope.lookup(instruction["value"]))
+        case "attr":
+            summon(pop().getattr(instruction["value"].s as String))
+        case "(":
+            push(B(Int(root["__pc__"].n), scope))
+            root["__pc__"] = Thing(integerLiteral: Int(instruction["matching parenthesis index"].n) + 1)
+        case ")": // We hit end of a block. Return to caller.
+            var message = root["__callstack__"].pop()
+            root["__pc__"] = message["return index"]
+            scope = message["return scope"] as! Scope
         default:
-            assert(false, "Dict does not support attr: " + attr)
-        } 
+            let type = instruction["type"]
+            assert(false, "Instruction type \(type) not supported")
+        }
     }
+    func done() -> Bool {
+        return Int(root["__pc__"].n) >= root["__bytecode__"].a.count
+    }
+    func run() {
+        while !done() {
+            step()
+        }
+    }
+}
+func ContextFromCode(code: String) -> Context { return Context(RootScope(code)) }
+func locally(@noescape work: () -> ()) { // pre-Swift 2.0, we didn't have 'do' blocks.
+    work()
+}
+func test() {
+    locally { // literal convertibles tests
+        let a : Thing = "hi"
+        let b : Thing = ["1", 2, []]
+        let c : Thing = true
+        let d : Thing = [1: 2, "3": 4]
+        let e : Thing = Thing(stringLiteral: "x \(a)")
+    }
+    locally { // Scope tests
+        let r = RootScope("")
+        let c = ChildScope(r)
+        // a lot of stuff in here now ... kind of annoying to test.
+        // assert(c == [
+        //     "__parent__": [
+        //         "__stack__": [],
+        //         "__stackstack__": [],
+        //         "__callstack__": [],
+        //         "__code__": "",
+        //         "__bytecode__": [],
+        //         "__pc__": 0,
+        //     ]
+        // ], c.description)
+        assert(c.root === r, c.root.description)
+        assert(r.stack == [], r.stack.description)
+        assert(c.stack == r.stack, c.stack.description)
+        r.push(1)
+        assert(r.stack == [1], r.stack.description)
+        assert(r.pop() == 1)
+    }
+    locally { // Parser tests
+        assert(map(parse("( 1 ) a .b ,c =d")) { $0["type"] } ==
+               ["(", "num", ")", "id", "attr", "lookup", "assign"])
+        assert(map(parse("( 1 ) a .b ,c =d")) { $0["value"] } ==
+               ["(", 1, ")", "a", "b", "c", "d"])
+    }
+    locally { // Execution tests
+        locally {
+            let c = ContextFromCode("1 'a' ( )")
+            c.run()
+            assert(c.stack == [1, "a", Block(2)], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("5 =x ,x ,x ,x")
+            c.run()
+            assert(c.stack == [5, 5, 5], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("( ) =x x")
+            c.run()
+            assert(c.stack == [], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("( ) =x ,x")
+            c.run()
+            assert(c.stack == [Block(0)], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("( ) =x ,x")
+            c.run()
+            assert(c.stack == [Block(0)], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("[ 1 2 3 ]")
+            c.run()
+            assert(c.stack == [ [1, 2, 3] ], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("[ 1 2 3 ] .size")
+            c.run()
+            assert(c.stack == [ 3 ], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("[ 1 2 3 4 ] dict")
+            c.run()
+            assert(c.stack == [ [1 : 2, 3 : 4] ], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("[ 1 2 3 4 ] dict .size")
+            c.run()
+            assert(c.stack == [ 2 ], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("[ 1 2 ] [ 3 4 ] .+ ")
+            c.run()
+            assert(c.stack == [ [3, 4, 1, 2] ], c.stack.description)
+        }
+        locally {
+            let c = ContextFromCode("[ 1 2 ] dict [ 3 4 ] dict .+ ")
+            c.run()
+            assert(c.stack == [ [1:2, 3:4] ], c.stack.description)
+        }
+    }
+    println("All core tests pass")
 }
 
-class Verb : Thing {
-    var exec : (Context) -> Void
-    init(e: (Context) -> Void) { exec = e }
-    override var hashValue : Int {
-        return ObjectIdentifier(self).hashValue
-    }
-    override func eq(rhs: Thing) -> Bool {
-        return ObjectIdentifier(self) == ObjectIdentifier(rhs)
-    }
-    override var description : String {
-        return toString(exec)
-    }
-    override var truthy : Bool {
-        return true
-    }
-}
-
-func ccltest() {
-    // MARK: - Tests
-    // poor man's tests
-    // MARK: lexer tests
-    var p = Parser("abc\n'hi' 78 .hey")
-    assert(p.starts_with("a"))
-    assert(!p.starts_with("b"))
-    assert(p.starts_with(["a", "b"]))
-    assert(p.starts_with(["b", "a"]))
-    p.next_token()
-    assert(p.tt == "id", p.tt)
-    assert(p.tv == "abc", p.tv)
-    p.next_token()
-    assert(p.tt == "str", p.tt)
-    assert(p.tv == "hi", p.tv)
-    p.next_token()
-    assert(p.tt == "id", p.tt)
-    assert(p.tv == "78", p.tv)
-    p.next_token()
-    assert(p.tt == "attr", p.tt)
-    assert(p.tv == "hey", p.tv)
-    // MARK: parser tests
-    var r = parse("a ( b c 'hi' r'\\n' ) 44")
-    assert(r == Block([
-        Id("a"),
-        Block([
-            Id("b"),
-            Id("c"),
-            StrAst("hi"),
-            StrAst("\\n"),
-        ]),
-        NumAst(44),
-        ]), "xxx")
-    // MARK: context tests
-    var rc = RootContext()
-    var cc = ChildContext(rc)
-    rc["Hi"] = Str("There")
-    assert(cc["Hi"] == Str("There"))
-    cc.stack.x.append(Num(6))
-    assert(rc.stack == List([Num(6)]))
-    rc.stack.x.append(Str("woa"))
-    assert(cc.stack == List([Num(6), Str("woa")]))
-    // MARK: exec tests
-    rc = RootContext()
-    cc = ChildContext(rc)
-    parse("[ 1 2 3 'hi' ]").exec(cc)
-    assert(cc.stack == List([List([Num(1), Num(2), Num(3), Str("hi")])]))
-    parse("1 '' assert").exec(cc)
-    // parse("0 '0 is false' assert").exec(cc)
-    // MARK: arithmetic tests
-    rc = RootContext()
-    cc = ChildContext(rc)
-    parse("1 2 +").exec(cc)
-    assert(cc.pop() == Num(3))
-    parse("1 2 -").exec(cc)
-    assert(cc.pop() == Num(-1))
-    parse("2 3 *").exec(cc)
-    assert(cc.pop() == Num(6))
-    parse("5 3 /").exec(cc)
-    assert(cc.pop() == Num(5.0/3.0))
-    parse("5 3 //").exec(cc)
-    assert(cc.pop() == Num(1))
-    parse("5 3 %").exec(cc)
-    assert(cc.pop() == Num(2))
-    // MARK: List methods
-    parse("[ 1 2 3 ] .size").exec(cc)
-    assert(cc.pop() == Num(3))
-    parse("1 [ 1 2 3 ] .get").exec(cc)
-    assert(cc.pop() == Num(2))
-    // MARK: Dict methods
-    parse("[ [ 1 2 ] [ 3 4 ] ] dict .size").exec(cc)
-    assert(cc.pop() == Num(2))
-    parse("3 [ [ 1 2 ] [ 3 4 ] ] dict .get").exec(cc)
-    assert(cc.pop() == Num(4))
-    // MARK: Are we still clean?
-    assert(cc.stack == List([]), toString(cc.stack))
-    // message indicating success
-    println("All core ccl tests passed successfully!")
-}
-// ccltest() // need to comment this out when file is linked to iOS project.
+test()

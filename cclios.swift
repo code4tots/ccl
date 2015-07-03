@@ -10,98 +10,128 @@ import UIKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    
     var window: UIWindow?
-    
-    // CCL context
+    var code : String?
     var context: Context?
-    
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // just for debugging
-        ccltest()
-        
-        // Override point for customization after application launch.
+        ccltest() // for debugging
         let path = NSBundle.mainBundle().pathForResource("code", ofType: "ccl")!
-        let code = NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding, error: nil)! as String
-        
+        code = NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding, error: nil)! as String
         self.window = UIWindow(frame: UIScreen.mainScreen().bounds)
         self.window!.backgroundColor = UIColor.whiteColor()
         self.window!.rootViewController = ViewController()
-        
         self.context = RootContext()
-        
         self.context!["window"] = WindowThing(self)
-        
-        parse(code).exec(self.context!)
-        
+        self.context!["new-button"] = Verb { (c:Context) in
+            c.push(ButtonThing(self))
+        }
         self.window!.makeKeyAndVisible()
         return true
     }
-    
-    func applicationWillResignActive(application: UIApplication) {
-        // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-        // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
-    }
-    
-    func applicationDidEnterBackground(application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-    }
-    
-    func applicationWillEnterForeground(application: UIApplication) {
-        // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
-    }
-    
-    func applicationDidBecomeActive(application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-    }
-    
-    func applicationWillTerminate(application: UIApplication) {
-        // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-    }
 }
 
-class WindowThing : Thing {
+class UiThing : Thing {
     var app : AppDelegate
-    
     var view : UIView {
         return app.window!.rootViewController!.view
     }
-    
-    init(_ app : AppDelegate) { self.app = app }
-    
     override var hashValue : Int {
         return ObjectIdentifier(self).hashValue
     }
-    override var description : String {
-        return "<window>"
-    }
-    override func eq(rhs: Thing) -> Bool {
+    override func eq2(rhs: Thing) -> Bool {
         return ObjectIdentifier(self) == ObjectIdentifier(rhs)
     }
     override var truthy : Bool {
         return true
+    }
+    init(_ app : AppDelegate) { self.app = app }
+}
+
+class WindowThing : UiThing {
+    override var description : String {
+        return "<window>"
     }
     override func getattr(attr: String) -> Thing {
         switch attr {
         case "width": return Num(Double(view.bounds.width))
         case "height": return Num(Double(view.bounds.height))
         default:
-            assert(false, "WindowThing does not support attribute " + attr)
+            super.getattr(attr)
         }
         return Num(0)
     }
 }
 
+class ButtonThing : UiThing {
+    var button : UIButton = UIButton()
+    override var description : String {
+        return "<button>"
+    }
+    override func getattr(attr: String) -> Thing {
+        switch attr {
+        case "=frame":
+            return Verb { (c:Context) in
+                let arg = c.pop()
+                let args = arg as! List
+                self.button.frame = CGRectMake(CGFloat((args.x[0] as! Num).x), CGFloat((args.x[1] as! Num).x), CGFloat((args.x[2] as! Num).x), CGFloat((args.x[3] as! Num).x))
+            }
+        case "=title":
+            return Verb { (c:Context) in
+                let arg = c.pop()
+                if let title = arg as? Str {
+                    self.button.setTitle(title.x, forState: UIControlState.Normal)
+                } else {
+                    assert(false, "button.=title expects a str argument")
+                }
+            }
+        case "show":
+            return Verb { (c: Context) in
+                self.view.addSubview(self.button)
+            }
+        case "=bg":
+            return Verb { (c: Context) in
+                self.button.backgroundColor = str2color((c.pop() as! Str).x)
+                
+            }
+        case "bg":
+            return Str(color2str(self.button.backgroundColor!))
+        case "=onclick":
+            return Verb { (c: Context) in
+                let cb = c.pop() as! Lambda
+                self.button.addTarget(cb, action: "buttonTapAction:", forControlEvents: UIControlEvents.TouchUpInside)
+            }
+        default:
+            return super.getattr(attr)
+        }
+    }
+}
+
+func str2color(s: String) -> UIColor {
+    switch s {
+    case "green": return UIColor.greenColor()
+    case "blue": return UIColor.blueColor()
+    case "brown": return UIColor.brownColor()
+    case "red": return UIColor.redColor()
+    default:
+        assert(false, "\(s) is not a supported color")
+        return UIColor.blackColor()
+    }
+}
+
+func color2str(c: UIColor) -> String {
+    switch c {
+    case UIColor.greenColor(): return "green"
+    case UIColor.blueColor(): return "blue"
+    case UIColor.brownColor(): return "brown"
+    case UIColor.redColor(): return "red"
+    default: return ""
+    }
+}
+
 class ViewController: UIViewController {
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        let delegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        parse(delegate.code!).exec(delegate.context!)
     }
 }
