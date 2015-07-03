@@ -198,6 +198,31 @@ class Thing : NSObject,
             return "<!!! \(x.dynamicType) has not overriden description>"
         }
     }
+    var str : String {
+        if x == nil {
+            return "nil"
+        } else if let y = x as? NSNumber {
+            return "\(y)"
+        } else if let y = x as? NSString {
+            return "\(y)"
+        } else if let y = x as? NSMutableArray {
+            var s = "List("
+            for i in y {
+                s += "\(i.str)"
+            }
+            s += ")"
+            return s
+        } else if let y = x as? NSMutableDictionary {
+            var s = "Dict("
+            for (k, v) in y {
+                s += "\(k.str):\(v.str)"
+            }
+            s += ")"
+            return s
+        } else {
+            return "<!!! \(x.dynamicType) has not overriden str>"
+        }
+    }
     override func isEqual(y: AnyObject?) -> Bool {
         if x == nil && y == nil { return true }
         if x == nil || y == nil { return false }
@@ -207,6 +232,8 @@ class Thing : NSObject,
     func getattr(attr: String) -> Thing {
         switch attr {
         case "eq": return NF { (c: Context) in c.push(Thing(booleanLiteral: self == c.pop())) }
+        case "p": return NF { (c: Context) in println(self) }
+        case "print": return NF { (c: Context) in print(self.str)}
         default:
             if let n = x as? NSNumber {
                 switch attr {
@@ -670,4 +697,4 @@ func test() {
     println("All core tests pass")
 }
 
-test()
+// test()

@@ -1,5 +1,7 @@
-# window .width p
-# window .height p
+"hello world!" .p
+
+window .width .p
+window .height .p
 
 new-button =button
 "hi" button .=title
@@ -11,14 +13,13 @@ button .show
 # "www.google.com" download "download-results" =
 # [  download-results ] wait
 
-(
-        "blue" "green"
-            "blue" button .bg .eq
-    .if
-    button .=bg
+# (
+#       "blue" "green"
+#            "blue" button .bg .eq
+#    .if
+#    button .=bg
+#) \ =cb # callback needs to be saved to a var; otherwise, iOS will kill it.
 
-) \ =cb # callback needs to be saved to a var; otherwise, iOS will kill it.
+# ,cb button .=onclick
 
-,cb button .=onclick
-
-\ dup =dlcb "www.google.com" download
+# \ dup =dlcb "www.google.com" download
