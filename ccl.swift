@@ -165,8 +165,24 @@ class Thing : NSObject,
     }
     func pop() -> Thing {
         if let a = x as? NSMutableArray {
-            var ret = a.lastObject as! Thing
+            let ret = a.lastObject as! Thing
             a.removeLastObject()
+            return ret
+        } else {
+            assert(false, "pop is only supported for List types")
+        }
+    }
+    func pushleft(t: Thing) { // linear time insertion. fix later.
+        if let a = x as? NSMutableArray {
+            a.insertObject(t, atIndex: 0)
+        } else {
+            assert(false, "push is only supported for List types (\(t))")
+        }
+    }
+    func popleft() -> Thing { // linear time insertion. fix later.
+        if let a = x as? NSMutableArray {
+            let ret = self[0]
+            a.removeObjectAtIndex(0)
             return ret
         } else {
             assert(false, "pop is only supported for List types")
@@ -231,14 +247,14 @@ class Thing : NSObject,
     }
     func getattr(attr: String) -> Thing {
         switch attr {
-        case "eq": return NF { (c: Context) in c.push(Thing(booleanLiteral: self == c.pop())) }
-        case "p": return NF { (c: Context) in println(self) }
-        case "print": return NF { (c: Context) in print(self.str)}
+        case "eq": return NF { (c: Runtime) in c.push(Thing(booleanLiteral: self == c.pop())) }
+        case "p": return NF { (c: Runtime) in println(self) }
+        case "print": return NF { (c: Runtime) in print(self.str)}
         default:
             if let n = x as? NSNumber {
                 switch attr {
                 case "+":
-                    return NF { (c: Context) in
+                    return NF { (c: Runtime) in
                         c.push(Thing(floatLiteral: Double(n) + Double(c.pop().n)))
                     }
                 default: break
@@ -246,14 +262,14 @@ class Thing : NSObject,
             } else if let a = x as? NSMutableArray {
                 switch attr {
                 case "+":
-                    return NF { (c: Context) in
+                    return NF { (c: Runtime) in
                         var ret : Thing = []
                         for item in self { ret.push(item) }
                         for item in c.pop() { ret.push(item) }
                         c.push(ret)
                     }
                 case "size":
-                    return NF { (c: Context) in
+                    return NF { (c: Runtime) in
                         c.push(Thing(integerLiteral: a.count))
                     }
                 default: break
@@ -261,11 +277,11 @@ class Thing : NSObject,
             } else if let d = x as? NSMutableDictionary {
                 switch attr {
                 case "size":
-                    return NF { (c: Context) in
+                    return NF { (c: Runtime) in
                         c.push(Thing(integerLiteral: d.count))
                     }
                 case "+":
-                    return NF { (c: Context) in
+                    return NF { (c: Runtime) in
                         var ret : Thing = [:]
                         for key in self { ret[key] = self[key] }
                         var rhs = c.pop()
@@ -284,14 +300,14 @@ func ==(lhs: Thing, rhs: Thing) -> Bool { return lhs.isEqual(rhs) }
 func T(t: Thing) -> Thing { return t } // convenient for literal convertibles.
 class Verb : Thing {} // Verb is a marker class.
 class Native : Verb { // Subclass this to your specific usecase.
-    func exec(c: Context) {}
+    func exec(c: Runtime) {}
 }
 class NativeFunc : Native {
-    var f : (Context) -> Void = {(c:Context) in}
+    var f : (Runtime) -> Void = {(c:Runtime) in}
     override func isEqual(y: AnyObject?) -> Bool { return y != nil && ObjectIdentifier(self) == ObjectIdentifier(y!) }
-    override func exec(c: Context) { f(c) }
+    override func exec(c: Runtime) { f(c) }
 }
-func NF(f: (Context) -> Void) -> NativeFunc {
+func NF(f: (Runtime) -> Void) -> NativeFunc {
     var nf = NativeFunc(0)
     nf.f = f
     return nf
@@ -452,13 +468,29 @@ class Scope : Thing {
             return self
         }
     }
+    var cp : Thing { // context pointer
+        get { return root["__cp__"] }
+        set(v) { root["__cp__"] = v }
+    }
+    var contexts : Thing { // queue of contexts
+        get { return root["__contexts__"] }
+        set(v) { root["__contexts__"] = v }
+    }
+    var context : Thing {
+    	get { return contexts[cp] }
+        set(v) { contexts[cp] = v }
+    }
     var stack : Thing {
-        get {
-            return root["__stack__"]
-        }
-        set(v) {
-            root["__stack__"] = v
-        }
+        get { return context["__stack__"] }
+        set(v) { context["__stack__"] = v }
+    }
+    var stackstack : Thing {
+        get { return context["__stackstack__"] }
+        set(v) { context["__stackstack__"] = v }
+    }
+    var pc : Thing { // program counter
+        get { return context["__pc__"] }
+        set(v) { context["__pc__"] = v }
     }
     override func push(t: Thing) {
         stack.a.addObject(t)
@@ -488,26 +520,39 @@ class Scope : Thing {
 }
 func RootScope(code: String) -> Scope {
     return [
-        "__stack__" : [], // stack for calculations
-        "__stackstack__" : [], // stack of __stack__; used for creating lists.
+
+        "__cp__": 0, // context pointer
+
+        "__contexts__": [
+            [
+                "__stack__" : [], // stack for calculations
+                "__stackstack__" : [], // stack of __stack__; used for creating lists.
+                "__callstack__" : [], // call stack keeps track of where to return after calls.
+                "__code__": Thing(stringLiteral: code), // raw code string (for error messages)
+                "__bytecode__": parse(code), // parsed code (surprise, it's flat!)
+                "__pc__": 0, // program counter
+            ],
+        ],
+
         "__callstack__" : [], // call stack keeps track of where to return after calls.
         "__code__": Thing(stringLiteral: code), // raw code string (for error messages)
         "__bytecode__": parse(code), // parsed code (surprise, it's flat!)
-        "__pc__": 0, // program counter
+
+        "__saved__": [], // saved contexts
 
         // list builder
-        "[" : NF { (c: Context) in
-            c.root["__stackstack__"].push(c.stack)
+        "[" : NF { (c: Runtime) in
+            c.root.stackstack.push(c.stack)
             c.stack = []
         },
-        "]" : NF { (c: Context) in
+        "]" : NF { (c: Runtime) in
             let stack = c.stack
-            c.stack = c.root["__stackstack__"].pop()
+            c.stack = c.root.stackstack.pop()
             c.stack.push(stack)
         },
 
         // dict from list
-        "dict" : NF { (c: Context) in
+        "dict" : NF { (c: Runtime) in
             var d : Thing = [:]
             var key : Thing? = nil
             for item in c.pop() {
@@ -525,8 +570,8 @@ func RootScope(code: String) -> Scope {
 func ChildScope(parent: Scope) -> Scope {
     return ["__parent__": parent]
 }
-// Context is what we use to run things.
-class Context {
+// Runtime is what we use to run things.
+class Runtime {
     var scope : Scope
     var root : Scope { return scope.root }
     var stack : Thing {
@@ -541,48 +586,48 @@ class Context {
             if let block = verb as? Block {
                 // Save to callstack
                 root["__callstack__"].push([
-                    "return index": Thing(integerLiteral: Int(root["__pc__"].n) + 1),
+                    "return index": Thing(integerLiteral: Int(root.pc.n) + 1),
                     "return scope": scope,
                 ])
                 var newscope = ChildScope(block.native)
                 newscope["__foreignscope__"] = scope
                 scope = newscope
-                root["__pc__"] = Thing(integerLiteral: Int(block.n) + 1) // move to the start of the block.
+                root.pc = Thing(integerLiteral: Int(block.n) + 1) // move to the start of the block.
             } else if let native = verb as? Native {
                 // Execute native swift code.
                 native.exec(self)
                 // WARNING: to native funcs that modify program counter: once your function finishes,
                 // counter will be incremented by 1.
-                root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
+                root.pc = Thing(integerLiteral: Int(root.pc.n) + 1)
             }
         } else {
             push(value)
-            root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
+            root.pc = Thing(integerLiteral: Int(root.pc.n) + 1)
         }
     }
     func step() {
-        var instruction = root["__bytecode__"][root["__pc__"]] // fetch
+        var instruction = root["__bytecode__"][root.pc] // fetch
         // println(instruction) // debugging
         switch instruction["type"] {
         case "str", "num":
             push(instruction["value"])
-            root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
+            root.pc = Thing(integerLiteral: Int(root.pc.n) + 1)
         case "assign":
             scope.assign(instruction["value"], pop())
-            root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
+            root.pc = Thing(integerLiteral: Int(root.pc.n) + 1)
         case "lookup":
             push(scope.lookup(instruction["value"]))
-            root["__pc__"] = Thing(integerLiteral: Int(root["__pc__"].n) + 1)
+            root.pc = Thing(integerLiteral: Int(root.pc.n) + 1)
         case "id":
             summon(scope.lookup(instruction["value"]))
         case "attr":
             summon(pop().getattr(instruction["value"].s as String))
         case "(":
-            push(B(Int(root["__pc__"].n), scope))
-            root["__pc__"] = Thing(integerLiteral: Int(instruction["matching parenthesis index"].n) + 1)
+            push(B(Int(root.pc.n), scope))
+            root.pc = Thing(integerLiteral: Int(instruction["matching parenthesis index"].n) + 1)
         case ")": // We hit end of a block. Return to caller.
             var message = root["__callstack__"].pop()
-            root["__pc__"] = message["return index"]
+            root.pc = message["return index"]
             scope = message["return scope"] as! Scope
         default:
             let type = instruction["type"]
@@ -590,7 +635,7 @@ class Context {
         }
     }
     func done() -> Bool {
-        return Int(root["__pc__"].n) >= root["__bytecode__"].a.count
+        return Int(root.pc.n) >= root["__bytecode__"].a.count
     }
     func run() {
         while !done() {
@@ -598,7 +643,7 @@ class Context {
         }
     }
 }
-func ContextFromCode(code: String) -> Context { return Context(RootScope(code)) }
+func RuntimeFromCode(code: String) -> Runtime { return Runtime(RootScope(code)) }
 func locally(@noescape work: () -> ()) { // pre-Swift 2.0, we didn't have 'do' blocks.
     work()
 }
@@ -609,6 +654,8 @@ func test() {
         let c : Thing = true
         let d : Thing = [1: 2, "3": 4]
         let e : Thing = Thing(stringLiteral: "x \(a)")
+        assert(b.popleft() == "1")
+        assert(b.popleft() == 2)
     }
     locally { // Scope tests
         let r = RootScope("")
@@ -639,57 +686,57 @@ func test() {
     }
     locally { // Execution tests
         locally {
-            let c = ContextFromCode("1 'a' ( )")
+            let c = RuntimeFromCode("1 'a' ( )")
             c.run()
             assert(c.stack == [1, "a", Block(2)], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("5 =x ,x ,x ,x")
+            let c = RuntimeFromCode("5 =x ,x ,x ,x")
             c.run()
             assert(c.stack == [5, 5, 5], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("( ) =x x")
+            let c = RuntimeFromCode("( ) =x x")
             c.run()
             assert(c.stack == [], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("( ) =x ,x")
+            let c = RuntimeFromCode("( ) =x ,x")
             c.run()
             assert(c.stack == [Block(0)], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("( ) =x ,x")
+            let c = RuntimeFromCode("( ) =x ,x")
             c.run()
             assert(c.stack == [Block(0)], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("[ 1 2 3 ]")
+            let c = RuntimeFromCode("[ 1 2 3 ]")
             c.run()
             assert(c.stack == [ [1, 2, 3] ], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("[ 1 2 3 ] .size")
+            let c = RuntimeFromCode("[ 1 2 3 ] .size")
             c.run()
             assert(c.stack == [ 3 ], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("[ 1 2 3 4 ] dict")
+            let c = RuntimeFromCode("[ 1 2 3 4 ] dict")
             c.run()
             assert(c.stack == [ [1 : 2, 3 : 4] ], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("[ 1 2 3 4 ] dict .size")
+            let c = RuntimeFromCode("[ 1 2 3 4 ] dict .size")
             c.run()
             assert(c.stack == [ 2 ], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("[ 1 2 ] [ 3 4 ] .+ ")
+            let c = RuntimeFromCode("[ 1 2 ] [ 3 4 ] .+ ")
             c.run()
             assert(c.stack == [ [3, 4, 1, 2] ], c.stack.description)
         }
         locally {
-            let c = ContextFromCode("[ 1 2 ] dict [ 3 4 ] dict .+ ")
+            let c = RuntimeFromCode("[ 1 2 ] dict [ 3 4 ] dict .+ ")
             c.run()
             assert(c.stack == [ [1:2, 3:4] ], c.stack.description)
         }
@@ -697,4 +744,4 @@ func test() {
     println("All core tests pass")
 }
 
-// test()
+test()

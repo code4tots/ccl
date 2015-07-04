@@ -12,7 +12,7 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     var code : String?
-    var context: Context?
+    var runtime: Runtime?
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         test() // for debugging
         let path = NSBundle.mainBundle().pathForResource("code", ofType: "ccl")!
@@ -20,21 +20,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window = UIWindow(frame: UIScreen.mainScreen().bounds)
         self.window!.backgroundColor = UIColor.whiteColor()
         self.window!.rootViewController = ViewController()
-        self.context = ContextFromCode(code!)
+        self.runtime = RuntimeFromCode(code!)
         self.window!.makeKeyAndVisible()
         return true
     }
 }
 class ViewController: UIViewController {
     var delegate : AppDelegate { return UIApplication.sharedApplication().delegate as! AppDelegate }
-    var context : Context { return delegate.context! }
+    var runtime : Runtime { return delegate.runtime! }
     override func viewDidLoad() {
         super.viewDidLoad()
-        context.root["window"] = WindowThing(fromAnyObject: delegate)
-        context.root["new-button"] = NF { (c:Context) in
+        runtime.root["window"] = WindowThing(fromAnyObject: delegate)
+        runtime.root["new-button"] = NF { (c:Runtime) in
             c.push(ButtonThing(fromAnyObject: self.delegate))
         }
-        context.run()
+        runtime.run()
     }
 }
 class UiThing : Thing {
@@ -87,35 +87,56 @@ func color2Thing(color: UIColor) -> Thing {
     ]
 }
 class ButtonThing : UiThing {
+    override var description : String {
+        return "<button \(button)>"
+    }
     var button : UIButton = UIButton()
+    var handler : ButtonActionHandler?
     override func getattr(attr: String) -> Thing {
         switch attr {
-        case "=frame":
-            return NF { (c:Context) in
+        case "frame=":
+            return NF { (c:Runtime) in
                 let args = c.pop()
                 self.button.frame = CGRectMake(CGFloat(args[0].n), CGFloat(args[1].n), CGFloat(args[2].n), CGFloat(args[3].n))
             }
-        case "=title":
-            return NF { (c:Context) in
+        case "title=":
+            return NF { (c:Runtime) in
                 self.button.setTitle(c.pop().s as String, forState: UIControlState.Normal)
             }
         case "show":
-            return NF { (c: Context) in
+            return NF { (c: Runtime) in
                 self.view.addSubview(self.button)
             }
-        case "=bg":
-            return NF { (c: Context) in
+        case "bg=":
+            return NF { (c: Runtime) in
                 self.button.backgroundColor = c.pop().color
             }
         case "bg":
             return color2Thing((self.button.backgroundColor!))
-//        case "=onclick":
-//            return NF { (c: Context) in
-//                let cb = c.pop() as! Lambda
-//                self.button.addTarget(cb, action: "buttonTapAction:", forControlEvents: UIControlEvents.TouchUpInside)
-//            }
+        case "onclick=":
+            return NF { (c: Runtime) in
+                let v = c.pop()
+                if let b = v as? Block {
+                    self.handler = ButtonActionHandler(c, b)
+                    self.button.addTarget(self.handler, action: "buttonTapAction:", forControlEvents: UIControlEvents.TouchUpInside)
+                } else {
+                    assert(false, "\(v) needs to be a block to set to onclick")
+                }
+            }
         default:
             return super.getattr(attr)
         }
+    }
+}
+class ButtonActionHandler : NSObject {
+    var runtime : Runtime
+    var block : Block
+    init(_ c: Runtime, _ b : Block) {
+        runtime = c
+        block = b
+    }
+    func buttonTapAction(sender: AnyObject?) {
+        println("tap action")
+        runtime.summon(block)
     }
 }
