@@ -188,6 +188,15 @@ class Thing : NSObject,
             assert(false, "pop is only supported for List types")
         }
     }
+    var size : Int {
+        if let a = x as? NSMutableArray {
+            return a.count
+        } else if let d = x as? NSMutableDictionary {
+            return d.count
+        } else {
+            assert(false, "Thing \(self) does not support attribute size")
+        }
+    }
     override var hash : Int { return x == nil ? 0 : x!.hash }
     override var description : String {
         if x == nil {
@@ -250,6 +259,7 @@ class Thing : NSObject,
         case "eq": return NF { (c: Runtime) in c.push(Thing(booleanLiteral: self == c.pop())) }
         case "p": return NF { (c: Runtime) in println(self) }
         case "print": return NF { (c: Runtime) in print(self.str)}
+        case "size": return Thing(integerLiteral: size)
         default:
             if let n = x as? NSNumber {
                 switch attr {
@@ -268,18 +278,10 @@ class Thing : NSObject,
                         for item in c.pop() { ret.push(item) }
                         c.push(ret)
                     }
-                case "size":
-                    return NF { (c: Runtime) in
-                        c.push(Thing(integerLiteral: a.count))
-                    }
                 default: break
                 }
             } else if let d = x as? NSMutableDictionary {
                 switch attr {
-                case "size":
-                    return NF { (c: Runtime) in
-                        c.push(Thing(integerLiteral: d.count))
-                    }
                 case "+":
                     return NF { (c: Runtime) in
                         var ret : Thing = [:]
@@ -298,6 +300,12 @@ class Thing : NSObject,
 }
 func ==(lhs: Thing, rhs: Thing) -> Bool { return lhs.isEqual(rhs) }
 func T(t: Thing) -> Thing { return t } // convenient for literal convertibles.
+func T(x : Int) -> Thing { return Thing(fromObject: NSNumber(integer: x)) }
+func T(x : Double) -> Thing { return Thing(fromObject: NSNumber(double: x)) }
+func T(x : String) -> Thing { return Thing(fromObject: x as NSString) }
+func T(x : NSMutableArray) -> Thing { return Thing(fromObject: x) }
+func T(x : NSMutableDictionary) -> Thing { return Thing(fromObject: x) }
+let NIL = Thing(nil)
 class Verb : Thing {} // Verb is a marker class.
 class Native : Verb { // Subclass this to your specific usecase.
     func exec(c: Runtime) {}
@@ -462,11 +470,19 @@ func parse(s: String) -> Thing { return Parser(s).parse() }
 // Scope is just a Dictionary with a few extra convenience methods.
 class Scope : Thing {
     var root : Scope {
-        if contains("__parent__") {
-            return (self["__parent__"] as! Scope).root
+        if let p = parent {
+            return p.root
         } else {
             return self
         }
+    }
+    var parent : Scope? {
+        if contains("__parent__") {
+            if let p = self["__parent__"] as? Scope { return p }
+            let p = self["__parent__"]
+            assert(false, "__parent__ is not a Scope: \(p)")
+        }
+        return nil
     }
     var cp : Thing { // context pointer
         get { return root["__cp__"] }
@@ -488,9 +504,33 @@ class Scope : Thing {
         get { return context["__stackstack__"] }
         set(v) { context["__stackstack__"] = v }
     }
+    var callstack : Thing {
+        get { return context["__callstack__"] }
+        set(v) { context["__callstack__"] = v }
+    }
     var pc : Thing { // program counter
         get { return context["__pc__"] }
         set(v) { context["__pc__"] = v }
+    }
+    var bytecode : Thing {
+        get { return context["__bytecode__"] }
+        set(v) { context["__bytecode__"] = v }
+    }
+    var code : Thing {
+        get { return context["__code__"] }
+        set(v) { context["__code__"] = v }
+    }
+    var defaultBytecode : Thing { // default bytecode for context if not overriden
+        get { return root["__bytecode__"] }
+        set(v) { root["__bytecode__"] = v }
+    }
+    var defaultCode : Thing { // default code for context if not overriden
+        get { return root["__code__"] }
+        set(v) { root["__code__"] = v }
+    }
+    var foreignscope : Thing? {
+        get { return self.lookup2("__foreignscope__") }
+        set(v) { self["__foreignscope__"] = v! } // WARNING: cannot assign nil.
     }
     override func push(t: Thing) {
         stack.a.addObject(t)
@@ -498,11 +538,20 @@ class Scope : Thing {
     override func pop() -> Thing {
         return stack.pop()
     }
+    func lookup2(key: Thing) -> Thing? {
+        if self.contains(key) {
+            return self[key]
+        } else if let p = parent {
+            return p.lookup2(key)
+        } else {
+            return nil
+        }
+    }
     func lookup(key: Thing) -> Thing {
         if self.contains(key) {
             return self[key]
-        } else if self.contains("__parent__") {
-            return (self["__parent__"] as! Scope).lookup(key)
+        } else if let p = parent {
+            return p.lookup(key)
         } else {
             assert(false, "\(key) is not in scope")
         }
@@ -510,35 +559,44 @@ class Scope : Thing {
     func assign(key: Thing, _ value: Thing) {
         if self.contains(key) {
             self[key] = value
-        } else if self.contains("__parent__") {
-            (self["__parent__"] as! Scope).assign(key, value)
+        } else if let p = parent {
+            p.assign(key, value)
         } else {
             self[key] = value
             // assert(false, "\(key) is not in scope")
         }
     }
+    func addContext(b: Block) {
+        addContext(b, withCustomCode: defaultCode.s as String, withCustomBytcode: defaultBytecode)
+    }
+    func addContext(b: Block, withCustomCode code: String) {
+        addContext(b, withCustomCode: code, withCustomBytcode: parse(code))
+    }
+    func addContext(b: Block, withCustomCode code: String, withCustomBytcode bytecode: Thing) {
+        self.contexts.push([
+            "__stack__" : [], // stack for calculations
+            "__stackstack__" : [], // stack of __stack__; used for creating lists.
+            "__callstack__" : [], // call stack keeps track of where to return after calls.
+            "__code__": Thing(stringLiteral: code), // raw code string (for error messages)
+            "__bytecode__": bytecode, // parsed code (surprise, it's flat!)
+            "__pc__": Thing(fromObject: b.n), // program counter
+        ])
+    }
 }
 func RootScope(code: String) -> Scope {
-    return [
+    var scope : Scope = [
 
         "__cp__": 0, // context pointer
+        "__contexts__": [], // list of contexts
 
-        "__contexts__": [
-            [
-                "__stack__" : [], // stack for calculations
-                "__stackstack__" : [], // stack of __stack__; used for creating lists.
-                "__callstack__" : [], // call stack keeps track of where to return after calls.
-                "__code__": Thing(stringLiteral: code), // raw code string (for error messages)
-                "__bytecode__": parse(code), // parsed code (surprise, it's flat!)
-                "__pc__": 0, // program counter
-            ],
-        ],
-
-        "__callstack__" : [], // call stack keeps track of where to return after calls.
+        // You can use custom code/bytecode, but by default, when creating a new context,
+        // we pick up this code/bytecode.
         "__code__": Thing(stringLiteral: code), // raw code string (for error messages)
         "__bytecode__": parse(code), // parsed code (surprise, it's flat!)
 
-        "__saved__": [], // saved contexts
+        // Builtins library
+
+        "pop" : NF { (c: Runtime) in c.pop() },
 
         // list builder
         "[" : NF { (c: Runtime) in
@@ -566,6 +624,8 @@ func RootScope(code: String) -> Scope {
             c.push(d)
         }
     ]
+    scope.addContext(0)
+    return scope
 }
 func ChildScope(parent: Scope) -> Scope {
     return ["__parent__": parent]
@@ -585,12 +645,12 @@ class Runtime {
         if let verb = value as? Verb {
             if let block = verb as? Block {
                 // Save to callstack
-                root["__callstack__"].push([
+                root.callstack.push([
                     "return index": Thing(integerLiteral: Int(root.pc.n) + 1),
                     "return scope": scope,
                 ])
                 var newscope = ChildScope(block.native)
-                newscope["__foreignscope__"] = scope
+                newscope.foreignscope = scope
                 scope = newscope
                 root.pc = Thing(integerLiteral: Int(block.n) + 1) // move to the start of the block.
             } else if let native = verb as? Native {
@@ -606,7 +666,7 @@ class Runtime {
         }
     }
     func step() {
-        var instruction = root["__bytecode__"][root.pc] // fetch
+        var instruction = root.bytecode[root.pc] // fetch
         // println(instruction) // debugging
         switch instruction["type"] {
         case "str", "num":
@@ -626,20 +686,36 @@ class Runtime {
             push(B(Int(root.pc.n), scope))
             root.pc = Thing(integerLiteral: Int(instruction["matching parenthesis index"].n) + 1)
         case ")": // We hit end of a block. Return to caller.
-            var message = root["__callstack__"].pop()
-            root.pc = message["return index"]
-            scope = message["return scope"] as! Scope
+            if root.callstack.size == 0 { // If there is nothing left on the callstack, we are finished.
+                root.pc = Thing(integerLiteral: root.bytecode.size)
+            } else { // Otherwise, we need to return to whoever called us.
+                var message = root.callstack.pop()
+                root.pc = message["return index"]
+                scope = message["return scope"] as! Scope
+            }
         default:
             let type = instruction["type"]
             assert(false, "Instruction type \(type) not supported")
         }
     }
     func done() -> Bool {
-        return Int(root.pc.n) >= root["__bytecode__"].a.count
+        return Int(root.pc.n) >= root.bytecode.size
     }
-    func run() {
-        while !done() {
-            step()
+    func ready() -> Bool { // can this context be stepped over right now?
+        // TODO: Take into account the stuff we are waiting for.
+        return !done()
+    }
+    func run() { // execute contexts until they can no longer run.
+        var i = 0, fin = false
+        while !fin {
+            fin = true
+            for i = 0; i < root.contexts.size; i++ {
+                root.cp = Thing(integerLiteral: i) // iterate over each context.
+                if ready() {
+                    fin = false
+                    while ready() { step() }
+                }
+            }
         }
     }
 }
@@ -660,17 +736,6 @@ func test() {
     locally { // Scope tests
         let r = RootScope("")
         let c = ChildScope(r)
-        // a lot of stuff in here now ... kind of annoying to test.
-        // assert(c == [
-        //     "__parent__": [
-        //         "__stack__": [],
-        //         "__stackstack__": [],
-        //         "__callstack__": [],
-        //         "__code__": "",
-        //         "__bytecode__": [],
-        //         "__pc__": 0,
-        //     ]
-        // ], c.description)
         assert(c.root === r, c.root.description)
         assert(r.stack == [], r.stack.description)
         assert(c.stack == r.stack, c.stack.description)
@@ -740,8 +805,12 @@ func test() {
             c.run()
             assert(c.stack == [ [1:2, 3:4] ], c.stack.description)
         }
+        locally { // multiple contexts test
+            let c = RuntimeFromCode("55 =x ( x ) =y")
+            c.run()
+            // assert(c.root.contexts == [], c.root.contexts.description)
+            // assert(c.stack == [ 55 ], c.stack.description)
+        }
     }
     println("All core tests pass")
 }
-
-test()
