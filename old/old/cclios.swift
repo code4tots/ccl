@@ -137,6 +137,7 @@ class ButtonActionHandler : NSObject {
     }
     func buttonTapAction(sender: AnyObject?) {
         println("tap action")
-        runtime.summon(block)
+        runtime.root.addContext(block)
+        runtime.run()
     }
 }

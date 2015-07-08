@@ -9,13 +9,17 @@ new-button =button
 "green" button .bg=
 button .show
 
+(
+    [ "stack is: " stack ] .p
+) =sp
+
 ## Hmm, this sort of waiting semantic seems neater than using callbacks.
-# "www.google.com" download "download-results" =
+# "www.google.com" download =download-results
 # [  download-results ] wait
 
 (
-    "blue" "green" "blue" button .bg .eq .if
-    button .bg=
+    "blue" "green" "blue" button .bg .eq sp .if sp
+    button sp .bg=
 ) button .onclick=
 
 # \ dup =dlcb "www.google.com" download

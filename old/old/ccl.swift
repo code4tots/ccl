@@ -248,6 +248,14 @@ class Thing : NSObject,
             return "<!!! \(x.dynamicType) has not overriden str>"
         }
     }
+    var truthy : Bool {
+        if x == nil { return false }
+        else if let y = x as? NSNumber { return y.doubleValue != 0 }
+        else if let y = x as? NSString { return y != "" }
+        else if let y = x as? NSMutableArray { return y.count > 0 }
+        else if let y = x as? NSMutableDictionary { return y.count > 0 }
+        return true
+    }
     override func isEqual(y: AnyObject?) -> Bool {
         if x == nil && y == nil { return true }
         if x == nil || y == nil { return false }
@@ -260,6 +268,12 @@ class Thing : NSObject,
         case "p": return NF { (c: Runtime) in println(self) }
         case "print": return NF { (c: Runtime) in print(self.str)}
         case "size": return Thing(integerLiteral: size)
+        case "if":
+            return NF { (c: Runtime) in
+                let first = c.pop()
+                let second = c.pop()
+                c.summon(self.truthy ? first : second)
+            }
         default:
             if let n = x as? NSNumber {
                 switch attr {
@@ -566,6 +580,9 @@ class Scope : Thing {
             // assert(false, "\(key) is not in scope")
         }
     }
+    func addGlobalContext() {
+        addContext(-1)
+    }
     func addContext(b: Block) {
         addContext(b, withCustomCode: defaultCode.s as String, withCustomBytcode: defaultBytecode)
     }
@@ -579,7 +596,7 @@ class Scope : Thing {
             "__callstack__" : [], // call stack keeps track of where to return after calls.
             "__code__": Thing(stringLiteral: code), // raw code string (for error messages)
             "__bytecode__": bytecode, // parsed code (surprise, it's flat!)
-            "__pc__": Thing(fromObject: b.n), // program counter
+            "__pc__": Thing(fromObject: NSNumber(integer: b.n.integerValue + 1)), // program counter
         ])
     }
 }
@@ -596,6 +613,8 @@ func RootScope(code: String) -> Scope {
 
         // Builtins library
 
+        "stack" : NF { (c: Runtime) in c.push(c.root.stack) },
+        
         "pop" : NF { (c: Runtime) in c.pop() },
 
         // list builder
@@ -624,7 +643,7 @@ func RootScope(code: String) -> Scope {
             c.push(d)
         }
     ]
-    scope.addContext(0)
+    scope.addGlobalContext()
     return scope
 }
 func ChildScope(parent: Scope) -> Scope {
